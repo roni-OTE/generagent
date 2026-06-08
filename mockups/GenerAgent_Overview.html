@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent — סקירת המוצר</title>
+<style>
+  :root {
+    --bg: #0A0A0A;
+    --bg-card: #141414;
+    --bg-elevated: #1C1C1C;
+    --border: #2A2A2A;
+    --border-strong: #3D3D3D;
+    --text: #E5E5E5;
+    --text-dim: #A3A3A3;
+    --text-muted: #6B6B6B;
+    --accent: #D97757;
+    --accent-dim: #8C4A36;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --info: #60A5FA;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Menlo', monospace;
+    --sans: -apple-system, 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.7;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 40px 0 60px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 60px;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  h1 {
+    font-size: 56px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #E5E5E5 0%, #A3A3A3 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .tagline {
+    font-size: 20px;
+    color: var(--text-dim);
+    max-width: 700px;
+    margin: 0 auto 24px;
+  }
+  .badges {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-dim);
+  }
+  .badge.accent { color: var(--accent); border-color: var(--accent-dim); }
+
+  /* Sections */
+  section {
+    margin-bottom: 64px;
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2::before {
+    content: '';
+    width: 4px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .section-sub {
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    font-size: 16px;
+  }
+
+  /* Cards Grid */
+  .grid {
+    display: grid;
+    gap: 16px;
+  }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    h1 { font-size: 36px; }
+    h2 { font-size: 24px; }
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .card:hover {
+    border-color: var(--border-strong);
+  }
+  .card-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Flow diagram */
+  .flow {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    overflow-x: auto;
+  }
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .flow-step:not(:last-child)::after {
+    content: '↓';
+    position: absolute;
+    bottom: -22px;
+    right: 32px;
+    color: var(--accent);
+    font-size: 18px;
+    z-index: 1;
+  }
+  .flow-num {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .flow-content { flex: 1; }
+  .flow-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .flow-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  /* Code/Terminal block */
+  .terminal {
+    background: #050505;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    direction: ltr;
+    text-align: left;
+  }
+  .terminal-header {
+    background: var(--bg-elevated);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .terminal-dot.red { background: #FF5F57; }
+  .terminal-dot.yellow { background: #FEBC2E; }
+  .terminal-dot.green { background: #28C840; }
+  .terminal-title {
+    margin-right: 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .terminal-body {
+    padding: 20px;
+    color: var(--text);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .terminal-body .dim { color: var(--text-muted); }
+  .terminal-body .accent { color: var(--accent); }
+  .terminal-body .success { color: var(--success); }
+  .terminal-body .info { color: var(--info); }
+  .terminal-body .comment { color: var(--text-muted); font-style: italic; }
+
+  /* Architecture diagram */
+  .arch-diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .arch-layer {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .arch-layer-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .arch-boxes {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .arch-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .arch-arrow {
+    text-align: center;
+    color: var(--accent);
+    font-size: 20px;
+    margin: 4px 0;
+  }
+
+  /* Question list */
+  .question-list {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .question-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .question-item:last-child { border-bottom: none; }
+  .question-num {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-weight: 600;
+    min-width: 32px;
+  }
+  .question-text {
+    flex: 1;
+  }
+  .question-q {
+    margin-bottom: 4px;
+  }
+  .question-purpose {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+
+  /* Comparison table */
+  .compare-table {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row.header {
+    background: var(--bg-elevated);
+    font-weight: 600;
+  }
+  .compare-cell {
+    padding: 14px 20px;
+  }
+  .compare-cell.label {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    border-left: 1px solid var(--border);
+  }
+
+  /* Highlight box */
+  .highlight {
+    background: linear-gradient(135deg, rgba(217, 119, 87, 0.08) 0%, rgba(217, 119, 87, 0.02) 100%);
+    border: 1px solid var(--accent-dim);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .highlight-title {
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .warning-box {
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .warning-box .highlight-title { color: var(--warning); }
+
+  /* TOC */
+  .toc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+  .toc-title {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+  .toc-list {
+    list-style: none;
+    columns: 2;
+    column-gap: 32px;
+  }
+  @media (max-width: 768px) {
+    .toc-list { columns: 1; }
+  }
+  .toc-list li {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .toc-list a {
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--mono);
+  }
+  .toc-list a:hover { color: var(--accent); }
+  .toc-list .num { color: var(--text-muted); margin-left: 8px; }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 80px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-family: var(--mono);
+  }
+
+  /* Final package preview */
+  .package-preview {
+    background: var(--bg-card);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(217, 119, 87, 0.1);
+  }
+  .package-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+  .package-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .package-meta {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .package-contents {
+    text-align: right;
+    margin-top: 24px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span>generagent.ai</span>
+    </div>
+    <h1>GenerAgent</h1>
+    <p class="tagline">פלטפורמה שמייצרת חבילות סוכן AI מותאמות אישית לכל בעל מקצוע — מבלי לדעת קוד</p>
+    <div class="badges">
+      <span class="badge accent">Next.js 14</span>
+      <span class="badge">Anthropic API</span>
+      <span class="badge">Supabase</span>
+      <span class="badge">Claude Code</span>
+      <span class="badge">Codex CLI</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">תוכן עניינים</div>
+    <ul class="toc-list">
+      <li><a href="#problem">הבעיה והפתרון<span class="num">01</span></a></li>
+      <li><a href="#how-it-works">איך זה עובד<span class="num">02</span></a></li>
+      <li><a href="#bot">הבוט: מנוע אדפטיבי<span class="num">03</span></a></li>
+      <li><a href="#architecture">ארכיטקטורה טכנית<span class="num">04</span></a></li>
+      <li><a href="#package">התוצר הסופי<span class="num">05</span></a></li>
+      <li><a href="#legal">השכבה המשפטית<span class="num">06</span></a></li>
+      <li><a href="#design">העיצוב<span class="num">07</span></a></li>
+      <li><a href="#roadmap">לוח זמנים<span class="num">08</span></a></li>
+    </ul>
+  </div>
+
+  <!-- 01. PROBLEM -->
+  <section id="problem">
+    <h2>הבעיה והפתרון</h2>
+    <p class="section-sub">למה צריך את GenerAgent בכלל?</p>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-icon">⚠️</div>
+        <div class="card-title">הבעיה</div>
+        <div class="card-desc">
+          קל ליצור סוכן AI, אבל קשה להבין <strong>איזה</strong> סוכן באמת צריך.
+          רוב המשתמשים נכנסים ל-Claude Code עם דף ריק ולא יודעים מה לבנות —
+          לא מבינים MCP, לא יודעים לחבר OAuth, ולא מבינים מה ההבדל בין skill לבין agent.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">✨</div>
+        <div class="card-title">הפתרון</div>
+        <div class="card-desc">
+          בוט שיחה שמראיין את המשתמש <strong>כיועץ עסקי מקצועי</strong> — שואל על התפקיד,
+          סדר היום, ותחומי האחריות. בסוף, מפיק חבילת ZIP מוכנה עם כל הקבצים
+          והוראות התקנה צעד-אחר-צעד בעברית פשוטה.
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <div class="highlight-title">🎯 הצעת הערך בשורה אחת</div>
+      <div>"ספר לי על העבודה שלך — אני אכין לך את הסוכן המושלם."</div>
+    </div>
+  </section>
+
+  <!-- 02. HOW IT WORKS -->
+  <section id="how-it-works">
+    <h2>איך זה עובד</h2>
+    <p class="section-sub">7 שלבים מהכניסה ועד החבילה</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <div class="flow-title">כניסה והרשמה</div>
+          <div class="flow-desc">Google OAuth — קליק אחד, ללא סיסמאות</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <div class="flow-title">חתימה על תנאי שימוש</div>
+          <div class="flow-desc">Click-wrap עם snapshot מאובטח — חובה לפני שממשיכים</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <div class="flow-title">בחירת פלטפורמה</div>
+          <div class="flow-desc">Claude Code, Codex CLI, או שניהם</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <div class="flow-title">ראיון אדפטיבי עם הבוט (3-8 דקות)</div>
+          <div class="flow-desc">7-15 שאלות שמסתעפות לפי התשובות — לא שאלון קבוע</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content">
+          <div class="flow-title">ניתוח והמלצות</div>
+          <div class="flow-desc">Claude מנתח, ומציג 3 ארכיטיפי סוכן מותאמים</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">6</div>
+        <div class="flow-content">
+          <div class="flow-title">חיבור OAuth (אם נדרש)</div>
+          <div class="flow-desc">הוראות ויזואליות: "פתח את Gmail Settings → API → Create..."</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">7</div>
+        <div class="flow-content">
+          <div class="flow-title">הורדת החבילה</div>
+          <div class="flow-desc">ZIP עם כל הקבצים + מדריך התקנה בעברית</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03. BOT — Adaptive Engine -->
+  <section id="bot">
+    <h2>הבוט — מנוע שיחה אדפטיבי</h2>
+    <p class="section-sub">לא שאלון קבוע. הבוט מנחה את המשתמש לגלות את הצורך שלו — תוך הסתעפות לפי התשובות וגבולות קשים</p>
+
+    <div class="highlight">
+      <div class="highlight-title">💡 פילוסופיה — סוקרטי, לא דריל</div>
+      <div>
+        רוב המשתמשים לא יודעים מראש איזה סוכן הם צריכים. הבוט שואל שאלות פתוחות ומסבירה למה הוא שואל ("שאלה זו תעזור לי להבין X"),
+        ובוחר את השאלה הבאה בהתאם למה שלמד עד עכשיו. <strong>7-15 שאלות בלבד</strong>, עם early-exit כשהביטחון גבוה.
+      </div>
+    </div>
+
+    <!-- 3 phases -->
+    <h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 20px;">שלושת השלבים</h3>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">Phase 1 — Discovery</div>
+        <div class="card-desc" style="margin-bottom: 12px;">
+          <strong style="color: var(--accent);">3-4 שאלות</strong> פתוחות תמיד נשאלות.
+          המטרה: לבנות תמונה כללית של המשתמש ולזהות persona ראשוני.
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 12px; font-size: 13px; color: var(--text-dim);">
+          <div style="margin-bottom: 6px;">"ספר לי בכמה משפטים — מה אתה עושה ביום-יום?"</div>
+          <div style="margin-bottom: 6px;">"אם הייתה לך עוד שעה ביום, מה היית עושה איתה?"</div>
+          <div>"אילו אפליקציות אתה פותח הכי הרבה?"</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🌳</div>
+        <div class="card-title">Phase 2 — Deep Dive</div>
+        <div class="card-desc" style="margin-bottom: 12px;">
+          <strong style="color: var(--accent);">3-7 שאלות מסתעפות</strong> נבחרות דינמית מבנק שאלות
+          בהתאם ל-persona שזוהה.
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 12px; font-size: 13px; color: var(--text-dim);">
+          <strong style="color: var(--info);">Knowledge Worker:</strong><br>
+          "כמה אחוז מהמיילים שלך לא רלוונטיים?"<br><br>
+          <strong style="color: var(--info);">Manager:</strong><br>
+          "איך אתה עוקב אחרי משימות הצוות?"
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <div class="card-title">Phase 3 — Refinement</div>
+        <div class="card-desc" style="margin-bottom: 12px;">
+          <strong style="color: var(--accent);">1-4 שאלות גימור</strong>. כאן הבוט כבר מציג
+          המלצה ראשונית ושואל שאלות מכוונות לחידוד.
+        </div>
+        <div style="border-top: 1px solid var(--border); padding-top: 12px; font-size: 13px; color: var(--text-dim);">
+          "מתוך 3 הארכיטיפים האלה — איזה מרגיש לך הכי קרוב? וכדי לדייק, ספר לי..."
+        </div>
+      </div>
+    </div>
+
+    <!-- Branching example -->
+    <h3 style="margin-top: 40px; margin-bottom: 16px; font-size: 20px;">דוגמה ל-Branching</h3>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <div class="terminal-title">consultation-flow.txt</div>
+      </div>
+      <div class="terminal-body"><span class="accent">[Discovery]</span>
+  <span class="info">Bot:</span> "ספר לי בכמה משפטים — מה אתה עושה ביום-יום?"
+  <span class="dim">User:</span> "אני רואה חשבון עצמאי, מנהל ~40 לקוחות"
+
+  <span class="info">Bot:</span> "אם הייתה לך עוד שעה ביום, מה היית עושה איתה?"
+  <span class="dim">User:</span> "הייתי משיב למיילים בזמן... אני מפגר שבוע"
+
+  <span class="info">Bot:</span> "אילו אפליקציות אתה פותח הכי הרבה?"
+  <span class="dim">User:</span> "Gmail, Calendar, ו-Excel"
+
+  <span class="comment"># Claude מנתח: persona=knowledge-worker-solo, confidence=0.72</span>
+  <span class="comment"># נדרש Deep Dive ב-2 כיוונים: email overload + scheduling</span>
+
+<span class="accent">[Deep Dive — branched to "email overload"]</span>
+  <span class="info">Bot:</span> "מתוך המיילים שאתה מקבל ביום, איזה אחוז דורש תגובה ממשית?"
+       <span class="dim">→ שאלה זו תעזור לי להבין אם הסוכן צריך לסנן או לסכם</span>
+  <span class="dim">User:</span> "אולי 30%, השאר זה הודעות מערכת"
+
+  <span class="info">Bot:</span> "כשמגיע מייל חשוב מלקוח — איך אתה יודע שהוא חשוב?"
+  <span class="dim">User:</span> "לפי השולח. יש לי 5 לקוחות VIP"
+
+  <span class="comment"># confidence=0.91 → EARLY EXIT לשלב הבא (פילגתי 5 שאלות במקום 8)</span>
+
+<span class="accent">[Refinement]</span>
+  <span class="info">Bot:</span> "על סמך מה שספרת, אני חושב שתועיל לך אחת מ-2 חבילות:
+         [A] Email Triage Assistant — מסנן ומסכם
+         [B] Client-Focused Inbox — VIP routing + priority
+
+         איזו מרגישה יותר מתאימה?"
+  <span class="dim">User:</span> "B"
+
+  <span class="success">✓</span> סיום אחרי 7 שאלות (במקום 12 קבועות)
+  <span class="success">✓</span> ביטחון סופי: 0.94</div>
+    </div>
+
+    <!-- Guardrails -->
+    <h3 style="margin-top: 40px; margin-bottom: 16px; font-size: 20px;">גבולות קשים — אין לופ אינסופי</h3>
+
+    <div class="compare-table">
+      <div class="compare-row header">
+        <div class="compare-cell">Guardrail</div>
+        <div class="compare-cell">ערך / מטרה</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">MAX_QUESTIONS</div>
+        <div class="compare-cell"><strong style="color: var(--danger);">15</strong> — תקרה קשה. מעבר לזה הבוט סוגר עם הנתונים שיש</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">MIN_QUESTIONS</div>
+        <div class="compare-cell"><strong style="color: var(--info);">7</strong> — לא מפסיק לפני, אחרת ההמלצה רדודה</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">EARLY_EXIT_CONFIDENCE</div>
+        <div class="compare-cell"><strong style="color: var(--success);">0.85</strong> — אם הביטחון גבוה, דלג ישר ל-Refinement</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">MAX_TIME_MINUTES</div>
+        <div class="compare-cell"><strong style="color: var(--warning);">8</strong> — אם המשתמש איטי, מציע "המשך מאוחר" עם שמירת state</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">MAX_RETRIES_PER_Q</div>
+        <div class="compare-cell"><strong>2</strong> — אם התשובה לא ברורה, מנסה ניסוח אחר ואז עובר הלאה</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">FALLBACK_ARCHETYPE</div>
+        <div class="compare-cell"><code>general-assistant</code> — אם הביטחון נשאר נמוך → ברירת מחדל בטוחה</div>
+      </div>
+    </div>
+
+    <!-- Flow diagram -->
+    <h3 style="margin-top: 40px; margin-bottom: 16px; font-size: 20px;">זרימת המנוע</h3>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <div class="flow-title">Discovery (3-4 שאלות פתוחות)</div>
+          <div class="flow-desc">איסוף הקשר → זיהוי persona ראשוני ע"י Claude</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <div class="flow-title">Persona Detection (אוטומטי, ללא שאלה)</div>
+          <div class="flow-desc">Claude מחזיר confidence + 1-3 archetypes חשודים</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <div class="flow-title">Deep Dive (3-7 שאלות מסתעפות)</div>
+          <div class="flow-desc">שאלות נבחרות דינמית מבנק לפי persona + early-exit אם confidence ≥ 0.85</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <div class="flow-title">Tentative Recommendation</div>
+          <div class="flow-desc">הבוט מציג 2-3 ארכיטיפים אפשריים — לא רק רשימה אלא הצעה</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content">
+          <div class="flow-title">Refinement (1-4 שאלות גימור)</div>
+          <div class="flow-desc">חידוד + טכניות + רגישות נתונים + אישור</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">6</div>
+        <div class="flow-content">
+          <div class="flow-title">→ Build Package</div>
+          <div class="flow-desc">סה"כ 7-15 שאלות (ממוצע צפוי: 9)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question library structure -->
+    <h3 style="margin-top: 40px; margin-bottom: 16px; font-size: 20px;">מבנה השאלה בבנק</h3>
+
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <div class="terminal-title">question-bank/deep_dive_email_volume.yaml</div>
+      </div>
+      <div class="terminal-body"><span class="accent">id:</span> deep_dive_email_volume
+<span class="accent">phase:</span> deep_dive
+<span class="accent">applies_to:</span> [knowledge-worker, manager, marketer]
+<span class="accent">blocks_if_answered:</span> [d3_apps_used]
+
+<span class="accent">text_he:</span> <span class="success">"באיזה תדירות אתה בודק מיילים?"</span>
+<span class="accent">micro_explanation_he:</span> <span class="dim">"שאלה זו תעזור לי להבין אם
+                       אתה צריך סוכן שמסנן או רק מסכם"</span>
+
+<span class="accent">input_type:</span> chips
+<span class="accent">options:</span> [<span class="info">'כל שעה'</span>, <span class="info">'כמה פעמים ביום'</span>, <span class="info">'פעם ביום'</span>, <span class="info">'פחות'</span>]
+
+<span class="accent">signal_weight:</span>
+  needs_email_triage: <span class="warning">0.4</span>
+  needs_priority_inbox: <span class="warning">0.3</span>
+
+<span class="accent">follow_up_if:</span>
+  <span class="info">'כל שעה'</span>: prompt_email_overload_detail</div>
+    </div>
+  </section>
+
+  <!-- 04. ARCHITECTURE -->
+  <section id="architecture">
+    <h2>ארכיטקטורה טכנית</h2>
+    <p class="section-sub">איך המערכת בנויה מבפנים</p>
+
+    <div class="arch-diagram">
+      <div class="arch-layer">
+        <div class="arch-layer-title">→ Client Layer</div>
+        <div class="arch-boxes">
+          <div class="arch-box">Next.js 14</div>
+          <div class="arch-box">React 18</div>
+          <div class="arch-box">TypeScript</div>
+          <div class="arch-box">shadcn/ui</div>
+          <div class="arch-box">Tailwind CSS</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">→ API Layer (Edge Functions)</div>
+        <div class="arch-boxes">
+          <div class="arch-box">/auth</div>
+          <div class="arch-box">/bot</div>
+          <div class="arch-box">/analyze</div>
+          <div class="arch-box">/build</div>
+          <div class="arch-box">/download</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">→ External Services</div>
+        <div class="arch-boxes">
+          <div class="arch-box">🔐 Supabase Auth + DB</div>
+          <div class="arch-box">🤖 Anthropic Claude API</div>
+          <div class="arch-box">📦 Supabase Storage</div>
+          <div class="arch-box">📧 Resend</div>
+          <div class="arch-box">📊 Sentry</div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 20px;">בחירות מרכזיות והנמקה</h3>
+    <div class="compare-table">
+      <div class="compare-row header">
+        <div class="compare-cell">רכיב</div>
+        <div class="compare-cell">בחירה והסבר</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">Frontend</div>
+        <div class="compare-cell">Next.js 14 — SSR, edge, deployment קל ב-Vercel</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">Auth</div>
+        <div class="compare-cell">Supabase Auth + Google OAuth — חינמי עד 50K משתמשים, מאוחד עם DB</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">Database</div>
+        <div class="compare-cell">Supabase Postgres — RLS פר-משתמש, real-time, audit log</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">LLM</div>
+        <div class="compare-cell">Claude Sonnet 4.6 (בוט) + Opus 4.6 (ניתוח)</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">File Storage</div>
+        <div class="compare-cell">Supabase Storage — חבילות ZIP עם signed URLs</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">Hosting</div>
+        <div class="compare-cell">Vercel — אינטגרציה מובנית עם Next.js</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05. PACKAGE -->
+  <section id="package">
+    <h2>התוצר הסופי — חבילת הסוכן</h2>
+    <p class="section-sub">מה המשתמש מקבל בסוף התהליך</p>
+
+    <div class="package-preview">
+      <div class="package-icon">📦</div>
+      <div class="package-title">my-agent-package.zip</div>
+      <div class="package-meta">~50KB · מוכן להתקנה · עברית</div>
+
+      <div class="package-contents">
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
+            <div class="terminal-title">my-agent-package.zip</div>
+          </div>
+          <div class="terminal-body"><span class="accent">my-agent-package/</span>
+│
+├── <span class="info">README.md</span>                  <span class="comment"># הסבר כללי בעברית</span>
+├── <span class="info">INSTALL.md</span>                 <span class="comment"># מדריך התקנה צעד-אחר-צעד</span>
+├── <span class="info">LEGAL.md</span>                   <span class="comment"># הסכם חתום + hash</span>
+│
+├── <span class="accent">.claude/</span>                   <span class="comment"># עבור Claude Code</span>
+│   ├── settings.json
+│   ├── <span class="accent">agents/</span>
+│   │   └── personal-assistant.md
+│   └── <span class="accent">skills/</span>
+│       ├── <span class="accent">email-triage/</span>
+│       │   └── SKILL.md
+│       └── <span class="accent">calendar-summary/</span>
+│           └── SKILL.md
+│
+├── <span class="accent">codex/</span>                     <span class="comment"># עבור Codex CLI</span>
+│   ├── AGENTS.md
+│   └── codex.config.toml
+│
+├── <span class="accent">mcp/</span>                       <span class="comment"># MCP Connectors</span>
+│   ├── mcp.json
+│   └── README.md             <span class="comment"># הוראות OAuth</span>
+│
+└── <span class="accent">scripts/</span>
+    ├── <span class="success">install.sh</span>             <span class="comment"># Mac/Linux</span>
+    └── <span class="success">install.ps1</span>            <span class="comment"># Windows</span>
+</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-3" style="margin-top: 24px;">
+      <div class="card">
+        <div class="card-icon">📖</div>
+        <div class="card-title">INSTALL.md מותאם</div>
+        <div class="card-desc">
+          מדריך התקנה בעברית פשוטה — מותאם לרמת הטכניות שהמשתמש דיווח בבוט.
+          רמה 1 = "פתח את היישום הזה ולחץ פה". רמה 5 = פקודות bash בלבד.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔌</div>
+        <div class="card-title">הוראות OAuth ויזואליות</div>
+        <div class="card-desc">
+          אם הסוכן צריך Gmail או Calendar — מדריך מפורט עם screenshots placeholders:
+          "פתח Gmail → Settings → Developer Console → Create Project..."
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚖️</div>
+        <div class="card-title">LEGAL.md חתום</div>
+        <div class="card-desc">
+          כל חבילה כוללת snapshot של ה-TOS שהמשתמש חתם עליו,
+          IP, תאריך, וגרסה. Hash של החבילה לוודא שלא שונתה.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06. LEGAL -->
+  <section id="legal">
+    <h2>השכבה המשפטית</h2>
+    <p class="section-sub">חיוני כי המוצר יוצר קוד שירוץ אצל המשתמש</p>
+
+    <div class="warning-box">
+      <div class="highlight-title">⚠️ קריטי — דרוש ייעוץ עו"ד הייטק לפני שחרור</div>
+      <div>נוסח ה-TOS חייב לעבור התייעצות עם עו"ד ישראלי המתמחה בהייטק/AI. הסעיפים למטה הם בסיס, לא המוצר הסופי.</div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="card-title">📜 4 מסמכים</div>
+        <div class="card-desc">
+          <strong>1.</strong> Terms of Service<br>
+          <strong>2.</strong> Privacy Policy (GDPR)<br>
+          <strong>3.</strong> Per-Package Disclaimer<br>
+          <strong>4.</strong> AI Disclaimer
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔒 שמירת ראיות</div>
+        <div class="card-desc">
+          לכל חתימה: <code>user_id</code>, <code>ip</code>, <code>user_agent</code>,
+          <code>timestamp</code>, ו-<code>document_snapshot</code> מלא.
+          Click-wrap מוכר ע"י בית משפט ישראלי.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🛡️ סעיפים חיוניים</div>
+        <div class="card-desc">
+          No Warranty (AS IS) · Limitation of Liability · User Responsibility ·
+          No Financial/Medical Advice · Indemnification · Israeli Law
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📦 לכל חבילה</div>
+        <div class="card-desc">
+          קובץ <code>LEGAL.md</code> מצורף עם: שם המשתמש, תאריך החתימה, IP,
+          גרסת ה-TOS, ו-Hash של החבילה לאימות.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07. DESIGN -->
+  <section id="design">
+    <h2>העיצוב</h2>
+    <p class="section-sub">בסגנון Claude Code — מינימליסטי, חשוך, ממוקד</p>
+
+    <div class="grid grid-4">
+      <div class="card" style="background: #0A0A0A;">
+        <div class="card-title" style="color: #E5E5E5;">#0A0A0A</div>
+        <div class="card-desc">רקע ראשי</div>
+      </div>
+      <div class="card" style="background: #141414;">
+        <div class="card-title" style="color: #E5E5E5;">#141414</div>
+        <div class="card-desc">רקע כרטיסים</div>
+      </div>
+      <div class="card" style="background: #D97757;">
+        <div class="card-title" style="color: #0A0A0A;">#D97757</div>
+        <div class="card-desc" style="color: #2A2A2A;">צבע מבטא</div>
+      </div>
+      <div class="card" style="background: #E5E5E5;">
+        <div class="card-title" style="color: #0A0A0A;">#E5E5E5</div>
+        <div class="card-desc" style="color: #525252;">טקסט ראשי</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top: 16px;">
+      <div class="card">
+        <div class="card-title">טיפוגרפיה — UI</div>
+        <div class="card-desc" style="font-family: Inter, sans-serif; font-size: 16px;">
+          Inter / SF Pro — לכל ה-UI<br>
+          <span style="color: var(--text-dim);">קריאות גבוהה, מודרני</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">טיפוגרפיה — קוד/בוט</div>
+        <div class="card-desc" style="font-family: var(--mono); font-size: 16px;">
+          JetBrains Mono — הבוט והקוד<br>
+          <span style="color: var(--text-dim);">תחושה של טרמינל, כמו Claude Code</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 08. ROADMAP -->
+  <section id="roadmap">
+    <h2>לוח זמנים</h2>
+    <p class="section-sub">12 שבועות מ-zero ל-MVP</p>
+
+    <div class="grid grid-4">
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <div class="card-title">Phase 0</div>
+        <div class="card-desc">
+          <strong>שבועות 1-3</strong><br>
+          Setup · Auth · Legal Gate · ייעוץ עו"ד
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤖</div>
+        <div class="card-title">Phase 1</div>
+        <div class="card-desc">
+          <strong>שבועות 4-7</strong><br>
+          Bot · Claude integration · Analyzer · ארכיטיפים
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📦</div>
+        <div class="card-title">Phase 2</div>
+        <div class="card-desc">
+          <strong>שבועות 8-10</strong><br>
+          Package Builder · INSTALL.md · Download flow
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🚀</div>
+        <div class="card-title">Phase 3</div>
+        <div class="card-desc">
+          <strong>שבועות 11-12</strong><br>
+          Dashboard · Emails · Soft launch (50 משתמשים)
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight" style="margin-top: 32px;">
+      <div class="highlight-title">🎯 המטרה בסוף 12 שבועות</div>
+      <div>
+        מערכת עובדת ש-50 משתמשים נכנסים, עוברים את הבוט, ומורידים חבילה.
+        מתוכם — לפחות 35 (70%) מצליחים להתקין את הסוכן ולהפעיל אותו.
+      </div>
+    </div>
+  </section>
+
+  <!-- DECISIONS -->
+  <section>
+    <h2>החלטות פתוחות</h2>
+    <p class="section-sub">מה דורש את האישור שלך לפני שמתחילים</p>
+
+    <div class="compare-table">
+      <div class="compare-row header">
+        <div class="compare-cell">החלטה</div>
+        <div class="compare-cell">סטטוס / המלצה</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">פלטפורמה</div>
+        <div class="compare-cell" style="color: var(--success);">✅ Next.js (אושר)</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">פלטפורמות יעד</div>
+        <div class="compare-cell" style="color: var(--success);">✅ Claude Code + Codex (אושר)</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">אימות</div>
+        <div class="compare-cell" style="color: var(--warning);">⏳ מומלץ: Supabase + Google OAuth</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">תמחור</div>
+        <div class="compare-cell" style="color: var(--warning);">⏳ מומלץ: Freemium + $19 Pro</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">ייעוץ עו"ד</div>
+        <div class="compare-cell" style="color: var(--danger);">⚠️ הכרחי לפני שחרור</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-cell label">שם דומיין</div>
+        <div class="compare-cell" style="color: var(--warning);">⏳ generagent.ai / .io?</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    GenerAgent PRD · v1.0 · נוצר ב-8 ביוני 2026 · עבור OTE Group
+  </footer>
+
+</div>
+</body>
+</html>

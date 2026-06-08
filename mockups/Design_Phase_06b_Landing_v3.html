@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · איזה סוכן AI אתה צריך?</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --indigo: #5E6AD2;
+    --indigo-hover: #7B85DC;
+    --indigo-text: #818CF8;
+    --indigo-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --success: #4ADE80;
+    --warm: #F5E6D3;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Page ambient (subtle) */
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: -1;
+  }
+  body::before { top: -15%; right: -10%; width: 540px; height: 540px; background: rgba(94,106,210,0.18); }
+  body::after  { bottom: -15%; left: -10%; width: 460px; height: 460px; background: rgba(192,132,252,0.10); }
+
+  .container { max-width: 1180px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+  /* ============================================
+     NAV — minimal
+     ============================================ */
+  .nav {
+    backdrop-filter: blur(20px);
+    background: rgba(2,2,3,0.6);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    flex-shrink: 0;
+  }
+  .nav-inner {
+    max-width: 1180px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--indigo), var(--magenta));
+    box-shadow: 0 0 14px rgba(94,106,210,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 13px;
+  }
+  .brand-name { font-weight: 700; font-size: 15px; letter-spacing: -0.005em; }
+  .nav-side { display: flex; gap: 4px; align-items: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    text-decoration: none;
+    white-space: nowrap; line-height: 1.2;
+    position: relative; overflow: hidden;
+  }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .btn-lg { padding: 14px 28px; font-size: 15px; border-radius: 12px; }
+  .btn-primary {
+    background: var(--indigo); color: #fff;
+    box-shadow: 0 0 28px rgba(94,106,210,0.3), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .btn-primary::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 600ms var(--ease);
+  }
+  .btn-primary:hover { background: var(--indigo-hover); transform: translateY(-1px); }
+  .btn-primary:hover::before { left: 100%; }
+  .btn-ghost { background: transparent; color: var(--fg-dim); }
+  .btn-ghost:hover { color: var(--fg); background: var(--surface); }
+  .arrow { display: inline-block; transition: transform 200ms var(--ease); }
+  .btn:hover .arrow { transform: translateX(-3px); }
+
+  /* ============================================
+     HERO — fills remaining viewport
+     ============================================ */
+  .hero {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 48px;
+    padding: 40px 0;
+    position: relative;
+  }
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 32px; padding: 32px 0; text-align: center; }
+  }
+
+  .hero-content {
+    max-width: 480px;
+  }
+  @media (max-width: 900px) { .hero-content { margin: 0 auto; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--indigo-text);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.25);
+    border-radius: 20px; padding: 5px 12px;
+    margin-bottom: 24px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 10px var(--indigo); }
+
+  h1 {
+    font-size: clamp(38px, 5.5vw, 64px);
+    font-weight: 700;
+    letter-spacing: -0.032em;
+    line-height: 1.02;
+    margin-bottom: 20px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B0B5C0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  h1 .accent {
+    background: linear-gradient(120deg, var(--indigo-bright) 0%, var(--magenta) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    color: var(--fg-dim);
+    font-size: clamp(15px, 1.3vw, 17px);
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+  .hero-cta {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 900px) { .hero-cta { justify-content: center; } }
+  .hero-meta {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+  }
+  @media (max-width: 900px) { .hero-meta { justify-content: center; } }
+  .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .hero-meta span::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+  }
+
+  /* ============================================
+     ORB — minimalist, no stage frame
+     Just the orb floating in space with its glow
+     ============================================ */
+  .orb-wrap {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 380px;
+  }
+  @media (max-width: 900px) {
+    .orb-wrap { min-height: 280px; }
+  }
+
+  .orb {
+    position: relative;
+    width: 280px; height: 280px;
+    will-change: transform;
+    transform-style: preserve-3d;
+    transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Track wrappers — for cursor following inner elements */
+  .orb-track {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    will-change: transform;
+    transition: transform 150ms linear;
+  }
+  @media (max-width: 900px) { .orb { width: 220px; height: 220px; } }
+
+  .orb-haze { position: absolute; inset: -120%; background: radial-gradient(circle, rgba(192,132,252,0.20) 0%, rgba(94,106,210,0.12) 30%, transparent 65%); border-radius: 50%; filter: blur(40px); animation: haze-pulse 4.5s ease-in-out infinite; }
+  @keyframes haze-pulse { 0%, 100% { transform: scale(0.85); opacity: 0.5; } 50% { transform: scale(1.25); opacity: 1.00; } }
+  .orb-rim { position: absolute; inset: -8%; border-radius: 50%; background: radial-gradient(circle, transparent 60%, rgba(192,132,252,0.30) 75%, rgba(94,106,210,0.18) 85%, transparent 100%); filter: blur(2px); animation: rim-pulse 4.5s ease-in-out infinite; }
+  @keyframes rim-pulse { 0%, 100% { opacity: 0.4; transform: scale(0.97); } 50% { opacity: 1.0; transform: scale(1.04); } }
+  .orb-sphere {
+    position: absolute; inset: 0; border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 30%, rgba(255,255,255,0.35) 0%, transparent 18%),
+      radial-gradient(circle at 38% 30%, rgba(245,230,211,0.45) 0%, rgba(192,132,252,0.20) 25%, transparent 50%),
+      radial-gradient(circle at 50% 50%, #4B56B8 0%, #2E3478 50%, #1A1F4F 85%, #0A0E2A 100%);
+    box-shadow:
+      inset -25px -35px 80px rgba(0,0,0,0.7),
+      inset 20px 20px 60px rgba(192,132,252,0.15),
+      0 0 80px rgba(94,106,210,0.5),
+      0 0 160px rgba(192,132,252,0.2);
+    animation: orb-breathe 4.5s ease-in-out infinite;
+  }
+  @keyframes orb-breathe { 0%, 100% { transform: scale(0.93); } 50% { transform: scale(1.07); } }
+  .orb-soul {
+    position: absolute; inset: 18%; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(192,132,252,0.8) 0%, rgba(94,106,210,0.4) 40%, transparent 70%);
+    filter: blur(8px); mix-blend-mode: screen;
+    animation: soul-wander 5s ease-in-out infinite;
+  }
+  @keyframes soul-wander { 0%, 100% { transform: translate(0%, 0%) scale(0.8); opacity: 0.6; } 25% { transform: translate(15%, -10%) scale(1.0); opacity: 0.95; } 50% { transform: translate(-8%, 12%) scale(1.1); opacity: 1.0; } 75% { transform: translate(-15%, -5%) scale(0.9); opacity: 0.8; } }
+  .orb-flow {
+    position: absolute; inset: 2%; border-radius: 50%;
+    background:
+      radial-gradient(ellipse 60% 80% at 30% 70%, rgba(192,132,252,0.35) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 70% at 70% 30%, rgba(103,232,249,0.20) 0%, transparent 45%),
+      radial-gradient(ellipse 70% 50% at 50% 80%, rgba(94,106,210,0.30) 0%, transparent 50%);
+    mix-blend-mode: screen; filter: blur(4px);
+    animation: flow-shift 6s linear infinite;
+  }
+  @keyframes flow-shift { 0% { transform: rotate(0deg) scale(1.0); } 50% { transform: rotate(180deg) scale(1.15); } 100% { transform: rotate(360deg) scale(1.0); } }
+  .orb-spec {
+    position: absolute; top: 22%; left: 32%; width: 18%; height: 14%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 30%, transparent 60%);
+    border-radius: 50%; filter: blur(3px);
+    animation: spec-shimmer 4.5s ease-in-out infinite;
+  }
+  @keyframes spec-shimmer { 0%, 100% { opacity: 0.5; transform: translate(0,0) scale(0.85); } 50% { opacity: 1.0; transform: translate(8%, -4%) scale(1.1); } }
+
+  /* ============================================
+     FOOTER — micro
+     ============================================ */
+  footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    padding: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .footer-inner {
+    max-width: 1180px; margin: 0 auto; padding: 0 24px;
+    display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .footer-links { display: flex; gap: 18px; }
+  .footer-links a {
+    color: var(--fg-muted); text-decoration: none;
+    transition: color 200ms var(--ease);
+  }
+  .footer-links a:hover { color: var(--fg-dim); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .orb-haze, .orb-rim, .orb-sphere, .orb-spec, .orb-soul, .orb-flow {
+      animation-duration: 24s !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand">
+      <div class="brand-mark">G</div>
+      <div class="brand-name">GenerAgent</div>
+    </a>
+    <div class="nav-side">
+      <button class="btn btn-ghost btn-sm">התחבר</button>
+      <button class="btn btn-primary btn-sm">התחל <span class="arrow">←</span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<main class="container hero">
+
+  <div class="hero-content">
+    <div class="eyebrow">agent consulting · v1.0</div>
+    <h1>איזה סוכן AI<br><span class="accent">אתה באמת צריך?</span></h1>
+    <p class="hero-sub">
+      ליצור סוכן זה קל. להבין <strong style="color:var(--fg);">איזה</strong> סוכן יעזור לך — זו השאלה.
+      נראיין אותך כיועץ, נאפיין את הצרכים, ונמסור חבילת התקנה מוכנה ל-Claude Code או Codex CLI.
+    </p>
+    <div class="hero-cta">
+      <button class="btn btn-primary btn-lg">התחל ייעוץ <span class="arrow">←</span></button>
+    </div>
+    <div class="hero-meta">
+      <span>ראיון בעברית · 5 דק׳</span>
+      <span>חבילת ZIP להורדה</span>
+      <span>חינם להתחיל</span>
+    </div>
+  </div>
+
+  <div class="orb-wrap">
+    <div class="orb" id="orb">
+      <div class="orb-haze"></div>
+      <div class="orb-rim"></div>
+      <div class="orb-sphere"></div>
+      <div class="orb-track" id="soul-track"><div class="orb-soul"></div></div>
+      <div class="orb-flow"></div>
+      <div class="orb-track" id="spec-track"><div class="orb-spec"></div></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>© 2026 GenerAgent · OTE Group</div>
+    <div class="footer-links">
+      <a href="#">תנאי שימוש</a>
+      <a href="#">פרטיות</a>
+      <a href="#">תיעוד</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ============================================
+     ORB cursor tracking — 3 layers
+     1. Whole orb: subtle 3D tilt + translate
+     2. Soul (inner glow): drifts toward cursor
+     3. Spec (highlight): subtly shifts toward cursor
+     Uses lerp for smooth motion. Listens on the whole viewport
+     so the orb follows you anywhere on the page.
+     ============================================ */
+  const orb = document.getElementById('orb');
+  const soulTrack = document.getElementById('soul-track');
+  const specTrack = document.getElementById('spec-track');
+
+  // -1..1 normalized cursor position relative to orb center
+  let tX = 0, tY = 0;   // target
+  let cX = 0, cY = 0;   // current (lerped)
+  let raf = null;
+
+  function onMove(e) {
+    const r = orb.getBoundingClientRect();
+    const ox = r.left + r.width / 2;
+    const oy = r.top  + r.height / 2;
+    // dx/dy in px, then normalized to ~window-sized range
+    const dx = e.clientX - ox;
+    const dy = e.clientY - oy;
+    // map to -1..1 with soft clamp (using window size as reference)
+    tX = Math.max(-1, Math.min(1, dx / (window.innerWidth  * 0.5)));
+    tY = Math.max(-1, Math.min(1, dy / (window.innerHeight * 0.5)));
+    if (!raf) raf = requestAnimationFrame(loop);
+  }
+
+  function loop() {
+    // Lerp toward target
+    cX += (tX - cX) * 0.08;
+    cY += (tY - cY) * 0.08;
+
+    // 1. Whole orb: subtle 3D tilt + translate
+    const tiltX = cY * -6;          // tilt up when cursor below, down when above
+    const tiltY = cX *  6;          // tilt right when cursor right
+    const moveX = cX * 14;          // translate up to 14px
+    const moveY = cY * 10;
+    orb.style.transform =
+      `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate3d(${moveX}px, ${moveY}px, 0)`;
+
+    // 2. Soul: drifts toward cursor (the "consciousness" looks at you)
+    soulTrack.style.transform = `translate3d(${cX * 14}%, ${cY * 10}%, 0)`;
+
+    // 3. Spec highlight: drifts toward cursor (subtle, half intensity)
+    specTrack.style.transform = `translate3d(${cX * 8}%, ${cY * 6}%, 0)`;
+
+    if (Math.abs(tX - cX) > 0.002 || Math.abs(tY - cY) > 0.002) {
+      raf = requestAnimationFrame(loop);
+    } else {
+      raf = null;
+    }
+  }
+
+  // Track cursor across the entire viewport (not just orb area)
+  window.addEventListener('mousemove', onMove, { passive: true });
+
+  // When cursor leaves the page, ease back to center
+  document.addEventListener('mouseleave', () => { tX = 0; tY = 0; if (!raf) raf = requestAnimationFrame(loop); });
+</script>
+
+</body>
+</html>

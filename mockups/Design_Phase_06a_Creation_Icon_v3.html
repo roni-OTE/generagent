@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: #020203;
+        background-image:
+          radial-gradient(ellipse at 35% 50%, rgba(94,106,210,0.16), transparent 55%),
+          radial-gradient(ellipse at 65% 50%, rgba(192,132,252,0.12), transparent 55%),
+          linear-gradient(to bottom, #0A0A0F 0%, #050506 30%, #020203 100%);
+      }
+      .stage {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .caption {
+        position: absolute;
+        bottom: 70px;
+        left: 0; right: 0;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        color: rgba(192,132,252,0.7);
+        font-size: 24px;
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+      }
+      .caption::before { content: '◆ '; color: rgba(192,132,252,1); }
+
+      /* Help GSAP-style smoothing on strokes */
+      svg path { vector-effect: non-scaling-stroke; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920" data-height="1080">
+      <div class="stage clip" id="stage" data-start="0" data-duration="4" data-track-index="1">
+
+        <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">
+          <defs>
+            <!-- Adam stroke gradient: warm cream -->
+            <linearGradient id="adamStroke" x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stop-color="#9C7E5A"/>
+              <stop offset="60%" stop-color="#D4B896"/>
+              <stop offset="100%" stop-color="#F5E6D3"/>
+            </linearGradient>
+
+            <!-- God/AI stroke gradient: indigo to bright -->
+            <linearGradient id="aiStroke" x1="100%" y1="50%" x2="0%" y2="50%">
+              <stop offset="0%" stop-color="#3A4296"/>
+              <stop offset="60%" stop-color="#5E6AD2"/>
+              <stop offset="100%" stop-color="#A5B4FC"/>
+            </linearGradient>
+
+            <!-- Spark gradients -->
+            <radialGradient id="sparkCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+              <stop offset="25%" stop-color="#F5E6D3" stop-opacity="0.95"/>
+              <stop offset="55%" stop-color="#C084FC" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#5E6AD2" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="sparkOuter" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#C084FC" stop-opacity="0.5"/>
+              <stop offset="60%" stop-color="#C084FC" stop-opacity="0.1"/>
+              <stop offset="100%" stop-color="#C084FC" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Bloom filter -->
+            <filter id="lineBloom" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="bigBloom" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="20" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Soft ambient halo behind meeting point -->
+          <circle id="halo" cx="960" cy="540" r="280"
+                  fill="url(#sparkOuter)" opacity="0.25" filter="url(#bigBloom)"/>
+
+          <!-- ============ ADAM (left, line-art, palm-down hand, index pointing right) ============ -->
+          <g id="adam"
+             stroke="url(#adamStroke)"
+             stroke-width="5"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             fill="none"
+             filter="url(#lineBloom)">
+
+            <!-- Main hand outline: wrist → back of hand → extended index → fingertip → bottom of index → curl of other fingers → thumb edge → back to wrist -->
+            <path d="
+              M 60 510
+              Q 70 490, 110 482
+              L 240 475
+              Q 360 470, 460 478
+              Q 540 484, 620 498
+              L 760 522
+              Q 850 540, 920 552
+              Q 935 555, 928 564
+              Q 855 575, 760 568
+              L 620 553
+              Q 540 550, 475 558
+              Q 455 568, 445 590
+              Q 432 622, 405 642
+              Q 365 662, 305 660
+              Q 250 656, 200 638
+              Q 140 615, 95 590
+              Q 65 568, 60 540
+              Z
+            "/>
+
+            <!-- Knuckle bumps (folded fingers visible on outline) -->
+            <path d="M 470 580 Q 490 595, 510 588"/>
+            <path d="M 440 605 Q 462 622, 488 614"/>
+            <path d="M 410 630 Q 432 645, 458 638"/>
+
+            <!-- Crease at base of extended index finger -->
+            <path d="M 480 540 Q 510 555, 545 548" opacity="0.6"/>
+
+            <!-- Thumb hint (small curve on bottom edge) -->
+            <path d="M 200 638 Q 175 658, 165 650 Q 162 642, 180 632" opacity="0.85"/>
+
+            <!-- Subtle tendon line on back of hand -->
+            <path d="M 320 485 L 360 478" opacity="0.4" stroke-width="3"/>
+            <path d="M 380 482 L 415 476" opacity="0.4" stroke-width="3"/>
+          </g>
+
+          <!-- Adam's fingertip dot (subtle) -->
+          <circle id="adamTip" cx="928" cy="558" r="6" fill="#F5E6D3" opacity="0.9" filter="url(#lineBloom)"/>
+
+          <!-- ============ GOD / AI (right, line-art, palm-down, index pointing left, more taut) ============ -->
+          <g id="god"
+             stroke="url(#aiStroke)"
+             stroke-width="5"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             fill="none"
+             filter="url(#lineBloom)">
+
+            <!-- Main outline: wrist (right) → back of hand → extended index → fingertip → bottom → curl → thumb → back -->
+            <path d="
+              M 1860 510
+              Q 1850 490, 1810 482
+              L 1680 475
+              Q 1560 470, 1460 478
+              Q 1380 484, 1300 498
+              L 1160 522
+              Q 1070 540, 1000 552
+              Q 985 555, 992 564
+              Q 1065 575, 1160 568
+              L 1300 553
+              Q 1380 550, 1445 558
+              Q 1465 568, 1475 590
+              Q 1488 622, 1515 642
+              Q 1555 662, 1615 660
+              Q 1670 656, 1720 638
+              Q 1780 615, 1825 590
+              Q 1855 568, 1860 540
+              Z
+            "/>
+
+            <!-- Knuckle bumps -->
+            <path d="M 1450 580 Q 1430 595, 1410 588"/>
+            <path d="M 1480 605 Q 1458 622, 1432 614"/>
+            <path d="M 1510 630 Q 1488 645, 1462 638"/>
+
+            <!-- Crease at base of extended index -->
+            <path d="M 1440 540 Q 1410 555, 1375 548" opacity="0.6"/>
+
+            <!-- Thumb (more extended, tense) -->
+            <path d="M 1720 638 Q 1745 658, 1755 650 Q 1758 642, 1740 632" opacity="0.85"/>
+
+            <!-- Tendons (more visible — God is taut) -->
+            <path d="M 1600 485 L 1560 478" opacity="0.45" stroke-width="3"/>
+            <path d="M 1540 482 L 1505 476" opacity="0.45" stroke-width="3"/>
+            <path d="M 1480 484 L 1450 480" opacity="0.45" stroke-width="3"/>
+          </g>
+
+          <!-- God's fingertip dot -->
+          <circle id="godTip" cx="992" cy="558" r="6" fill="#C7D2FE" opacity="0.9" filter="url(#lineBloom)"/>
+
+          <!-- ============ ENERGY ARC between fingertips ============ -->
+          <path id="energyArc"
+                d="M 928 558 Q 960 540, 992 558"
+                stroke="url(#sparkCore)"
+                stroke-width="0"
+                fill="none"
+                stroke-linecap="round"
+                opacity="0"
+                filter="url(#lineBloom)"/>
+
+          <!-- ============ SPARK at meeting point ============ -->
+          <g id="sparkGroup" opacity="0" style="transform-origin: 960px 549px;">
+            <circle cx="960" cy="549" r="60" fill="url(#sparkOuter)" opacity="0.6" filter="url(#bigBloom)"/>
+            <circle cx="960" cy="549" r="22" fill="url(#sparkCore)" filter="url(#lineBloom)"/>
+            <circle cx="960" cy="549" r="5" fill="#FFFFFF"/>
+          </g>
+        </svg>
+
+        <div class="caption">GenerAgent &middot; thinking</div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Initial: hands slightly apart
+      gsap.set("#adam",   { x: -30, transformOrigin: "0% 50%" });
+      gsap.set("#god",    { x:  30, transformOrigin: "100% 50%" });
+      gsap.set("#adamTip", { x: -30 });
+      gsap.set("#godTip",  { x:  30 });
+      gsap.set("#sparkGroup", { opacity: 0, scale: 0.3 });
+      gsap.set("#halo", { opacity: 0.15, scale: 0.85, transformOrigin: "960px 549px" });
+      gsap.set("#energyArc", { opacity: 0, strokeWidth: 0 });
+
+      // PHASE 1: Approach (0 → 1.6s)
+      tl.to(["#adam","#adamTip"], { x: 0, duration: 1.6, ease: "power2.inOut" }, 0);
+      tl.to(["#god","#godTip"],   { x: 0, duration: 1.6, ease: "power2.inOut" }, 0);
+      tl.to("#halo", { opacity: 0.45, scale: 1.1, duration: 1.6, ease: "sine.inOut" }, 0);
+
+      // PHASE 2: Spark moment (1.6 → 2.1s)
+      tl.to("#energyArc", { opacity: 0.9, strokeWidth: 4, duration: 0.4, ease: "power3.out" }, 1.6);
+      tl.to("#sparkGroup", { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, 1.65);
+      tl.to("#halo", { opacity: 0.9, scale: 1.4, duration: 0.5, ease: "power2.out" }, 1.6);
+
+      // Hold the moment briefly
+      tl.to({}, { duration: 0.3 }, 2.1);
+
+      // PHASE 3: Retreat (2.4 → 4s)
+      tl.to(["#adam","#adamTip"], { x: -30, duration: 1.6, ease: "power2.inOut" }, 2.4);
+      tl.to(["#god","#godTip"],   { x:  30, duration: 1.6, ease: "power2.inOut" }, 2.4);
+      tl.to("#sparkGroup", { opacity: 0, scale: 0.3, duration: 0.8, ease: "power2.in" }, 2.4);
+      tl.to("#energyArc",  { opacity: 0, strokeWidth: 0, duration: 0.6, ease: "power2.in" }, 2.4);
+      tl.to("#halo", { opacity: 0.15, scale: 0.85, duration: 1.6, ease: "sine.inOut" }, 2.4);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

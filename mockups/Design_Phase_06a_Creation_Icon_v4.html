@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Creation Icon v4 (Adobe Stock + GSAP)</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=IBM+Plex+Sans+Hebrew:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --accent: #5E6AD2;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+  }
+  body {
+    background: var(--bg-deep);
+    background-image:
+      radial-gradient(ellipse at 30% 50%, rgba(94,106,210,0.15), transparent 55%),
+      radial-gradient(ellipse at 70% 50%, rgba(192,132,252,0.10), transparent 55%),
+      linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Ambient blobs */
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: -1; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); opacity: 0.5; }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); opacity: 0.5; }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  .header { text-align: center; padding: 20px 0 40px; }
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #818CF8;
+    background: rgba(94,106,210,0.1);
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px;
+    padding: 5px 12px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  h1 {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .sub {
+    color: var(--fg-dim);
+    font-size: 15px;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  /* =========================================
+     THE STAR — Creation Icon Stage
+     ========================================= */
+  .stage {
+    position: relative;
+    margin: 32px auto;
+    max-width: 720px;
+    background:
+      radial-gradient(ellipse at center, rgba(192,132,252,0.06) 0%, transparent 65%),
+      linear-gradient(135deg, #0A0A0F 0%, #050506 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 48px 32px 64px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 80px rgba(94,106,210,0.08);
+  }
+
+  /* Ambient blob inside stage that pulses with the spark */
+  .stage-halo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(circle, rgba(192,132,252,0.30) 0%, rgba(94,106,210,0.15) 40%, transparent 75%);
+    filter: blur(40px);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* The image container — holds the Adobe Stock illustration */
+  .icon-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 580px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  /*
+    The licensed Adobe Stock illustration.
+    Asset #469857769 — "simple line art illustration of robotic and human hands touching each other"
+    Licensed via Adobe Stock — usage rights confirmed via asset_license_and_download_stock.
+    Style: line-art on white background → we invert to white-on-dark for aurora.
+  */
+  .hands-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Invert white-bg art to white-on-transparent for dark UI */
+    filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 20px rgba(94,106,210,0.4));
+    mix-blend-mode: screen;
+    opacity: 0.95;
+    transform-origin: center;
+  }
+
+  /* The spark/glow at the meeting point (where the fingers touch) — center of the image */
+  .spark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80px;
+    height: 80px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .spark-core {
+    position: absolute;
+    inset: 30px;
+    background: radial-gradient(circle, #FFFFFF 0%, #F5E6D3 25%, #C084FC 60%, transparent 100%);
+    border-radius: 50%;
+    filter: blur(2px);
+  }
+  .spark-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(192,132,252,0.5) 0%, rgba(94,106,210,0.2) 50%, transparent 80%);
+    border-radius: 50%;
+    filter: blur(8px);
+  }
+
+  /* Caption */
+  .caption {
+    text-align: center;
+    margin-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(192,132,252,0.7);
+    font-size: 14px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    z-index: 1;
+    position: relative;
+  }
+  .caption::before { content: '◆ '; color: rgba(192,132,252,1); }
+
+  /* Source credit */
+  .credit {
+    text-align: center;
+    margin-top: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #5E636E;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .credit a { color: #71778A; text-decoration: none; }
+
+  /* =========================================
+     Variants showcase
+     ========================================= */
+  .variants {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 48px;
+  }
+  @media (max-width: 768px) { .variants { grid-template-columns: 1fr; } }
+
+  .v-card {
+    background: var(--bg-elev);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+  .v-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #818CF8;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .v-icon {
+    width: 100%;
+    aspect-ratio: 1/1;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .v-icon .hands-img { filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 8px rgba(94,106,210,0.5)); }
+  .v-icon .spark { width: 36px; height: 36px; }
+  .v-icon .spark-core { inset: 12px; }
+
+  .v-icon.small { max-width: 120px; margin: 0 auto 12px; }
+  .v-icon.small .spark { width: 20px; height: 20px; }
+  .v-icon.small .spark-core { inset: 7px; }
+
+  .v-desc {
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 1.5;
+  }
+
+  /* =========================================
+     Bot bubble integration preview
+     ========================================= */
+  .integration {
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-base);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+  }
+  .integration-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #818CF8;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .bubble-bot, .bubble-user {
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    max-width: 75%;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .bubble-bot {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--fg);
+    margin-right: auto;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--accent), #7B85DC);
+    color: #fff;
+    margin-left: auto;
+    margin-right: 0;
+    text-align: right;
+    box-shadow: 0 4px 16px rgba(94,106,210,0.25);
+  }
+  .bubble-thinking {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 14px;
+    padding: 10px 16px;
+    max-width: 75%;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-right: auto;
+  }
+  .bubble-thinking .icon-mini {
+    width: 56px;
+    height: 28px;
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .bubble-thinking .icon-mini .hands-img {
+    filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 4px rgba(192,132,252,0.6));
+    object-position: center;
+  }
+  .bubble-thinking .icon-mini .spark { width: 14px; height: 14px; }
+  .bubble-thinking .icon-mini .spark-core { inset: 5px; }
+  .bubble-thinking .think-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--magenta);
+    direction: ltr;
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="tag">PHASE 06A · CREATION ICON · V4</div>
+    <h1>הידיים אמיתיות.<br>הקסם הוא ב-aurora מסביב.</h1>
+    <p class="sub">איור Adobe Stock מורשה (#469857769) — human + robotic hands touching. ה-aurora מוסיף glow פועם, breathing, ו-ambient halo דרך GSAP timeline.</p>
+  </div>
+
+  <!-- HERO ICON -->
+  <div class="stage" id="hero-stage">
+    <div class="stage-halo" id="hero-halo"></div>
+
+    <div class="icon-wrap" id="hero-icon">
+      <img class="hands-img" id="hero-img"
+           src="https://t4.ftcdn.net/jpg/04/69/85/77/240_F_469857769_TSyVj8oIqjVuxz5CPQQLXBle7wjJjZlK.jpg"
+           alt="Human and robotic hands touching">
+      <div class="spark" id="hero-spark">
+        <div class="spark-glow"></div>
+        <div class="spark-core"></div>
+      </div>
+    </div>
+
+    <div class="caption">GenerAgent · thinking</div>
+  </div>
+
+  <p class="credit">Illustration: Adobe Stock #469857769 · Licensed</p>
+
+  <!-- VARIANTS GRID -->
+  <h2 style="text-align: center; margin: 56px 0 24px; font-size: 22px; font-weight: 700;">
+    3 וריאנטים לפי קונטקסט
+  </h2>
+  <div class="variants">
+    <div class="v-card">
+      <div class="v-label">→ HERO · WELCOME</div>
+      <div class="v-icon" data-variant="hero">
+        <img class="hands-img"
+             src="https://t4.ftcdn.net/jpg/04/69/85/77/240_F_469857769_TSyVj8oIqjVuxz5CPQQLXBle7wjJjZlK.jpg"
+             alt="hero">
+        <div class="spark"><div class="spark-glow"></div><div class="spark-core"></div></div>
+      </div>
+      <div class="v-desc">איטי · 4 שניות · להתחלת שיחה</div>
+    </div>
+
+    <div class="v-card">
+      <div class="v-label">→ THINKING · INLINE</div>
+      <div class="v-icon" data-variant="thinking">
+        <img class="hands-img"
+             src="https://t4.ftcdn.net/jpg/04/69/85/77/240_F_469857769_TSyVj8oIqjVuxz5CPQQLXBle7wjJjZlK.jpg"
+             alt="thinking">
+        <div class="spark"><div class="spark-glow"></div><div class="spark-core"></div></div>
+      </div>
+      <div class="v-desc">מהיר · 2.4 שניות · בועת חשיבה</div>
+    </div>
+
+    <div class="v-card">
+      <div class="v-label">→ MICRO · SIDEBAR</div>
+      <div class="v-icon small" data-variant="micro">
+        <img class="hands-img"
+             src="https://t4.ftcdn.net/jpg/04/69/85/77/240_F_469857769_TSyVj8oIqjVuxz5CPQQLXBle7wjJjZlK.jpg"
+             alt="micro">
+        <div class="spark"><div class="spark-glow"></div><div class="spark-core"></div></div>
+      </div>
+      <div class="v-desc">קטן · 2 שניות · indicator</div>
+    </div>
+  </div>
+
+  <!-- INTEGRATION DEMO -->
+  <div class="integration">
+    <div class="integration-label">→ INTEGRATION: BOT BUBBLE WITH NEW ICON</div>
+
+    <div class="bubble-bot">הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?</div>
+    <div class="bubble-user">הייתי משיב למיילים בזמן.</div>
+    <div class="bubble-bot">עכשיו ספר לי — אילו כלים אתה משתמש?</div>
+    <div class="bubble-user">Gmail, Calendar, Notion.</div>
+
+    <div class="bubble-thinking">
+      <div class="icon-mini" data-variant="thinking">
+        <img class="hands-img"
+             src="https://t4.ftcdn.net/jpg/04/69/85/77/240_F_469857769_TSyVj8oIqjVuxz5CPQQLXBle7wjJjZlK.jpg"
+             alt="thinking" style="object-fit: cover;">
+        <div class="spark"><div class="spark-glow"></div><div class="spark-core"></div></div>
+      </div>
+      <div class="think-text">analyzing · 5 signals · confidence rising</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ============================================
+  // GSAP Timelines per variant
+  // ============================================
+
+  // Helper: build a thinking-pulse timeline for a given icon set
+  function buildPulse(rootSelector, durationSec) {
+    const root = document.querySelector(rootSelector);
+    if (!root) return;
+    const img = root.querySelector('.hands-img');
+    const sparkCore = root.querySelector('.spark-core');
+    const sparkGlow = root.querySelector('.spark-glow');
+    const halo = root.querySelector('.stage-halo, .v-icon, .icon-mini'); // halo varies
+
+    const tl = gsap.timeline({ repeat: -1, defaults: { ease: "sine.inOut" } });
+
+    // Subtle breath on the image itself (1-1.03 scale)
+    tl.to(img, { scale: 1.04, duration: durationSec / 2 }, 0)
+      .to(img, { scale: 1.00, duration: durationSec / 2 }, durationSec / 2);
+
+    // Spark fade & scale — quiet → glow → quiet
+    gsap.set([sparkCore, sparkGlow], { opacity: 0.2, scale: 0.6, transformOrigin: 'center' });
+    tl.to([sparkCore, sparkGlow], { opacity: 1, scale: 1.1, duration: durationSec * 0.35, ease: "power2.out" }, durationSec * 0.30)
+      .to(sparkCore, { opacity: 1, scale: 1.25, duration: durationSec * 0.10, ease: "power3.out" }, durationSec * 0.45)
+      .to([sparkCore, sparkGlow], { opacity: 0.2, scale: 0.6, duration: durationSec * 0.40, ease: "power2.in" }, durationSec * 0.60);
+
+    return tl;
+  }
+
+  // ============ HERO (4s slow pulse) ============
+  {
+    const tl = gsap.timeline({ repeat: -1, defaults: { ease: "sine.inOut" } });
+    const heroImg = document.querySelector('#hero-img');
+    const heroSparkCore = document.querySelector('#hero-spark .spark-core');
+    const heroSparkGlow = document.querySelector('#hero-spark .spark-glow');
+    const heroHalo = document.querySelector('#hero-halo');
+
+    gsap.set([heroSparkCore, heroSparkGlow], { opacity: 0.15, scale: 0.5, transformOrigin: 'center' });
+    gsap.set(heroHalo, { opacity: 0.4, scale: 0.85, transformOrigin: 'center' });
+    gsap.set(heroImg, { scale: 1.0, transformOrigin: 'center' });
+
+    const DUR = 4;
+    // Breath
+    tl.to(heroImg, { scale: 1.035, duration: DUR/2 }, 0)
+      .to(heroImg, { scale: 1.000, duration: DUR/2 }, DUR/2);
+    // Halo
+    tl.to(heroHalo, { opacity: 1.0, scale: 1.15, duration: DUR*0.4, ease: "power2.out" }, DUR*0.3)
+      .to(heroHalo, { opacity: 0.4,  scale: 0.85, duration: DUR*0.3, ease: "power2.in" }, DUR*0.7);
+    // Spark
+    tl.to([heroSparkCore, heroSparkGlow], { opacity: 1.0, scale: 1.2, duration: DUR*0.35, ease: "power2.out" }, DUR*0.3)
+      .to(heroSparkCore, { scale: 1.35, duration: DUR*0.10, ease: "back.out(2)" }, DUR*0.42)
+      .to([heroSparkCore, heroSparkGlow], { opacity: 0.15, scale: 0.5, duration: DUR*0.35, ease: "power2.in" }, DUR*0.65);
+  }
+
+  // ============ VARIANTS (thinking 2.4s, micro 2s) ============
+  document.querySelectorAll('.v-icon, .icon-mini').forEach(node => {
+    const variant = node.dataset.variant || 'thinking';
+    const dur = variant === 'hero' ? 4 : (variant === 'thinking' ? 2.4 : 2.0);
+
+    const img = node.querySelector('.hands-img');
+    const sparkCore = node.querySelector('.spark-core');
+    const sparkGlow = node.querySelector('.spark-glow');
+
+    gsap.set([sparkCore, sparkGlow], { opacity: 0.2, scale: 0.6, transformOrigin: 'center' });
+    gsap.set(img, { scale: 1.0, transformOrigin: 'center' });
+
+    const tl = gsap.timeline({ repeat: -1, defaults: { ease: "sine.inOut" } });
+    tl.to(img, { scale: 1.03, duration: dur/2 }, 0)
+      .to(img, { scale: 1.00, duration: dur/2 }, dur/2);
+    tl.to([sparkCore, sparkGlow], { opacity: 1, scale: 1.15, duration: dur*0.35, ease: "power2.out" }, dur*0.3)
+      .to([sparkCore, sparkGlow], { opacity: 0.2, scale: 0.6, duration: dur*0.35, ease: "power2.in" }, dur*0.65);
+  });
+
+  // Respect prefers-reduced-motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    gsap.globalTimeline.pause();
+    document.querySelectorAll('.spark-core, .spark-glow').forEach(el => {
+      el.style.opacity = '0.7';
+      el.style.transform = 'scale(1)';
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* ============================================
+   GenerAgent — aurora design system
+   tokens consolidated from Design_Phase 02-07
+   ============================================ */
+:root {
+  --bg-deep: #020203;
+  --bg-base: #050506;
+  --bg-elev: #0A0A0F;
+  --bg-elev-2: #11111A;
+  --bg-elev-3: #1A1A24;
+  --surface: rgba(255,255,255,0.04);
+  --surface-strong: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --fg: #EDEDEF;
+  --fg-dim: #8A8F98;
+  --fg-muted: #5E636E;
+  --indigo: #5E6AD2;
+  --indigo-hover: #7B85DC;
+  --indigo-text: #818CF8;
+  --indigo-bright: #A5B4FC;
+  --magenta: #C084FC;
+  --cyan: #67E8F9;
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --warm: #F5E6D3;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --color-bg-deep: var(--bg-deep);
+  --color-bg-base: var(--bg-base);
+  --color-bg-elev: var(--bg-elev);
+  --color-fg: var(--fg);
+  --color-fg-dim: var(--fg-dim);
+  --color-indigo: var(--indigo);
+  --color-magenta: var(--magenta);
+  --font-sans: var(--font-heebo), 'IBM Plex Sans Hebrew', system-ui, sans-serif;
+  --font-mono: var(--font-mono);
+}
+
+html, body { height: 100%; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--fg);
+  font-family: var(--font-heebo), 'IBM Plex Sans Hebrew', system-ui, sans-serif;
+  line-height: 1.55;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Page-level ambient blobs */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: -1;
+}
+body::before {
+  top: -15%; right: -10%;
+  width: 540px; height: 540px;
+  background: rgba(94,106,210,0.18);
+}
+body::after {
+  bottom: -15%; left: -10%;
+  width: 460px; height: 460px;
+  background: rgba(192,132,252,0.10);
+}
+
+/* Global focus ring */
+*:focus-visible {
+  outline: 2px solid var(--indigo-bright);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgba(94,106,210,0.35);
+  color: var(--fg);
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.essential-anim) {
+    animation-duration: 24s !important;
+  }
+  *:hover { transform: none !important; }
+}

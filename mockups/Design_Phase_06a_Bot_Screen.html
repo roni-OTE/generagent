@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 6a — Bot Screen (aurora)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'IBM Plex Sans Hebrew', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-hover: #7B85DC;
+    --accent-text: #818CF8;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 32px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1.title {
+    font-size: 48px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 720px; margin: 0 auto; }
+
+  /* State labels */
+  .state-section { margin-bottom: 56px; }
+  .state-label {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .state-num {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--magenta);
+    background: rgba(192,132,252,0.08);
+    border: 1px solid rgba(192,132,252,0.3);
+    border-radius: 6px; padding: 4px 10px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .state-title { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; }
+  .state-desc { color: var(--fg-dim); font-size: 14px; margin-bottom: 18px; }
+
+  /* App window frame */
+  .app-window {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 80px rgba(94,106,210,0.08);
+  }
+  .app-titlebar {
+    background: var(--bg-elev-2);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FEBC2E; }
+  .dot.g { background: #28C840; }
+  .app-url {
+    margin: 0 16px 0 0;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 12px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    direction: ltr;
+    flex: 1;
+    max-width: 320px;
+  }
+
+  /* Main bot layout: sidebar + chat */
+  .bot-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 640px;
+  }
+
+  /* Sidebar */
+  .bot-sidebar {
+    background: var(--bg-elev);
+    border-left: 1px solid var(--border);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 4px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-mark {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--magenta));
+    box-shadow: 0 0 16px rgba(94,106,210,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .brand-name {
+    font-weight: 700; font-size: 15px;
+  }
+  .brand-version {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-muted);
+    background: var(--surface);
+    padding: 1px 6px; border-radius: 4px; margin-right: auto;
+  }
+
+  .sidebar-section-label {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0 8px; margin-bottom: 6px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--fg-dim);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+  .sidebar-item:hover { background: var(--surface); color: var(--fg); }
+  .sidebar-item.active {
+    background: rgba(94,106,210,0.12);
+    color: var(--accent-bright);
+    border: 1px solid rgba(94,106,210,0.25);
+  }
+  .sidebar-item .icon-box {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .sidebar-item.active .icon-box {
+    background: rgba(94,106,210,0.2);
+    color: var(--accent-bright);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 12px 8px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar-sm {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--magenta));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 11px;
+  }
+  .user-info { font-size: 12px; }
+  .user-name { color: var(--fg); font-weight: 500; }
+  .user-meta { color: var(--fg-muted); font-size: 11px; }
+
+  /* Chat area */
+  .bot-main {
+    display: flex; flex-direction: column;
+    background: var(--bg-base);
+  }
+  .bot-topbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-elev);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-title { font-size: 14px; font-weight: 600; }
+  .topbar-sub {
+    font-family: var(--mono); font-size: 10px; color: var(--fg-muted);
+    margin-right: 12px; direction: ltr;
+  }
+  .progress-bar-wrap { display: flex; gap: 4px; }
+  .pip { width: 22px; height: 3px; background: var(--border); border-radius: 2px; }
+  .pip.done { background: var(--accent); box-shadow: 0 0 8px rgba(94,106,210,0.5); }
+  .pip.current { background: var(--magenta); box-shadow: 0 0 8px rgba(192,132,252,0.5); }
+  .topbar-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 32px; height: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 150ms ease;
+  }
+  .icon-btn:hover { background: var(--surface-strong); color: var(--fg); }
+
+  .chat-area {
+    flex: 1;
+    padding: 32px 28px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 380px;
+  }
+
+  /* Bubble styles */
+  .bubble-bot {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: var(--fg);
+    max-width: 75%;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-right: auto; margin-left: 0;
+  }
+  .bubble-bot .micro {
+    display: block; margin-top: 6px;
+    font-size: 12px; color: var(--fg-muted);
+    font-family: var(--mono); direction: ltr; text-align: left;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--accent), #7B85DC);
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    max-width: 75%;
+    margin-left: auto; margin-right: 0;
+    font-size: 15px;
+    box-shadow: 0 4px 16px rgba(94,106,210,0.25);
+  }
+  .bubble-thinking {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 14px;
+    padding: 12px 16px;
+    color: var(--magenta);
+    font-family: var(--mono);
+    font-size: 12px;
+    direction: ltr; text-align: left;
+    display: flex; align-items: center; gap: 10px;
+    margin: 4px 0;
+    align-self: flex-start;
+  }
+  .think-orb {
+    width: 10px; height: 10px;
+    border: 2px solid rgba(192,132,252,0.3);
+    border-top-color: var(--magenta);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Chips below bot bubble */
+  .chips-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-right: auto; margin-left: 0;
+    margin-top: 4px;
+    max-width: 75%;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--fg);
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+    font-family: var(--sans);
+  }
+  .chip:hover { background: var(--surface-strong); border-color: rgba(94,106,210,0.3); }
+  .chip.selected {
+    background: rgba(94,106,210,0.15);
+    border-color: rgba(94,106,210,0.4);
+    color: var(--accent-bright);
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 28px 22px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elev);
+  }
+  .input-helper {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--fg-muted);
+    margin-bottom: 8px;
+    display: flex; justify-content: space-between;
+    direction: ltr; text-align: left;
+  }
+  .input-helper .kbd {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+  .input-row {
+    display: flex; gap: 10px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 6px 6px 6px 14px;
+    transition: all 200ms var(--easing);
+  }
+  .input-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(94,106,210,0.15);
+  }
+  .input-row textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 10px 4px;
+    resize: none;
+    line-height: 1.5;
+    max-height: 120px;
+  }
+  .input-row textarea::placeholder { color: var(--fg-muted); }
+  .send-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    align-self: flex-end;
+    height: 36px;
+    transition: all 200ms var(--easing);
+    box-shadow: 0 0 16px rgba(94,106,210,0.3);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .send-btn:hover { background: var(--accent-hover); }
+  .send-btn:disabled { background: var(--surface); color: var(--fg-muted); cursor: not-allowed; box-shadow: none; }
+
+  /* ===== Welcome screen ===== */
+  .welcome-stage {
+    text-align: center;
+    padding: 56px 32px;
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 380px;
+    position: relative;
+  }
+  .welcome-icon {
+    width: 72px; height: 72px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(94,106,210,0.2), rgba(192,132,252,0.15));
+    border: 1px solid rgba(94,106,210,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 0 40px rgba(94,106,210,0.25);
+    position: relative;
+  }
+  .welcome-icon::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--accent), var(--magenta));
+    z-index: -1;
+    opacity: 0.3;
+    filter: blur(20px);
+  }
+  .welcome-icon-inner {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--magenta));
+    border-radius: 8px;
+  }
+  .welcome-title {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 8px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .welcome-sub {
+    color: var(--fg-dim); font-size: 15px;
+    max-width: 420px; margin: 0 auto 28px;
+    line-height: 1.7;
+  }
+  .welcome-stats {
+    display: flex; gap: 28px;
+    margin-bottom: 32px;
+    padding: 16px 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .welcome-stat {
+    text-align: center;
+  }
+  .welcome-stat-num {
+    font-family: var(--mono); font-weight: 700;
+    font-size: 20px;
+    color: var(--accent-text);
+  }
+  .welcome-stat-label {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  /* Big primary CTA */
+  .btn-cta {
+    background: var(--accent);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 0 32px rgba(94,106,210,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: all 200ms var(--easing);
+  }
+  .btn-cta:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+  /* ===== Recommendation cards ===== */
+  .reco-stage {
+    padding: 12px 0 12px;
+  }
+  .reco-intro {
+    margin-bottom: 20px;
+  }
+  .reco-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-width: 75%;
+    margin-right: auto; margin-left: 0;
+  }
+  .reco-card {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 250ms var(--easing);
+    position: relative;
+  }
+  .reco-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(94,106,210,0.35);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4), 0 0 32px rgba(94,106,210,0.12);
+  }
+  .reco-card.recommended {
+    border-color: rgba(94,106,210,0.4);
+    box-shadow: 0 0 32px rgba(94,106,210,0.15);
+  }
+  .reco-card.recommended::before {
+    content: '★ RECOMMENDED';
+    position: absolute;
+    top: -8px; right: 16px;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+  .reco-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .reco-title {
+    font-size: 16px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .reco-score {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--accent-text);
+    background: rgba(94,106,210,0.1);
+    border: 1px solid rgba(94,106,210,0.25);
+    border-radius: 6px;
+    padding: 3px 8px;
+    direction: ltr;
+  }
+  .reco-desc {
+    color: var(--fg-dim);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .reco-meta {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .reco-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-muted);
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    direction: ltr;
+  }
+
+  /* Mobile preview */
+  .mobile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 768px) { .mobile-grid { grid-template-columns: 1fr; } }
+  .mobile-frame {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 28px;
+    padding: 8px;
+    max-width: 320px;
+    margin: 0 auto;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+  .mobile-screen {
+    background: var(--bg-base);
+    border-radius: 22px;
+    overflow: hidden;
+    aspect-ratio: 9/19;
+    display: flex; flex-direction: column;
+  }
+  .mobile-notch {
+    height: 22px;
+    background: var(--bg-deep);
+    display: flex; justify-content: center; align-items: center;
+  }
+  .mobile-notch::before {
+    content: '';
+    width: 80px; height: 16px;
+    background: #000;
+    border-radius: 0 0 12px 12px;
+  }
+  .mobile-content {
+    flex: 1;
+    padding: 16px 14px;
+    display: flex; flex-direction: column;
+    gap: 10px;
+  }
+  .mobile-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .mob-pip-row { display: flex; gap: 3px; }
+  .mob-pip { width: 14px; height: 2px; background: var(--border); border-radius: 1px; }
+  .mob-pip.done { background: var(--accent); }
+  .mob-pip.current { background: var(--magenta); }
+  .mob-bubble-bot, .mob-bubble-user {
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 88%;
+  }
+  .mob-bubble-bot {
+    background: var(--surface);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    margin-right: auto;
+  }
+  .mob-bubble-user {
+    background: linear-gradient(135deg, var(--accent), #7B85DC);
+    color: #fff;
+    margin-left: auto;
+    box-shadow: 0 2px 12px rgba(94,106,210,0.2);
+  }
+  .mob-input {
+    margin-top: auto;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 4px 4px 4px 10px;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .mob-input input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--fg-muted); font-size: 11px; font-family: var(--sans);
+    padding: 6px 0;
+  }
+  .mob-send {
+    background: var(--accent);
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    color: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+
+  /* Anatomy callouts */
+  .anatomy {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 18px;
+  }
+  .anatomy-title {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--accent-text); text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 14px;
+  }
+  .anatomy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .anatomy-item {
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .anatomy-name {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--magenta); margin-bottom: 4px;
+  }
+  .anatomy-desc {
+    font-size: 12px; color: var(--fg-dim); line-height: 1.5;
+  }
+
+  @media (max-width: 900px) {
+    .bot-layout { grid-template-columns: 1fr; }
+    .bot-sidebar { display: none; }
+  }
+  @media (max-width: 768px) {
+    h1.title { font-size: 36px; }
+    .state-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 06A · BOT SCREEN · CORE EXPERIENCE</div>
+    <h1 class="title">מסך הבוט.<br>הלב של המוצר.</h1>
+    <p class="subtitle">6 מצבים אמיתיים של מסך השיחה — מ-Welcome ועד Recommendation. Layout עם sidebar, top bar עם progress, שטח שיחה, ו-input חכם.</p>
+  </div>
+
+  <!-- ============ STATE 1: WELCOME ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">STATE · 01</div>
+      <div class="state-title">Welcome · התחלת שיחה</div>
+    </div>
+    <div class="state-desc">המסך הראשון שמשתמש רואה אחרי auth + TOS. מציב ציפיות (5 דקות, 7-15 שאלות) ומרגיע.</div>
+
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="app-url">generagent.ai/consult</div>
+      </div>
+      <div class="bot-layout">
+        <!-- Sidebar -->
+        <div class="bot-sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-mark">G</div>
+            <div class="brand-name">GenerAgent</div>
+            <div class="brand-version">v1.0</div>
+          </div>
+
+          <div>
+            <div class="sidebar-section-label">→ ראשי</div>
+            <div class="sidebar-item active">
+              <div class="icon-box">◆</div> שיחה חדשה
+            </div>
+            <div class="sidebar-item">
+              <div class="icon-box">▤</div> החבילות שלי
+            </div>
+            <div class="sidebar-item">
+              <div class="icon-box">⚙</div> חיבורים
+            </div>
+          </div>
+
+          <div>
+            <div class="sidebar-section-label">→ היסטוריה</div>
+            <div class="sidebar-item">
+              <div class="icon-box">●</div> Personal Email Asst.
+            </div>
+            <div class="sidebar-item">
+              <div class="icon-box">●</div> Meeting Co-pilot
+            </div>
+          </div>
+
+          <div class="sidebar-footer">
+            <div class="avatar-sm">RA</div>
+            <div class="user-info">
+              <div class="user-name">Roni Apter</div>
+              <div class="user-meta">Free plan</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main chat -->
+        <div class="bot-main">
+          <div class="bot-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title">ייעוץ חדש</div>
+              <div class="topbar-sub">→ adaptive · 7-15 questions</div>
+            </div>
+            <div class="topbar-actions">
+              <button class="icon-btn">×</button>
+            </div>
+          </div>
+
+          <div class="welcome-stage">
+            <div class="welcome-icon">
+              <div class="welcome-icon-inner"></div>
+            </div>
+            <div class="welcome-title">בוא נבנה לך סוכן.</div>
+            <div class="welcome-sub">
+              אני אשאל אותך כמה שאלות על העבודה שלך — מה אתה עושה, אילו כלים אתה משתמש, ומה לוקח לך הכי הרבה זמן.
+              בסוף, אכין לך חבילת סוכן מוכנה להתקנה.
+            </div>
+            <div class="welcome-stats">
+              <div class="welcome-stat">
+                <div class="welcome-stat-num">5 min</div>
+                <div class="welcome-stat-label">avg time</div>
+              </div>
+              <div class="welcome-stat">
+                <div class="welcome-stat-num">7-15</div>
+                <div class="welcome-stat-label">questions</div>
+              </div>
+              <div class="welcome-stat">
+                <div class="welcome-stat-num">100%</div>
+                <div class="welcome-stat-label">free start</div>
+              </div>
+            </div>
+            <button class="btn-cta">התחל שיחה ←</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 2: DISCOVERY ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">STATE · 02</div>
+      <div class="state-title">Discovery · שאלות פתוחות</div>
+    </div>
+    <div class="state-desc">השאלה הראשונה. שורת progress מתעדכנת, מיקרו-הסבר תחת השאלה, input עם תזכורת shortcut.</div>
+
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="app-url">generagent.ai/consult</div>
+      </div>
+      <div class="bot-layout">
+        <div class="bot-sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-mark">G</div>
+            <div class="brand-name">GenerAgent</div>
+            <div class="brand-version">v1.0</div>
+          </div>
+          <div>
+            <div class="sidebar-section-label">→ ראשי</div>
+            <div class="sidebar-item active"><div class="icon-box">◆</div> שיחה חדשה</div>
+            <div class="sidebar-item"><div class="icon-box">▤</div> החבילות שלי</div>
+            <div class="sidebar-item"><div class="icon-box">⚙</div> חיבורים</div>
+          </div>
+          <div class="sidebar-footer">
+            <div class="avatar-sm">RA</div>
+            <div class="user-info">
+              <div class="user-name">Roni Apter</div>
+              <div class="user-meta">Free plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bot-main">
+          <div class="bot-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title">Phase 1 · Discovery</div>
+              <div class="topbar-sub">→ question 1 / ~9</div>
+              <div class="progress-bar-wrap">
+                <div class="pip current"></div>
+                <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                <div class="pip"></div><div class="pip"></div>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <button class="icon-btn">⏎</button>
+              <button class="icon-btn">×</button>
+            </div>
+          </div>
+
+          <div class="chat-area">
+            <div class="bubble-bot">
+              ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה?
+              <span class="micro">→ this helps me understand your role and routines</span>
+            </div>
+          </div>
+
+          <div class="input-area">
+            <div class="input-helper">
+              <span>type to respond · Enter to send</span>
+              <span><span class="kbd">⌘K</span> shortcuts · <span class="kbd">Esc</span> exit</span>
+            </div>
+            <div class="input-row">
+              <textarea placeholder="התשובה שלך..." rows="1"></textarea>
+              <button class="send-btn" disabled>שלח →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 3: MID CONVERSATION ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">STATE · 03</div>
+      <div class="state-title">Deep Dive · באמצע השיחה + Chips</div>
+    </div>
+    <div class="state-desc">שאלה שכוללת multi-select chips. ה-input עדיין זמין למקרה שירצה לכתוב בנוסף. ה-progress הגיע ל-step 4.</div>
+
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="app-url">generagent.ai/consult</div>
+      </div>
+      <div class="bot-layout">
+        <div class="bot-sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-mark">G</div>
+            <div class="brand-name">GenerAgent</div>
+            <div class="brand-version">v1.0</div>
+          </div>
+          <div>
+            <div class="sidebar-section-label">→ ראשי</div>
+            <div class="sidebar-item active"><div class="icon-box">◆</div> שיחה חדשה</div>
+            <div class="sidebar-item"><div class="icon-box">▤</div> החבילות שלי</div>
+            <div class="sidebar-item"><div class="icon-box">⚙</div> חיבורים</div>
+          </div>
+          <div class="sidebar-footer">
+            <div class="avatar-sm">RA</div>
+            <div class="user-info">
+              <div class="user-name">Roni Apter</div>
+              <div class="user-meta">Free plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bot-main">
+          <div class="bot-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title">Phase 2 · Deep Dive</div>
+              <div class="topbar-sub">→ persona: knowledge-worker · 0.78</div>
+              <div class="progress-bar-wrap">
+                <div class="pip done"></div><div class="pip done"></div><div class="pip done"></div>
+                <div class="pip current"></div>
+                <div class="pip"></div><div class="pip"></div><div class="pip"></div>
+                <div class="pip"></div><div class="pip"></div>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <button class="icon-btn">⏎</button>
+              <button class="icon-btn">×</button>
+            </div>
+          </div>
+
+          <div class="chat-area">
+            <div class="bubble-bot">
+              ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה?
+              <span class="micro">→ this helps me understand your role and routines</span>
+            </div>
+            <div class="bubble-user">
+              אני רואה חשבון עצמאי, מנהל בערך 40 לקוחות. רוב היום עובר במיילים וקריאות זום.
+            </div>
+            <div class="bubble-bot">
+              הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?
+            </div>
+            <div class="bubble-user">
+              הייתי משיב למיילים בזמן — אני שבועיים מאחור.
+            </div>
+            <div class="bubble-bot">
+              עכשיו ספר לי — אילו כלים אתה משתמש בהם הכי הרבה? (אפשר לבחור כמה)
+              <span class="micro">→ this maps to MCP connectors we'll include</span>
+            </div>
+            <div class="chips-row">
+              <div class="chip selected">Gmail</div>
+              <div class="chip selected">Google Calendar</div>
+              <div class="chip">Slack</div>
+              <div class="chip">Notion</div>
+              <div class="chip">Excel</div>
+              <div class="chip">QuickBooks</div>
+              <div class="chip">Zoom</div>
+              <div class="chip">+ עוד...</div>
+            </div>
+          </div>
+
+          <div class="input-area">
+            <div class="input-helper">
+              <span>בחר אופציות או הוסף משלך · Enter לאישור</span>
+              <span><span class="kbd">⌘K</span> shortcuts</span>
+            </div>
+            <div class="input-row">
+              <textarea placeholder="או הוסף כלי שלא ברשימה..." rows="1"></textarea>
+              <button class="send-btn">המשך →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 4: THINKING ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">STATE · 04</div>
+      <div class="state-title">Analyzing · Claude חושב</div>
+    </div>
+    <div class="state-desc">אחרי שלב Discovery — הבוט עוצר ל-2 שניות, מציג מצב thinking ב-magenta, ואז עובר ל-recommendation.</div>
+
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="app-url">generagent.ai/consult</div>
+      </div>
+      <div class="bot-layout">
+        <div class="bot-sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-mark">G</div>
+            <div class="brand-name">GenerAgent</div>
+            <div class="brand-version">v1.0</div>
+          </div>
+          <div>
+            <div class="sidebar-section-label">→ ראשי</div>
+            <div class="sidebar-item active"><div class="icon-box">◆</div> שיחה חדשה</div>
+            <div class="sidebar-item"><div class="icon-box">▤</div> החבילות שלי</div>
+            <div class="sidebar-item"><div class="icon-box">⚙</div> חיבורים</div>
+          </div>
+          <div class="sidebar-footer">
+            <div class="avatar-sm">RA</div>
+            <div class="user-info">
+              <div class="user-name">Roni Apter</div>
+              <div class="user-meta">Free plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bot-main">
+          <div class="bot-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title">Analyzing</div>
+              <div class="topbar-sub">→ phase transition</div>
+              <div class="progress-bar-wrap">
+                <div class="pip done"></div><div class="pip done"></div><div class="pip done"></div>
+                <div class="pip done"></div><div class="pip done"></div><div class="pip done"></div>
+                <div class="pip current"></div>
+                <div class="pip"></div><div class="pip"></div>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <button class="icon-btn">×</button>
+            </div>
+          </div>
+
+          <div class="chat-area">
+            <div class="bubble-user">
+              גם Asana וגם Notion. בעיקר Notion.
+            </div>
+            <div class="bubble-bot">
+              מצוין. רגע אחד — אני מנתח את מה שאמרת ומכין לך 3 ארכיטיפים מתאימים.
+            </div>
+            <div class="bubble-thinking">
+              <div class="think-orb"></div>
+              analyzing 5 signals · matching against 12 archetypes · confidence rising...
+            </div>
+          </div>
+
+          <div class="input-area">
+            <div class="input-helper">
+              <span>...</span>
+              <span><span class="kbd">⌘K</span> shortcuts</span>
+            </div>
+            <div class="input-row" style="opacity: 0.5;">
+              <textarea placeholder="הבוט עובד..." rows="1" disabled></textarea>
+              <button class="send-btn" disabled>שלח →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 5: RECOMMENDATION ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">STATE · 05</div>
+      <div class="state-title">Recommendation · בחירת ארכיטיפ</div>
+    </div>
+    <div class="state-desc">3 כרטיסי המלצה בתוך השיחה. כל אחד עם score, תגיות skills/MCPs. ה-recommended מודגש.</div>
+
+    <div class="app-window">
+      <div class="app-titlebar">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="app-url">generagent.ai/consult</div>
+      </div>
+      <div class="bot-layout">
+        <div class="bot-sidebar">
+          <div class="sidebar-brand">
+            <div class="brand-mark">G</div>
+            <div class="brand-name">GenerAgent</div>
+            <div class="brand-version">v1.0</div>
+          </div>
+          <div>
+            <div class="sidebar-section-label">→ ראשי</div>
+            <div class="sidebar-item active"><div class="icon-box">◆</div> שיחה חדשה</div>
+            <div class="sidebar-item"><div class="icon-box">▤</div> החבילות שלי</div>
+            <div class="sidebar-item"><div class="icon-box">⚙</div> חיבורים</div>
+          </div>
+          <div class="sidebar-footer">
+            <div class="avatar-sm">RA</div>
+            <div class="user-info">
+              <div class="user-name">Roni Apter</div>
+              <div class="user-meta">Free plan</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bot-main">
+          <div class="bot-topbar">
+            <div class="topbar-left">
+              <div class="topbar-title">Phase 3 · Refinement</div>
+              <div class="topbar-sub">→ 3 archetypes · confidence 0.91</div>
+              <div class="progress-bar-wrap">
+                <div class="pip done"></div><div class="pip done"></div><div class="pip done"></div>
+                <div class="pip done"></div><div class="pip done"></div><div class="pip done"></div>
+                <div class="pip done"></div>
+                <div class="pip current"></div>
+                <div class="pip"></div>
+              </div>
+            </div>
+            <div class="topbar-actions">
+              <button class="icon-btn">⏎</button>
+              <button class="icon-btn">×</button>
+            </div>
+          </div>
+
+          <div class="chat-area">
+            <div class="bubble-bot reco-intro">
+              סיימתי לנתח. בהתבסס על מה שספרת — רואה חשבון עצמאי עם 40 לקוחות, הצפת מיילים, ועבודה ב-Gmail/Calendar/Notion — אני חושב שתועיל לך אחת מ-3 חבילות אלה. כל אחת מותאמת ל-flow שונה:
+            </div>
+
+            <div class="reco-cards">
+              <div class="reco-card recommended">
+                <div class="reco-head">
+                  <div class="reco-title">Personal Email Assistant</div>
+                  <div class="reco-score">match 0.92</div>
+                </div>
+                <div class="reco-desc">
+                  סוכן שמסנן מיילים יומיים, מסמן את ה-5 הכי דחופים, מוציא משימות לרשימה, ועונה אוטומטית למיילים סטנדרטיים.
+                </div>
+                <div class="reco-meta">
+                  <div class="reco-tag">8 skills</div>
+                  <div class="reco-tag">2 MCPs · Gmail + Calendar</div>
+                  <div class="reco-tag">~15 min install</div>
+                </div>
+              </div>
+
+              <div class="reco-card">
+                <div class="reco-head">
+                  <div class="reco-title">Client-Focused Inbox</div>
+                  <div class="reco-score">match 0.84</div>
+                </div>
+                <div class="reco-desc">
+                  סוכן ש-מתעדף מיילים לפי לקוח. VIP routing — 5 הלקוחות החשובים מקבלים תגובה מיידית, השאר ממתינים.
+                </div>
+                <div class="reco-meta">
+                  <div class="reco-tag">6 skills</div>
+                  <div class="reco-tag">1 MCP · Gmail</div>
+                  <div class="reco-tag">~10 min install</div>
+                </div>
+              </div>
+
+              <div class="reco-card">
+                <div class="reco-head">
+                  <div class="reco-title">Knowledge Hub</div>
+                  <div class="reco-score">match 0.71</div>
+                </div>
+                <div class="reco-desc">
+                  סוכן שעושה חיפוש semantic על Gmail + Notion + Drive. ענה לי לפי מה שכבר יש לנו.
+                </div>
+                <div class="reco-meta">
+                  <div class="reco-tag">5 skills</div>
+                  <div class="reco-tag">3 MCPs · Gmail + Notion + Drive</div>
+                  <div class="reco-tag">~25 min install</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-area">
+            <div class="input-helper">
+              <span>בחר כרטיס · או ספר לי מה לא מתאים</span>
+              <span><span class="kbd">⌘K</span> shortcuts</span>
+            </div>
+            <div class="input-row">
+              <textarea placeholder="או הסבר למה אף אחד לא מתאים..." rows="1"></textarea>
+              <button class="send-btn" disabled>שלח →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE 6: MOBILE ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">STATE · 06</div>
+      <div class="state-title">Mobile · גרסת מובייל</div>
+    </div>
+    <div class="state-desc">Sidebar מתחבא · top bar מצומצם · bubbles ב-88% רוחב · input bar קומפקטי.</div>
+
+    <div class="mobile-grid">
+      <div>
+        <div class="mobile-frame">
+          <div class="mobile-screen">
+            <div class="mobile-notch"></div>
+            <div class="mobile-content">
+              <div class="mobile-topbar">
+                <div style="font-size: 11px; color: var(--fg-muted); font-family: var(--mono);">3 / 9</div>
+                <div class="mob-pip-row">
+                  <div class="mob-pip done"></div><div class="mob-pip done"></div>
+                  <div class="mob-pip current"></div>
+                  <div class="mob-pip"></div><div class="mob-pip"></div>
+                  <div class="mob-pip"></div><div class="mob-pip"></div>
+                  <div class="mob-pip"></div><div class="mob-pip"></div>
+                </div>
+                <div style="font-size: 14px; color: var(--fg-dim);">×</div>
+              </div>
+              <div class="mob-bubble-bot">ספר לי מה אתה עושה ביום-יום</div>
+              <div class="mob-bubble-user">רואה חשבון עצמאי</div>
+              <div class="mob-bubble-bot">אם הייתה לך עוד שעה ביום?</div>
+              <div class="mob-bubble-user">משיב למיילים</div>
+              <div class="mob-bubble-bot">אילו כלים אתה משתמש?</div>
+              <div class="mob-input">
+                <input placeholder="התשובה שלך...">
+                <button class="mob-send">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--fg-muted);">
+          → MOBILE · BOT MID-CONVERSATION
+        </div>
+      </div>
+
+      <div>
+        <div class="mobile-frame">
+          <div class="mobile-screen">
+            <div class="mobile-notch"></div>
+            <div class="mobile-content" style="padding: 20px 14px;">
+              <div style="text-align: center; padding: 24px 0;">
+                <div style="width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, rgba(94,106,210,0.2), rgba(192,132,252,0.15)); border: 1px solid rgba(94,106,210,0.3); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 32px rgba(94,106,210,0.25);">
+                  <div style="width: 24px; height: 24px; background: linear-gradient(135deg, var(--accent), var(--magenta)); border-radius: 6px;"></div>
+                </div>
+                <div style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">בוא נבנה לך סוכן.</div>
+                <div style="font-size: 12px; color: var(--fg-dim); margin-bottom: 20px; line-height: 1.6;">5 דקות. 7-15 שאלות. בלי קוד.</div>
+                <button style="background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 0 20px rgba(94,106,210,0.3);">התחל ←</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--fg-muted);">
+          → MOBILE · WELCOME
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ANATOMY ============ -->
+  <div class="state-section">
+    <div class="state-label">
+      <div class="state-num">ANATOMY</div>
+      <div class="state-title">פירוק האזורים</div>
+    </div>
+    <div class="state-desc">5 אזורים עיקריים. כל אחד עם תפקיד מוגדר ועקרון מנחה.</div>
+
+    <div class="anatomy">
+      <div class="anatomy-title">→ ZONES &amp; ROLES</div>
+      <div class="anatomy-grid">
+        <div class="anatomy-item">
+          <div class="anatomy-name">→ sidebar 260px</div>
+          <div class="anatomy-desc">ניווט גלובלי · היסטוריה · משתמש. נעלם במובייל. רוחב קבוע.</div>
+        </div>
+        <div class="anatomy-item">
+          <div class="anatomy-name">→ topbar 56px</div>
+          <div class="anatomy-desc">title · sub-status · progress pips · actions. תמיד גלוי, sticky במובייל.</div>
+        </div>
+        <div class="anatomy-item">
+          <div class="anatomy-name">→ chat-area (scroll)</div>
+          <div class="anatomy-desc">flex: 1, scrollable. padding 32/28 דסקטופ, 16/14 מובייל. גלילה אוטומטית לתחתית.</div>
+        </div>
+        <div class="anatomy-item">
+          <div class="anatomy-name">→ chips-row</div>
+          <div class="anatomy-desc">משוחל לאחר שאלה. selected מקבל indigo tint. תמיד מתחת לבועה האחרונה של הבוט.</div>
+        </div>
+        <div class="anatomy-item">
+          <div class="anatomy-name">→ input-area</div>
+          <div class="anatomy-desc">sticky bottom · 2 שורות: helper + textarea+send. focus ring באקסנט. Cmd+Enter = שלח.</div>
+        </div>
+        <div class="anatomy-item">
+          <div class="anatomy-name">→ thinking state</div>
+          <div class="anatomy-desc">magenta · mono · spinner. רק בין phases — לא אחרי כל תשובה. מקסימום 2-3 שניות.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

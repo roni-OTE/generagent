@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Direction A — Linear Cinema</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'Heebo', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    /* === Direction A — Linear Cinema (full) === */
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-strong: rgba(255, 255, 255, 0.07);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --accent: #5E6AD2;
+    --accent-hover: #7B85DC;
+    --accent-glow: rgba(94, 106, 210, 0.25);
+    --accent-glow-soft: rgba(94, 106, 210, 0.12);
+    --magenta: #C084FC;     /* secondary glow */
+    --cyan: #67E8F9;        /* tertiary glow */
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    padding: 0;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+
+  /* Ambient cinematic blobs */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .blob-1 { top: -10%; right: -10%; width: 600px; height: 600px; background: var(--accent-glow); animation: float1 20s ease-in-out infinite; }
+  .blob-2 { bottom: -10%; left: -10%; width: 500px; height: 500px; background: rgba(192,132,252,0.15); animation: float2 25s ease-in-out infinite; }
+  .blob-3 { top: 40%; left: 30%; width: 400px; height: 400px; background: rgba(103,232,249,0.08); animation: float3 30s ease-in-out infinite; }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-40px, 60px) scale(1.1); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(60px, -40px) scale(1.05); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-50px, -30px) scale(1.08); }
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .phase-header {
+    text-align: center;
+    padding: 60px 0 56px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 64px;
+  }
+  .phase-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-glow-soft);
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px;
+    padding: 6px 14px;
+    margin-bottom: 24px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .phase-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+  h1 {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+  }
+  .subtitle {
+    color: var(--fg-dim);
+    font-size: 18px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .codename {
+    font-family: var(--mono);
+    font-size: 13px;
+    margin-top: 16px;
+    color: var(--magenta);
+    display: inline-block;
+  }
+
+  /* Section */
+  section { margin-bottom: 72px; }
+  h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  h2 .num {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 12px;
+    vertical-align: middle;
+  }
+  .section-sub {
+    color: var(--fg-dim);
+    margin-bottom: 32px;
+    font-size: 16px;
+  }
+
+  /* Glass card */
+  .glass-card {
+    background: var(--surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  }
+
+  /* Hero showcase */
+  .hero-showcase {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    margin-bottom: 48px;
+    min-height: 380px;
+  }
+  .hero-showcase::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 50%);
+    filter: blur(60px);
+  }
+  .hero-showcase::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 50%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(192,132,252,0.15) 0%, transparent 50%);
+    filter: blur(80px);
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 64px 48px;
+    text-align: center;
+  }
+  .hero-content h3 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-content p {
+    color: var(--fg-dim);
+    font-size: 17px;
+    max-width: 540px;
+    margin: 0 auto 32px;
+  }
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #FFFFFF;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow:
+      0 0 40px var(--accent-glow),
+      0 8px 24px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: all 250ms var(--easing);
+  }
+  .hero-cta:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 60px var(--accent-glow),
+      0 12px 32px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  /* Palette */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .palette-row {
+    margin-bottom: 28px;
+  }
+  .palette-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fg-muted);
+    margin-bottom: 12px;
+  }
+  .swatch {
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    min-height: 96px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .swatch.glass {
+    backdrop-filter: blur(10px);
+    background: var(--surface);
+  }
+  .swatch-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg);
+    z-index: 1;
+  }
+  .swatch-hex {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-dim);
+    direction: ltr;
+    text-align: left;
+    z-index: 1;
+  }
+  .swatch.light .swatch-name { color: #020203; }
+  .swatch.light .swatch-hex { color: rgba(0,0,0,0.6); }
+  .swatch.has-glow::after {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle, currentColor, transparent 60%);
+    opacity: 0.4;
+    filter: blur(30px);
+    z-index: 0;
+  }
+
+  /* Bot Preview Window */
+  .preview-window {
+    border-radius: 20px;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-base) 100%);
+    border: 1px solid var(--border);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.5),
+      0 0 80px var(--accent-glow-soft);
+    position: relative;
+  }
+  .preview-titlebar {
+    background: var(--bg-elev-2);
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FEBC2E; }
+  .dot.g { background: #28C840; }
+  .preview-title-text {
+    margin-right: 16px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .preview-progress {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .progress-pip {
+    width: 24px; height: 3px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+  .progress-pip.done { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+  .progress-pip.current { background: var(--magenta); box-shadow: 0 0 8px rgba(192,132,252,0.5); }
+
+  .preview-body {
+    padding: 40px 32px;
+    min-height: 360px;
+  }
+  .bubble {
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    max-width: 75%;
+    font-size: 15px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .bubble.bot {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    margin-right: auto;
+    margin-left: 0;
+  }
+  .bubble.bot .micro {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+  }
+  .bubble.user {
+    background: linear-gradient(135deg, var(--accent) 0%, #7B85DC 100%);
+    color: #FFFFFF;
+    margin-left: auto;
+    margin-right: 0;
+    text-align: right;
+    direction: rtl;
+    box-shadow:
+      0 4px 20px var(--accent-glow),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .bubble.thinking {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(192,132,252,0.2);
+    color: var(--magenta);
+    font-family: var(--mono);
+    font-size: 12px;
+    max-width: 100%;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .thinking-spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(192,132,252,0.3);
+    border-top-color: var(--magenta);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .preview-input {
+    border-top: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--bg-elev-2);
+  }
+  .preview-input-field {
+    flex: 1;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--fg-dim);
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+  .preview-btn {
+    background: var(--accent);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow:
+      0 0 24px var(--accent-glow),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: all 200ms var(--easing);
+  }
+  .preview-btn:hover { background: var(--accent-hover); }
+
+  /* Button showcase */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .btn {
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+    font-family: var(--sans);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #FFFFFF;
+    box-shadow: 0 0 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--fg);
+    border-color: var(--border-strong);
+    backdrop-filter: blur(10px);
+  }
+  .btn-secondary:hover { background: var(--surface-strong); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--fg-dim);
+  }
+  .btn-ghost:hover { color: var(--fg); background: var(--surface); }
+
+  /* Typography sample */
+  .type-sample {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .type-sample .display {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .type-sample .h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .type-sample .body { font-size: 16px; color: var(--fg-dim); margin-bottom: 16px; line-height: 1.7; }
+  .type-sample .mono {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    padding: 10px 14px;
+    background: var(--bg-deep);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: inline-block;
+    direction: ltr;
+  }
+  .type-meta {
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+    padding-top: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Tokens table */
+  .tokens-table {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .token-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    border-bottom: 1px solid var(--border);
+    transition: background 150ms ease;
+  }
+  .token-row:last-child { border-bottom: none; }
+  .token-row:hover { background: var(--surface); }
+  .token-row.header {
+    background: var(--bg-elev-2);
+    font-weight: 600;
+  }
+  .token-cell {
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .token-cell.label {
+    font-family: var(--mono);
+    color: var(--accent);
+    border-left: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .token-cell code {
+    font-family: var(--mono);
+    background: var(--bg-deep);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    direction: ltr;
+    display: inline-block;
+    color: var(--magenta);
+  }
+
+  /* Pros/cons honest */
+  .honest-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .honest-grid { grid-template-columns: 1fr; } }
+  .honest-card {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .honest-card.pros { border-color: rgba(74,222,128,0.25); }
+  .honest-card.cons { border-color: rgba(251,191,36,0.25); }
+  .honest-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .honest-card.pros .honest-title { color: var(--success); }
+  .honest-card.cons .honest-title { color: var(--warning); }
+  .honest-card ul { list-style: none; padding: 0; }
+  .honest-card li {
+    padding: 10px 0;
+    color: var(--fg-dim);
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+  }
+  .honest-card li:last-child { border-bottom: none; }
+  .honest-card li strong { color: var(--fg); font-weight: 500; }
+
+  /* Inspirations strip */
+  .inspirations {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .insp-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--fg-dim);
+    font-family: var(--mono);
+  }
+  .insp-chip strong { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 36px; }
+    h2 { font-size: 24px; }
+    .hero-content h3 { font-size: 28px; }
+    .hero-content { padding: 40px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">DIRECTION A · LINEAR CINEMA · FULL PREVIEW</div>
+    <h1>Cinematic. Premium.<br>Built for makers.</h1>
+    <p class="subtitle">השראה: Linear, Vercel, Arc, Raycast. עומק קולנועי, ambient glow, glassmorphism עדין, ו-indigo כצבע המוביל</p>
+    <div class="codename">codename: <strong>"aurora"</strong></div>
+  </div>
+
+  <!-- Hero showcase -->
+  <section>
+    <div class="hero-showcase">
+      <div class="hero-content">
+        <h3>הסוכן שלך<br>מתחיל בשיחה אחת</h3>
+        <p>אל תעצב סוכן בעצמך. ספר לנו על העבודה שלך — ואנחנו נבנה לך אותו.</p>
+        <a href="#" class="hero-cta">
+          התחל עכשיו ←
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Inspirations -->
+  <section>
+    <h2>השראה <span class="num">/ inspirations</span></h2>
+    <p class="section-sub">המוצרים שמהם נגזרה השפה הוויזואלית</p>
+    <div class="inspirations">
+      <div class="insp-chip"><strong>Linear</strong> — indigo accent, glass, sharp</div>
+      <div class="insp-chip"><strong>Vercel</strong> — deep black, sharp typography</div>
+      <div class="insp-chip"><strong>Arc Browser</strong> — ambient, fluid motion</div>
+      <div class="insp-chip"><strong>Raycast</strong> — premium dev tool craft</div>
+      <div class="insp-chip"><strong>Framer</strong> — cinematic transitions</div>
+    </div>
+  </section>
+
+  <!-- Palette -->
+  <section>
+    <h2>פלטת צבעים מלאה <span class="num">/ palette</span></h2>
+    <p class="section-sub">14 טוקנים, עם דגש על indigo + ambient glows</p>
+
+    <div class="palette-row">
+      <div class="palette-label">→ SURFACES (deep cinematic)</div>
+      <div class="palette-grid">
+        <div class="swatch" style="background:#020203;">
+          <div class="swatch-name">bg-deep</div>
+          <div class="swatch-hex">#020203</div>
+        </div>
+        <div class="swatch" style="background:#050506;">
+          <div class="swatch-name">bg-base</div>
+          <div class="swatch-hex">#050506</div>
+        </div>
+        <div class="swatch" style="background:#0A0A0F;">
+          <div class="swatch-name">bg-elev</div>
+          <div class="swatch-hex">#0A0A0F</div>
+        </div>
+        <div class="swatch" style="background:#11111A;">
+          <div class="swatch-name">bg-elev-2</div>
+          <div class="swatch-hex">#11111A</div>
+        </div>
+        <div class="swatch glass" style="background:rgba(255,255,255,0.04);">
+          <div class="swatch-name">surface (glass)</div>
+          <div class="swatch-hex">rgba/.04</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="palette-row">
+      <div class="palette-label">→ TEXT</div>
+      <div class="palette-grid">
+        <div class="swatch light" style="background:#EDEDEF;">
+          <div class="swatch-name">fg</div>
+          <div class="swatch-hex">#EDEDEF</div>
+        </div>
+        <div class="swatch" style="background:#8A8F98;">
+          <div class="swatch-name">fg-dim</div>
+          <div class="swatch-hex">#8A8F98</div>
+        </div>
+        <div class="swatch" style="background:#5E636E;">
+          <div class="swatch-name">fg-muted</div>
+          <div class="swatch-hex">#5E636E</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="palette-row">
+      <div class="palette-label">→ ACCENT (indigo glow)</div>
+      <div class="palette-grid">
+        <div class="swatch has-glow" style="background:#5E6AD2; color:#5E6AD2;">
+          <div class="swatch-name">accent</div>
+          <div class="swatch-hex" style="color:rgba(255,255,255,0.7);">#5E6AD2</div>
+        </div>
+        <div class="swatch" style="background:#7B85DC;">
+          <div class="swatch-name">accent-hover</div>
+          <div class="swatch-hex" style="color:rgba(255,255,255,0.7);">#7B85DC</div>
+        </div>
+        <div class="swatch has-glow" style="background:#C084FC; color:#C084FC;">
+          <div class="swatch-name">magenta (AI)</div>
+          <div class="swatch-hex" style="color:rgba(255,255,255,0.7);">#C084FC</div>
+        </div>
+        <div class="swatch has-glow" style="background:#67E8F9; color:#67E8F9;">
+          <div class="swatch-name">cyan (info)</div>
+          <div class="swatch-hex" style="color:rgba(0,0,0,0.5);">#67E8F9</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="palette-row">
+      <div class="palette-label">→ SEMANTIC</div>
+      <div class="palette-grid">
+        <div class="swatch" style="background:#4ADE80;">
+          <div class="swatch-name">success</div>
+          <div class="swatch-hex" style="color:rgba(0,0,0,0.6);">#4ADE80</div>
+        </div>
+        <div class="swatch" style="background:#FBBF24;">
+          <div class="swatch-name">warning</div>
+          <div class="swatch-hex" style="color:rgba(0,0,0,0.6);">#FBBF24</div>
+        </div>
+        <div class="swatch" style="background:#F87171;">
+          <div class="swatch-name">danger</div>
+          <div class="swatch-hex" style="color:rgba(0,0,0,0.6);">#F87171</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Typography -->
+  <section>
+    <h2>טיפוגרפיה <span class="num">/ typography</span></h2>
+    <p class="section-sub">Display gradient + minimal sans + crisp mono</p>
+
+    <div class="type-sample">
+      <div class="display">בונה סוכן בשיחה אחת.</div>
+      <div class="h2">Adaptive consultation bot</div>
+      <div class="body">
+        ספר לנו על העבודה שלך, ונבנה לך סוכן AI שמכיר את הכלים שלך, את ה-flow שלך, ואת השפה שלך.
+        בלי תכנון מורכב — שיחה אחת, חבילה מוכנה, התקנה בשתי דקות.
+      </div>
+      <div class="mono">const agent = await generate({ persona: "knowledge-worker" });</div>
+      <div class="type-meta">
+        Display: Heebo 800 · H2: Heebo 700 · Body: Heebo 400/Inter · Mono: JetBrains Mono 500
+      </div>
+    </div>
+  </section>
+
+  <!-- Bot preview -->
+  <section>
+    <h2>מסך הבוט — Live preview <span class="num">/ bot ui</span></h2>
+    <p class="section-sub">איך הבוט מרגיש בכיוון Linear Cinema — שים לב ל-glass bubbles, indigo glow על כפתור ה-send, ו-magenta ל-thinking states</p>
+
+    <div class="preview-window">
+      <div class="preview-titlebar">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <div class="preview-title-text">generagent · consultation</div>
+        <div class="preview-progress">
+          <div class="progress-pip done"></div>
+          <div class="progress-pip done"></div>
+          <div class="progress-pip current"></div>
+          <div class="progress-pip"></div>
+          <div class="progress-pip"></div>
+        </div>
+      </div>
+      <div class="preview-body">
+        <div class="bubble bot">
+          ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה?
+          <span class="micro">→ this helps me detect your persona</span>
+        </div>
+        <div class="bubble user">
+          אני רואה חשבון עצמאי, מנהל בערך 40 לקוחות. רוב היום עובר במיילים וקריאות זום.
+        </div>
+        <div class="bubble bot">
+          הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?
+        </div>
+        <div class="bubble user">
+          הייתי משיב למיילים בזמן — אני שבועיים מאחור.
+        </div>
+        <div class="bubble thinking">
+          <div class="thinking-spinner"></div>
+          analyzing · persona: knowledge-worker-solo · confidence: 0.78
+        </div>
+      </div>
+      <div class="preview-input">
+        <div class="preview-input-field">הקלד את התשובה שלך...</div>
+        <button class="preview-btn">שלח →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Buttons -->
+  <section>
+    <h2>כפתורים <span class="num">/ buttons</span></h2>
+    <p class="section-sub">3 רמות היררכיה — primary, secondary, ghost</p>
+
+    <div class="glass-card">
+      <div class="btn-row">
+        <button class="btn btn-primary">Primary CTA →</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-ghost">Ghost</button>
+      </div>
+      <div class="btn-row" style="margin-top: 24px;">
+        <button class="btn btn-primary">צור חבילה →</button>
+        <button class="btn btn-secondary">שמור טיוטה</button>
+        <button class="btn btn-ghost">בטל</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Design tokens -->
+  <section>
+    <h2>Design tokens <span class="num">/ specs</span></h2>
+    <p class="section-sub">כל מה שצריך כדי להפיק את הסגנון ב-Tailwind/CSS</p>
+
+    <div class="tokens-table">
+      <div class="token-row header">
+        <div class="token-cell">Token</div>
+        <div class="token-cell">Value · usage</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--radius-sm</div>
+        <div class="token-cell"><code>8px</code> · קלטים, chips</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--radius</div>
+        <div class="token-cell"><code>12px</code> · כפתורים, bubbles בוט</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--radius-lg</div>
+        <div class="token-cell"><code>16-20px</code> · כרטיסים, מודאלים, hero</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--easing</div>
+        <div class="token-cell"><code>cubic-bezier(0.16, 1, 0.3, 1)</code> · expo-out (cinematic)</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--duration-fast</div>
+        <div class="token-cell"><code>200ms</code> · hover, focus</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--duration-base</div>
+        <div class="token-cell"><code>300ms</code> · טרנזישנים רגילים</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--duration-cinematic</div>
+        <div class="token-cell"><code>500ms</code> · hero reveals, scene changes</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--glow-accent</div>
+        <div class="token-cell"><code>0 0 40px rgba(94,106,210,0.25)</code> · primary CTAs</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--glow-magenta</div>
+        <div class="token-cell"><code>0 0 24px rgba(192,132,252,0.3)</code> · AI thinking</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--blur-glass</div>
+        <div class="token-cell"><code>backdrop-filter: blur(20px)</code> · כל ה-glass surfaces</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--blur-blob</div>
+        <div class="token-cell"><code>filter: blur(80-100px)</code> · ambient background blobs</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--border-hairline</div>
+        <div class="token-cell"><code>1px solid rgba(255,255,255,0.08)</code> · כל הקומפוננטות</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--font-display</div>
+        <div class="token-cell"><code>'Heebo' 800 + gradient</code> · h1 בלבד</div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--font-ui</div>
+        <div class="token-cell"><code>'Heebo', 'Inter', system-ui</code></div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--font-mono</div>
+        <div class="token-cell"><code>'JetBrains Mono', monospace</code></div>
+      </div>
+      <div class="token-row">
+        <div class="token-cell label">--spacing-unit</div>
+        <div class="token-cell"><code>4px</code> · base grid (4, 8, 12, 16, 24, 32, 48, 64, 96)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Honest assessment -->
+  <section>
+    <h2>הערכה כנה <span class="num">/ honest review</span></h2>
+    <p class="section-sub">למה Direction A טוב — ולמה צריך להיזהר</p>
+
+    <div class="honest-grid">
+      <div class="honest-card pros">
+        <div class="honest-title">✓ למה זה עובד</div>
+        <ul>
+          <li><strong>פרימיום מובהק</strong> — נראה כמו מוצר ב-$50/חודש, לא $9</li>
+          <li><strong>מבדל מ-Claude Code</strong> — תופס סטטוס משלך, לא "עוד clone"</li>
+          <li><strong>Linear/Vercel = שפה שמפתחים מכבדים</strong> — VC-friendly aesthetic</li>
+          <li><strong>גמיש לעתיד</strong> — קל להוסיף Pro tier עם עוד glow ועומק</li>
+          <li><strong>Indigo + magenta</strong> — קומבו ייחודי לרגעי AI ("המכונה חושבת")</li>
+        </ul>
+      </div>
+      <div class="honest-card cons">
+        <div class="honest-title">! במה צריך להיזהר</div>
+        <ul>
+          <li><strong>סותר את הוראת הפרויקט</strong> — ה-CLAUDE.md אומר "דמיון ל-Claude Code"</li>
+          <li><strong>GPU-heavy</strong> — blur + glow על מובייל ישן ייראה רע (fallback צריך)</li>
+          <li><strong>פחות "ביתי"</strong> — קהל חרדי/לא-טכני עלול לחוש "קר" מדי</li>
+          <li><strong>WCAG AA</strong> בלבד (לא AAA) — indigo על black צריך בדיקה זהירה</li>
+          <li><strong>זמן פיתוח ארוך יותר</strong> ב-15-20% בגלל אנימציות וטרנזישנים</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Hebrew Font Picker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700;800&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Heebo:wght@400;700;800&family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --mono: 'JetBrains Mono', monospace;
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --surface: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-text: #818CF8;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'Heebo', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: 0; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  .phase-header { text-align: center; padding: 32px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1.title {
+    font-size: 48px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 680px; margin: 0 auto; }
+
+  /* Candidate card */
+  .candidate {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .candidate.recommended {
+    border-color: rgba(94,106,210,0.4);
+    box-shadow: 0 0 40px rgba(94,106,210,0.15);
+  }
+  .candidate::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  }
+  .cand-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 20px;
+  }
+  .cand-id {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .cand-name {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--fg);
+  }
+  .cand-tagline {
+    color: var(--fg-dim);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .cand-meta {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    line-height: 1.8;
+    direction: ltr;
+    min-width: 180px;
+  }
+  .badge-rec {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    box-shadow: 0 0 20px rgba(94,106,210,0.3);
+  }
+
+  /* Samples per font */
+  .sample-block {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 20px;
+  }
+  .sample-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .sample-display {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .sample-h2 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    margin: 14px 0 8px;
+  }
+  .sample-body {
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--fg-dim);
+    margin-bottom: 4px;
+  }
+  .sample-body strong { color: var(--fg); font-weight: 600; }
+  .sample-small {
+    font-size: 13px;
+    color: var(--fg-muted);
+    line-height: 1.6;
+  }
+
+  /* Personality chips */
+  .personality {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--fg-dim);
+    font-family: var(--mono);
+  }
+  .chip.pro {
+    background: rgba(74,222,128,0.08);
+    border-color: rgba(74,222,128,0.25);
+    color: var(--success);
+  }
+  .chip.con {
+    background: rgba(251,191,36,0.08);
+    border-color: rgba(251,191,36,0.25);
+    color: var(--warning);
+  }
+
+  /* Font-specific bindings */
+  .font-ibm * { font-family: 'IBM Plex Sans Hebrew', 'Heebo', sans-serif; }
+  .font-rubik * { font-family: 'Rubik', 'Heebo', sans-serif; }
+  .font-assistant * { font-family: 'Assistant', 'Heebo', sans-serif; }
+  .font-frank * { font-family: 'Frank Ruhl Libre', 'Heebo', serif; }
+  .font-heebo * { font-family: 'Heebo', sans-serif; }
+
+  /* Decision box */
+  .decision {
+    background: linear-gradient(135deg, rgba(94,106,210,0.06) 0%, rgba(192,132,252,0.04) 100%);
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 32px;
+  }
+  .decision-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .decision-text {
+    color: var(--fg-dim);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .decision-text strong { color: var(--fg); }
+
+  @media (max-width: 768px) {
+    h1.title { font-size: 36px; }
+    .cand-header { flex-direction: column; }
+    .cand-meta { text-align: right; direction: rtl; min-width: 0; }
+    .candidate { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 03 · HEBREW FONT · UPGRADE</div>
+    <h1 class="title">בוחרים גופן עברי<br>שמדבר בקול שלך.</h1>
+    <p class="subtitle">4 מועמדים פרימיום מ-Google Fonts. כולם חינמיים, כולם תומכים בכל ה-weights, וכולם נראים מצוין במצב dark.</p>
+  </div>
+
+  <!-- CANDIDATE 1 — IBM Plex Sans Hebrew (RECOMMENDED) -->
+  <div class="candidate recommended font-ibm">
+    <div class="cand-header">
+      <div>
+        <div class="badge-rec">★ TOP PICK</div>
+        <div class="cand-id">candidate · 01</div>
+        <div class="cand-name">IBM Plex Sans Hebrew</div>
+        <div class="cand-tagline">
+          הגופן של IBM Design System. עוצב ע"י ליעם לוי טורקנייץ' במיוחד לעברית — לא תרגום של גופן לטיני.
+          המקבילה הישראלית של Inter — engineering-grade, מדויק, יוקרתי.
+        </div>
+      </div>
+      <div class="cand-meta">
+        Designer: Liron Lavi Turkenich<br>
+        License: Open Font (OFL)<br>
+        Weights: 100-700<br>
+        Match: JetBrains Mono ✓<br>
+        Pairs with: IBM Plex Mono<br>
+        Used by: IBM, Pivotal, dev-tool brands
+      </div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ DISPLAY · 800</div>
+      <div class="sample-display" style="font-weight: 700;">בונה סוכן.<br>בשיחה אחת.</div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ H2 · 700</div>
+      <div class="sample-h2">מערכת הצבעים המלאה של aurora</div>
+      <div class="sample-body">
+        ספר לי בכמה משפטים — <strong>מה אתה עושה ביום-יום בעבודה?</strong>
+        התשובה תעזור לי להבין את ה-persona שלך, ולהמליץ על הסוכן המתאים.
+        הבוט שואל 7-15 שאלות, מסתעף לפי התשובות, ומגיע להבנה מדויקת תוך 5 דקות.
+      </div>
+      <div class="sample-small">→ פרסונה זוהתה: rאה-חשבון עצמאי · confidence 0.88 · נמשיך?</div>
+    </div>
+
+    <div class="personality">
+      <div class="chip pro">+ engineering premium</div>
+      <div class="chip pro">+ Hebrew designed natively</div>
+      <div class="chip pro">+ unique character — לא Heebo</div>
+      <div class="chip pro">+ matching mono family</div>
+      <div class="chip">neutral · IBM brand association</div>
+    </div>
+  </div>
+
+  <!-- CANDIDATE 2 — Rubik -->
+  <div class="candidate font-rubik">
+    <div class="cand-header">
+      <div>
+        <div class="cand-id">candidate · 02</div>
+        <div class="cand-name">Rubik</div>
+        <div class="cand-tagline">
+          הגופן הפופולרי ביותר בהייטק הישראלי. גיאומטרי, מודרני, ידידותי.
+          בשימוש ב-Wix, Israeli tech brands, ועוד. הכי "בטוח" — כולם מכירים.
+        </div>
+      </div>
+      <div class="cand-meta">
+        Designer: Philipp Hubert &amp; Sebastian Fischer<br>
+        License: Open Font (OFL)<br>
+        Weights: 300-900<br>
+        Match: JetBrains Mono ✓<br>
+        Used by: Wix, monday.com, Bezeq
+      </div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ DISPLAY · 800</div>
+      <div class="sample-display">בונה סוכן.<br>בשיחה אחת.</div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ H2 · 700</div>
+      <div class="sample-h2">מערכת הצבעים המלאה של aurora</div>
+      <div class="sample-body">
+        ספר לי בכמה משפטים — <strong>מה אתה עושה ביום-יום בעבודה?</strong>
+        התשובה תעזור לי להבין את ה-persona שלך, ולהמליץ על הסוכן המתאים.
+        הבוט שואל 7-15 שאלות, מסתעף לפי התשובות, ומגיע להבנה מדויקת תוך 5 דקות.
+      </div>
+      <div class="sample-small">→ פרסונה זוהתה: רואה-חשבון עצמאי · confidence 0.88 · נמשיך?</div>
+    </div>
+
+    <div class="personality">
+      <div class="chip pro">+ familiar · safe choice</div>
+      <div class="chip pro">+ friendly · approachable</div>
+      <div class="chip pro">+ 9 weights (300-900)</div>
+      <div class="chip con">! קצת גנרי בהייטק הישראלי</div>
+      <div class="chip con">! פחות "פרימיום craft"</div>
+    </div>
+  </div>
+
+  <!-- CANDIDATE 3 — Assistant -->
+  <div class="candidate font-assistant">
+    <div class="cand-header">
+      <div>
+        <div class="cand-id">candidate · 03</div>
+        <div class="cand-name">Assistant</div>
+        <div class="cand-tagline">
+          גופן הומניסטי שעוצב ע"י Yanek Iontef. קל לקריאה, חברותי, פחות פורמלי.
+          בחירה טובה אם רוצים תחושה "ביתית" יותר — פחות תאגידי, יותר קרוב.
+        </div>
+      </div>
+      <div class="cand-meta">
+        Designer: Yanek Iontef<br>
+        License: Open Font (OFL)<br>
+        Weights: 200-800<br>
+        Match: JetBrains Mono ✓<br>
+        Used by: Israeli government, .gov.il
+      </div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ DISPLAY · 800</div>
+      <div class="sample-display">בונה סוכן.<br>בשיחה אחת.</div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ H2 · 700</div>
+      <div class="sample-h2">מערכת הצבעים המלאה של aurora</div>
+      <div class="sample-body">
+        ספר לי בכמה משפטים — <strong>מה אתה עושה ביום-יום בעבודה?</strong>
+        התשובה תעזור לי להבין את ה-persona שלך, ולהמליץ על הסוכן המתאים.
+        הבוט שואל 7-15 שאלות, מסתעף לפי התשובות, ומגיע להבנה מדויקת תוך 5 דקות.
+      </div>
+      <div class="sample-small">→ פרסונה זוהתה: רואה-חשבון עצמאי · confidence 0.88 · נמשיך?</div>
+    </div>
+
+    <div class="personality">
+      <div class="chip pro">+ humanist · warm</div>
+      <div class="chip pro">+ great body readability</div>
+      <div class="chip con">! פחות בולט ב-display</div>
+      <div class="chip con">! "ממשלתי" — אסוציאציה ל-gov.il</div>
+    </div>
+  </div>
+
+  <!-- CANDIDATE 4 — Frank Ruhl Libre (WILDCARD) -->
+  <div class="candidate font-frank">
+    <div class="cand-header">
+      <div>
+        <div class="cand-id">candidate · 04 · wildcard</div>
+        <div class="cand-name">Frank Ruhl Libre</div>
+        <div class="cand-tagline">
+          סריף קלאסי, מבוסס פרנק רוהל המקורי. יוקרתי, ספרותי, ייחודי.
+          ה-wildcard — לא בחירה רגילה לדאשבורד, אבל יכול להיות מהלך נועז שמבדל אותך לחלוטין.
+        </div>
+      </div>
+      <div class="cand-meta">
+        Designer: Originally Raphael Frank<br>
+        License: Open Font (OFL)<br>
+        Weights: 300-900<br>
+        Match: JetBrains Mono ⚠ (contrast)<br>
+        Style: Serif (literary)
+      </div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ DISPLAY · 900</div>
+      <div class="sample-display" style="font-weight: 900;">בונה סוכן.<br>בשיחה אחת.</div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-label">→ H2 · 700</div>
+      <div class="sample-h2">מערכת הצבעים המלאה של aurora</div>
+      <div class="sample-body">
+        ספר לי בכמה משפטים — <strong>מה אתה עושה ביום-יום בעבודה?</strong>
+        התשובה תעזור לי להבין את ה-persona שלך, ולהמליץ על הסוכן המתאים.
+        הבוט שואל 7-15 שאלות, מסתעף לפי התשובות, ומגיע להבנה מדויקת תוך 5 דקות.
+      </div>
+      <div class="sample-small">→ פרסונה זוהתה: רואה-חשבון עצמאי · confidence 0.88 · נמשיך?</div>
+    </div>
+
+    <div class="personality">
+      <div class="chip pro">+ UNIQUE — אף אחד לא משתמש</div>
+      <div class="chip pro">+ literary · premium feel</div>
+      <div class="chip pro">+ display עוצמתי</div>
+      <div class="chip con">! Serif סותר את "developer tool"</div>
+      <div class="chip con">! פחות אופטימלי ל-body small</div>
+    </div>
+  </div>
+
+  <!-- Current — Heebo -->
+  <div class="candidate font-heebo" style="opacity: 0.6;">
+    <div class="cand-header">
+      <div>
+        <div class="cand-id">currently using · for comparison</div>
+        <div class="cand-name">Heebo</div>
+        <div class="cand-tagline">
+          הבחירה הנוכחית — פונקציונלי, נטרלי, אבל ללא אופי מובחן. רירוב Roboto-לעברית.
+        </div>
+      </div>
+      <div class="cand-meta">
+        Designer: Oded Ezer<br>
+        License: Open Font (OFL)<br>
+        Weights: 100-900
+      </div>
+    </div>
+
+    <div class="sample-block">
+      <div class="sample-display">בונה סוכן.<br>בשיחה אחת.</div>
+    </div>
+  </div>
+
+  <!-- Decision -->
+  <div class="decision">
+    <div class="decision-title">המלצה ברורה</div>
+    <p class="decision-text">
+      <strong>IBM Plex Sans Hebrew</strong> הוא הבחירה הנכונה ל-aurora. שלוש סיבות:
+      <br><br>
+      <strong>1.</strong> זה הגופן הפרימיום היחיד פה שעוצב <em>במיוחד לעברית</em> (לא תרגום מלטינית).
+      ליעם לוי טורקנייץ' הוא מעצבת ישראלית שיצרה אותו כחלק מהמשפחה של IBM Plex —
+      אותה רמת craft שיש ל-Inter בלטינית.
+      <br><br>
+      <strong>2.</strong> ה-DNA שלו הוא "engineering premium" — בדיוק התחושה של Linear, Vercel,
+      ו-developer tools מודרניים. הוא לא ידידותי-מדי (כמו Assistant) ולא גנרי (כמו Rubik).
+      <br><br>
+      <strong>3.</strong> בעתיד, אם תרצה להחליף את JetBrains Mono ל-<strong>IBM Plex Mono</strong>
+      תקבל family מאוחד — אסטטיקה אחת מהבוט ועד הלוגו. זה משחרר אותך מ-vendor lock-in של JetBrains.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 2 — Color System (aurora)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'Heebo', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-hover: #7B85DC;
+    --accent-text: #818CF8;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: 0; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 40px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 24px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1 {
+    font-size: 52px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 680px; margin: 0 auto; }
+
+  /* Section */
+  section { margin-bottom: 64px; }
+  h2 { font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
+  h2 .num { color: var(--accent-text); font-family: var(--mono); font-size: 14px; font-weight: 500; margin-left: 12px; }
+  .section-sub { color: var(--fg-dim); margin-bottom: 28px; font-size: 16px; }
+
+  /* Architecture diagram */
+  .arch {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .arch-layer {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+  .arch-layer:last-child { margin-bottom: 0; }
+  .arch-tag {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 8px;
+  }
+  .arch-layer.l1 .arch-tag { color: var(--accent-text); }
+  .arch-layer.l2 .arch-tag { color: var(--magenta); }
+  .arch-layer.l3 .arch-tag { color: var(--cyan); }
+  .arch-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .arch-desc { color: var(--fg-dim); font-size: 13px; }
+  .arch-arrow { text-align: center; color: var(--accent-text); font-size: 18px; margin: 4px 0; opacity: 0.6; }
+
+  /* Token table */
+  .tokens-table {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .tok-row {
+    display: grid;
+    grid-template-columns: 220px 110px 1fr 120px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background 150ms ease;
+  }
+  .tok-row:last-child { border-bottom: none; }
+  .tok-row:hover { background: var(--surface); }
+  .tok-row.header { background: var(--bg-elev-2); font-weight: 600; font-size: 13px; }
+  .tok-cell { padding: 13px 18px; font-size: 13px; }
+  .tok-cell.name { font-family: var(--mono); color: var(--accent-text); font-size: 12px; border-left: 1px solid var(--border); }
+  .tok-cell.swatch-cell { padding: 8px 12px; }
+  .tok-cell.value { color: var(--fg-dim); font-family: var(--mono); font-size: 12px; direction: ltr; }
+  .tok-cell.usage { color: var(--fg); font-size: 13px; }
+  .tok-cell.contrast { font-family: var(--mono); font-size: 11px; text-align: center; }
+  .mini-swatch {
+    width: 100%; height: 32px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-family: var(--mono); font-size: 10px; font-weight: 600; }
+  .badge.aaa { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+  .badge.aa { background: rgba(251,191,36,0.15); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+  .badge.fail { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .badge.surface { background: rgba(255,255,255,0.06); color: var(--fg-dim); border: 1px solid var(--border); }
+  @media (max-width: 768px) {
+    .tok-row { grid-template-columns: 1fr 1fr; }
+    .tok-cell.usage, .tok-cell.contrast { grid-column: span 2; padding-top: 4px; }
+  }
+
+  /* State variants */
+  .states-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .states-grid { grid-template-columns: 1fr; } }
+  .state-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .state-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .state-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .state-row:last-child { border-bottom: none; }
+  .state-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    width: 80px;
+  }
+  .state-demo {
+    flex: 1;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+  }
+  .state-hex {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    direction: ltr;
+    width: 70px;
+    text-align: left;
+  }
+  /* button states */
+  .btn-state.default { background: var(--accent); color: #fff; }
+  .btn-state.hover { background: var(--accent-hover); color: #fff; box-shadow: 0 0 20px rgba(94,106,210,0.25); }
+  .btn-state.active { background: #4D58B8; color: #fff; transform: translateY(1px); }
+  .btn-state.focus { background: var(--accent); color: #fff; outline: 2px solid var(--accent-bright); outline-offset: 2px; }
+  .btn-state.disabled { background: rgba(94,106,210,0.3); color: rgba(255,255,255,0.4); cursor: not-allowed; }
+
+  /* surface states */
+  .surf-state.default { background: var(--surface); color: var(--fg); border: 1px solid var(--border); }
+  .surf-state.hover { background: var(--surface-strong); color: var(--fg); border: 1px solid var(--border-strong); }
+  .surf-state.active { background: rgba(255,255,255,0.1); color: var(--fg); border: 1px solid var(--border-strong); }
+  .surf-state.selected { background: rgba(94,106,210,0.15); color: var(--accent-bright); border: 1px solid rgba(94,106,210,0.4); }
+  .surf-state.disabled { background: var(--surface); color: var(--fg-muted); border: 1px solid var(--border); opacity: 0.5; }
+
+  /* Elevation showcase */
+  .elev-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .elev-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .elev-0 { box-shadow: none; }
+  .elev-1 { box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .elev-2 { box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+  .elev-3 { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+  .elev-glow {
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.5),
+      0 0 40px rgba(94,106,210,0.25);
+    background: var(--bg-elev-2);
+    border-color: rgba(94,106,210,0.3);
+  }
+  .elev-name { font-family: var(--mono); font-size: 11px; color: var(--accent-text); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .elev-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .elev-use { font-size: 12px; color: var(--fg-dim); }
+
+  /* Glow showcase */
+  .glow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .glow-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 20px;
+    text-align: center;
+  }
+  .glow-orb {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+  }
+  .orb-accent { background: var(--accent); box-shadow: 0 0 40px rgba(94,106,210,0.5); }
+  .orb-magenta { background: var(--magenta); box-shadow: 0 0 32px rgba(192,132,252,0.5); }
+  .orb-cyan { background: var(--cyan); box-shadow: 0 0 32px rgba(103,232,249,0.5); }
+  .orb-success { background: var(--success); box-shadow: 0 0 32px rgba(74,222,128,0.4); }
+  .orb-danger { background: var(--danger); box-shadow: 0 0 32px rgba(248,113,113,0.4); }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .code-head {
+    background: var(--bg-elev-2);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .code-filename { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); direction: ltr; }
+  .code-copy {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg-dim);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 150ms var(--easing);
+  }
+  .code-copy:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .code-body {
+    padding: 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--fg);
+    direction: ltr;
+    text-align: left;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .c-comment { color: var(--fg-muted); }
+  .c-key { color: var(--accent-text); }
+  .c-string { color: var(--success); }
+  .c-num { color: var(--magenta); }
+  .c-fn { color: var(--cyan); }
+
+  /* Pitfalls */
+  .pitfalls {
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .pitfall-row {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(251,191,36,0.15);
+  }
+  .pitfall-row:last-child { border-bottom: none; }
+  .pitfall-icon { color: var(--warning); font-weight: 700; flex-shrink: 0; }
+  .pitfall-text { color: var(--fg-dim); font-size: 14px; }
+  .pitfall-text strong { color: var(--fg); }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 36px; }
+    h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 02 · COLOR SYSTEM · AURORA</div>
+    <h1>מערכת הצבעים<br>המלאה.</h1>
+    <p class="subtitle">22 טוקנים. 3 שכבות. WCAG audit על כל זוג. מוכן לייצוא ל-Tailwind, CSS vars, או JSON</p>
+  </div>
+
+  <!-- Token architecture -->
+  <section>
+    <h2>ארכיטקטורת הטוקנים <span class="num">/ 01 architecture</span></h2>
+    <p class="section-sub">3 שכבות מהאקראי לסמנטי — שינוי בערך אחד מתפזר אוטומטית בכל המערכת</p>
+
+    <div class="arch">
+      <div class="arch-layer l1">
+        <div class="arch-tag">→ LAYER 1 · PRIMITIVES (raw values)</div>
+        <div class="arch-name">indigo-500, indigo-400, neutral-950, neutral-900...</div>
+        <div class="arch-desc">צבעים גולמיים. אף קומפוננטה לא צורכת ישירות.</div>
+      </div>
+      <div class="arch-arrow">↓ mapped to</div>
+      <div class="arch-layer l2">
+        <div class="arch-tag">→ LAYER 2 · SEMANTIC (purpose)</div>
+        <div class="arch-name">--accent, --fg, --bg-elev, --danger, --surface...</div>
+        <div class="arch-desc">תפקיד במקום ערך. כל קומפוננטה משתמשת מהשכבה הזו.</div>
+      </div>
+      <div class="arch-arrow">↓ consumed by</div>
+      <div class="arch-layer l3">
+        <div class="arch-tag">→ LAYER 3 · COMPONENT (contextual)</div>
+        <div class="arch-name">--btn-primary-bg, --bot-bubble-bot-fg, --modal-overlay...</div>
+        <div class="arch-desc">טוקנים נקודתיים שמושכים מהשכבה הסמנטית. לא חובה לכל קומפוננטה — רק לאלו שדורשים עידון.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full semantic tokens with WCAG -->
+  <section>
+    <h2>טוקנים סמנטיים + WCAG audit <span class="num">/ 02 tokens</span></h2>
+    <p class="section-sub">כל שורה — name · swatch · hex · usage · contrast vs. <code>bg-base #050506</code></p>
+
+    <div class="tokens-table">
+      <div class="tok-row header">
+        <div class="tok-cell">Token</div>
+        <div class="tok-cell">Color</div>
+        <div class="tok-cell">Usage</div>
+        <div class="tok-cell" style="text-align:center;">WCAG</div>
+      </div>
+
+      <!-- Surfaces -->
+      <div class="tok-row">
+        <div class="tok-cell name">--bg-deep</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#020203;"></div></div>
+        <div class="tok-cell usage">רקע ה-body. השכבה הכי עמוקה.</div>
+        <div class="tok-cell contrast"><span class="badge surface">surface</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--bg-base</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#050506;"></div></div>
+        <div class="tok-cell usage">רקע ראשי לאזורי תוכן.</div>
+        <div class="tok-cell contrast"><span class="badge surface">surface</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--bg-elev</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#0A0A0F;"></div></div>
+        <div class="tok-cell usage">כרטיסים, panels, sidebars.</div>
+        <div class="tok-cell contrast"><span class="badge surface">surface</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--bg-elev-2</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#11111A;"></div></div>
+        <div class="tok-cell usage">title bars, table headers, code chunks.</div>
+        <div class="tok-cell contrast"><span class="badge surface">surface</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--bg-elev-3</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#1A1A24;"></div></div>
+        <div class="tok-cell usage">מודאלים על top, popovers, dropdowns.</div>
+        <div class="tok-cell contrast"><span class="badge surface">surface</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--surface</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.04)),#050506;"></div></div>
+        <div class="tok-cell usage">glass surfaces + backdrop-filter: blur(20px).</div>
+        <div class="tok-cell contrast"><span class="badge surface">glass</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--surface-strong</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.07)),#050506;"></div></div>
+        <div class="tok-cell usage">glass במצב hover/active.</div>
+        <div class="tok-cell contrast"><span class="badge surface">glass</span></div>
+      </div>
+
+      <!-- Borders -->
+      <div class="tok-row">
+        <div class="tok-cell name">--border</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.08)),#050506;"></div></div>
+        <div class="tok-cell usage">hairline borders על כל הקומפוננטות.</div>
+        <div class="tok-cell contrast"><span class="badge surface">border</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--border-strong</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:linear-gradient(135deg,rgba(255,255,255,0.14),rgba(255,255,255,0.14)),#050506;"></div></div>
+        <div class="tok-cell usage">קלטים, dividers דומיננטיים.</div>
+        <div class="tok-cell contrast"><span class="badge surface">border</span></div>
+      </div>
+
+      <!-- Text -->
+      <div class="tok-row">
+        <div class="tok-cell name">--fg</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#EDEDEF;"></div></div>
+        <div class="tok-cell usage">טקסט ראשי — body, headings.</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 17.4</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--fg-dim</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#8A8F98;"></div></div>
+        <div class="tok-cell usage">subtitles, captions, helper text.</div>
+        <div class="tok-cell contrast"><span class="badge aa">AA · 6.27</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--fg-muted</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#71778A;"></div></div>
+        <div class="tok-cell usage">placeholders, disabled labels (טקסט גדול בלבד 18px+).</div>
+        <div class="tok-cell contrast"><span class="badge aa">AA · 4.6</span></div>
+      </div>
+
+      <!-- Accent -->
+      <div class="tok-row">
+        <div class="tok-cell name">--accent</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#5E6AD2;"></div></div>
+        <div class="tok-cell usage">FILLS בלבד — כפתורים, icons. <strong>לא לטקסט</strong>.</div>
+        <div class="tok-cell contrast"><span class="badge fail">⚠ 4.3</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--accent-hover</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#7B85DC;"></div></div>
+        <div class="tok-cell usage">accent + hover state בלבד.</div>
+        <div class="tok-cell contrast"><span class="badge aa">AA · 6.04</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--accent-text</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#818CF8;"></div></div>
+        <div class="tok-cell usage">לינקים אינדיגו, לייבלים, accent text — חליפי לטקסט.</div>
+        <div class="tok-cell contrast"><span class="badge aa">AA · 6.83</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--accent-bright</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#A5B4FC;"></div></div>
+        <div class="tok-cell usage">accent בהיר ביותר — focus rings, key callouts.</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 10.2</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--magenta</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#C084FC;"></div></div>
+        <div class="tok-cell usage">AI thinking, analysis spinners, "המכונה חושבת".</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 7.71</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--cyan</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#67E8F9;"></div></div>
+        <div class="tok-cell usage">info badges, code highlights, links sub-tier.</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 14.1</span></div>
+      </div>
+
+      <!-- Semantic -->
+      <div class="tok-row">
+        <div class="tok-cell name">--success</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#4ADE80;"></div></div>
+        <div class="tok-cell usage">checkmarks, completion, "פעולה הצליחה".</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 11.7</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--warning</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#FBBF24;"></div></div>
+        <div class="tok-cell usage">אזהרות, "דרושה תשומת לב".</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 12.2</span></div>
+      </div>
+      <div class="tok-row">
+        <div class="tok-cell name">--danger</div>
+        <div class="tok-cell swatch-cell"><div class="mini-swatch" style="background:#F87171;"></div></div>
+        <div class="tok-cell usage">errors, destructive actions, "מחק".</div>
+        <div class="tok-cell contrast"><span class="badge aaa">AAA · 7.37</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- State variants -->
+  <section>
+    <h2>State variants <span class="num">/ 03 interactive states</span></h2>
+    <p class="section-sub">כל אלמנט אינטראקטיבי חייב להציג 5 מצבים. הנה הסטנדרט.</p>
+
+    <div class="states-grid">
+      <div class="state-card">
+        <div class="state-title">Primary button states</div>
+        <div class="state-row">
+          <div class="state-label">default</div>
+          <div class="state-demo btn-state default">שלח</div>
+          <div class="state-hex">#5E6AD2</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">hover</div>
+          <div class="state-demo btn-state hover">שלח</div>
+          <div class="state-hex">#7B85DC</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">active</div>
+          <div class="state-demo btn-state active">שלח</div>
+          <div class="state-hex">#4D58B8</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">focus</div>
+          <div class="state-demo btn-state focus">שלח</div>
+          <div class="state-hex">ring A5B4FC</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">disabled</div>
+          <div class="state-demo btn-state disabled">שלח</div>
+          <div class="state-hex">opacity 0.4</div>
+        </div>
+      </div>
+
+      <div class="state-card">
+        <div class="state-title">Surface (chip/option) states</div>
+        <div class="state-row">
+          <div class="state-label">default</div>
+          <div class="state-demo surf-state default">אפשרות</div>
+          <div class="state-hex">surface</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">hover</div>
+          <div class="state-demo surf-state hover">אפשרות</div>
+          <div class="state-hex">surface-str</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">active</div>
+          <div class="state-demo surf-state active">אפשרות</div>
+          <div class="state-hex">rgba/.1</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">selected</div>
+          <div class="state-demo surf-state selected">אפשרות</div>
+          <div class="state-hex">indigo tint</div>
+        </div>
+        <div class="state-row">
+          <div class="state-label">disabled</div>
+          <div class="state-demo surf-state disabled">אפשרות</div>
+          <div class="state-hex">opacity 0.5</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Elevation -->
+  <section>
+    <h2>מערכת Elevation <span class="num">/ 04 shadows</span></h2>
+    <p class="section-sub">5 רמות גובה. ב-aurora העומק נוצר משילוב של shadow + glow + border</p>
+
+    <div class="elev-grid">
+      <div class="elev-card elev-0">
+        <div class="elev-name">elev-0</div>
+        <div class="elev-label">Flat</div>
+        <div class="elev-use">inline elements</div>
+      </div>
+      <div class="elev-card elev-1">
+        <div class="elev-name">elev-1</div>
+        <div class="elev-label">Subtle</div>
+        <div class="elev-use">chips, badges</div>
+      </div>
+      <div class="elev-card elev-2">
+        <div class="elev-name">elev-2</div>
+        <div class="elev-label">Card</div>
+        <div class="elev-use">כרטיסים רגילים</div>
+      </div>
+      <div class="elev-card elev-3">
+        <div class="elev-name">elev-3</div>
+        <div class="elev-label">Modal</div>
+        <div class="elev-use">מודאלים, popovers</div>
+      </div>
+      <div class="elev-card elev-glow">
+        <div class="elev-name">elev-glow</div>
+        <div class="elev-label">Primary CTA</div>
+        <div class="elev-use">shadow + accent glow</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Glow tokens -->
+  <section>
+    <h2>Glow tokens <span class="num">/ 05 luminance</span></h2>
+    <p class="section-sub">aurora משתמש בזוהר כאלמנט עיצובי. 5 glow-tokens מוגדרים.</p>
+
+    <div class="glow-grid">
+      <div class="glow-card">
+        <div class="glow-orb orb-accent"></div>
+        <div class="elev-name">glow-accent</div>
+        <div class="elev-label">Primary CTAs</div>
+        <div class="elev-use">0 0 40px rgba(94,106,210,.25)</div>
+      </div>
+      <div class="glow-card">
+        <div class="glow-orb orb-magenta"></div>
+        <div class="elev-name">glow-magenta</div>
+        <div class="elev-label">AI thinking</div>
+        <div class="elev-use">0 0 24px rgba(192,132,252,.3)</div>
+      </div>
+      <div class="glow-card">
+        <div class="glow-orb orb-cyan"></div>
+        <div class="elev-name">glow-cyan</div>
+        <div class="elev-label">Info accents</div>
+        <div class="elev-use">0 0 24px rgba(103,232,249,.3)</div>
+      </div>
+      <div class="glow-card">
+        <div class="glow-orb orb-success"></div>
+        <div class="elev-name">glow-success</div>
+        <div class="elev-label">Completed</div>
+        <div class="elev-use">0 0 24px rgba(74,222,128,.25)</div>
+      </div>
+      <div class="glow-card">
+        <div class="glow-orb orb-danger"></div>
+        <div class="elev-name">glow-danger</div>
+        <div class="elev-label">Errors</div>
+        <div class="elev-use">0 0 24px rgba(248,113,113,.25)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Export: Tailwind -->
+  <section>
+    <h2>ייצוא ל-Tailwind <span class="num">/ 06 tailwind.config</span></h2>
+    <p class="section-sub">העתק ישירות ל-<code>tailwind.config.ts</code> בפרויקט Next.js</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">tailwind.config.ts</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body"><span class="c-key">import</span> <span class="c-fn">type</span> { Config } <span class="c-key">from</span> <span class="c-string">"tailwindcss"</span>;
+
+<span class="c-key">export default</span> {
+  darkMode: <span class="c-string">"class"</span>,
+  content: [<span class="c-string">"./app/**/*.{ts,tsx}"</span>],
+  theme: {
+    extend: {
+      colors: {
+        bg: {
+          deep: <span class="c-string">"#020203"</span>,
+          base: <span class="c-string">"#050506"</span>,
+          elev: <span class="c-string">"#0A0A0F"</span>,
+          <span class="c-key">"elev-2"</span>: <span class="c-string">"#11111A"</span>,
+          <span class="c-key">"elev-3"</span>: <span class="c-string">"#1A1A24"</span>,
+        },
+        fg: {
+          DEFAULT: <span class="c-string">"#EDEDEF"</span>,
+          dim: <span class="c-string">"#8A8F98"</span>,
+          muted: <span class="c-string">"#71778A"</span>,
+        },
+        accent: {
+          DEFAULT: <span class="c-string">"#5E6AD2"</span>,
+          hover: <span class="c-string">"#7B85DC"</span>,
+          text: <span class="c-string">"#818CF8"</span>,
+          bright: <span class="c-string">"#A5B4FC"</span>,
+        },
+        magenta: <span class="c-string">"#C084FC"</span>,
+        cyan: <span class="c-string">"#67E8F9"</span>,
+        success: <span class="c-string">"#4ADE80"</span>,
+        warning: <span class="c-string">"#FBBF24"</span>,
+        danger: <span class="c-string">"#F87171"</span>,
+      },
+      borderColor: {
+        DEFAULT: <span class="c-string">"rgba(255,255,255,0.08)"</span>,
+        strong: <span class="c-string">"rgba(255,255,255,0.14)"</span>,
+      },
+      boxShadow: {
+        <span class="c-key">"elev-1"</span>: <span class="c-string">"0 1px 2px rgba(0,0,0,0.3)"</span>,
+        <span class="c-key">"elev-2"</span>: <span class="c-string">"0 4px 12px rgba(0,0,0,0.4)"</span>,
+        <span class="c-key">"elev-3"</span>: <span class="c-string">"0 8px 24px rgba(0,0,0,0.5)"</span>,
+        <span class="c-key">"glow-accent"</span>: <span class="c-string">"0 0 40px rgba(94,106,210,0.25)"</span>,
+        <span class="c-key">"glow-magenta"</span>: <span class="c-string">"0 0 24px rgba(192,132,252,0.3)"</span>,
+        <span class="c-key">"glow-cyan"</span>: <span class="c-string">"0 0 24px rgba(103,232,249,0.3)"</span>,
+      },
+      backdropBlur: {
+        glass: <span class="c-string">"20px"</span>,
+        blob: <span class="c-string">"100px"</span>,
+      },
+      transitionTimingFunction: {
+        cinematic: <span class="c-string">"cubic-bezier(0.16, 1, 0.3, 1)"</span>,
+      },
+    },
+  },
+} <span class="c-key">satisfies</span> Config;</div>
+    </div>
+  </section>
+
+  <!-- Export: CSS Variables -->
+  <section>
+    <h2>ייצוא ל-CSS Variables <span class="num">/ 07 globals.css</span></h2>
+    <p class="section-sub">לפרויקטים שלא משתמשים ב-Tailwind, או ככיסוי ב-CSS Modules</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">app/globals.css</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body"><span class="c-comment">/* ============================================
+   AURORA · Color System v1.0
+   ============================================ */</span>
+:root {
+  <span class="c-comment">/* surfaces */</span>
+  <span class="c-key">--bg-deep</span>: #020203;
+  <span class="c-key">--bg-base</span>: #050506;
+  <span class="c-key">--bg-elev</span>: #0A0A0F;
+  <span class="c-key">--bg-elev-2</span>: #11111A;
+  <span class="c-key">--bg-elev-3</span>: #1A1A24;
+  <span class="c-key">--surface</span>: rgba(255,255,255,0.04);
+  <span class="c-key">--surface-strong</span>: rgba(255,255,255,0.07);
+
+  <span class="c-comment">/* borders */</span>
+  <span class="c-key">--border</span>: rgba(255,255,255,0.08);
+  <span class="c-key">--border-strong</span>: rgba(255,255,255,0.14);
+
+  <span class="c-comment">/* text */</span>
+  <span class="c-key">--fg</span>: #EDEDEF;
+  <span class="c-key">--fg-dim</span>: #8A8F98;
+  <span class="c-key">--fg-muted</span>: #71778A;
+
+  <span class="c-comment">/* accent */</span>
+  <span class="c-key">--accent</span>: #5E6AD2;
+  <span class="c-key">--accent-hover</span>: #7B85DC;
+  <span class="c-key">--accent-text</span>: #818CF8;
+  <span class="c-key">--accent-bright</span>: #A5B4FC;
+
+  <span class="c-comment">/* secondary accents */</span>
+  <span class="c-key">--magenta</span>: #C084FC;
+  <span class="c-key">--cyan</span>: #67E8F9;
+
+  <span class="c-comment">/* semantic */</span>
+  <span class="c-key">--success</span>: #4ADE80;
+  <span class="c-key">--warning</span>: #FBBF24;
+  <span class="c-key">--danger</span>: #F87171;
+
+  <span class="c-comment">/* elevation */</span>
+  <span class="c-key">--elev-1</span>: 0 1px 2px rgba(0,0,0,0.3);
+  <span class="c-key">--elev-2</span>: 0 4px 12px rgba(0,0,0,0.4);
+  <span class="c-key">--elev-3</span>: 0 8px 24px rgba(0,0,0,0.5);
+
+  <span class="c-comment">/* glow */</span>
+  <span class="c-key">--glow-accent</span>: 0 0 40px rgba(94,106,210,0.25);
+  <span class="c-key">--glow-magenta</span>: 0 0 24px rgba(192,132,252,0.3);
+  <span class="c-key">--glow-cyan</span>: 0 0 24px rgba(103,232,249,0.3);
+
+  <span class="c-comment">/* motion */</span>
+  <span class="c-key">--ease-cinematic</span>: cubic-bezier(0.16, 1, 0.3, 1);
+  <span class="c-key">--dur-fast</span>: 200ms;
+  <span class="c-key">--dur-base</span>: 300ms;
+  <span class="c-key">--dur-slow</span>: 500ms;
+}</div>
+    </div>
+  </section>
+
+  <!-- Pitfalls -->
+  <section>
+    <h2>אזהרות שימוש <span class="num">/ 08 don'ts</span></h2>
+    <p class="section-sub">דברים שלא תופסים בעין רגילה אבל יהרסו את העקביות</p>
+
+    <div class="pitfalls">
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תשתמש ב-<code>--accent</code> לטקסט.</strong>
+          הקונטרסט שלו על הרקע הוא 4.3 — נופל מ-AA. השתמש ב-<code>--accent-text</code> או <code>--accent-bright</code>.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תערבב glow-accent עם glow-magenta על אותו אלמנט.</strong>
+          זה יוצר רעש ויזואלי. אחד שולט — השני הוא תפאורה ברקע.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תפתח 4 שכבות glassmorphism מעל אותו רקע.</strong>
+          backdrop-filter מצטבר וגומר את ה-GPU. מקסימום 2 שכבות (overlay + modal).
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תשנה <code>--bg-base</code> לבן בעתיד.</strong>
+          aurora היא מערכת dark-only. בנייה של light mode דורשת מערכת אחיות (לא inversion פשוט) — נושא לשלב נפרד.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תוסיף accent חדש בלי לבדוק WCAG.</strong>
+          כל צבע אינטראקטיבי חייב לעמוד ב-AA (4.5:1) על <code>--bg-base</code>. הוסף בדיקה ל-CI.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

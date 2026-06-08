@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 3 — Typography (aurora)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'IBM Plex Sans Hebrew', 'Inter', system-ui, sans-serif;
+    --sans-en: 'Inter', 'IBM Plex Sans Hebrew', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-text: #818CF8;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: 0; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 40px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 24px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1.title {
+    font-size: 52px; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 680px; margin: 0 auto; }
+
+  /* Section */
+  section { margin-bottom: 64px; }
+  h2.section-h {
+    font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em;
+  }
+  h2.section-h .num { color: var(--accent-text); font-family: var(--mono); font-size: 14px; font-weight: 500; margin-left: 12px; }
+  .section-sub { color: var(--fg-dim); margin-bottom: 28px; font-size: 16px; }
+
+  /* Font family showcase */
+  .families {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .families { grid-template-columns: 1fr; } }
+  .family-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .family-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  }
+  .family-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .family-card.heebo .family-tag { color: var(--accent-text); }
+  .family-card.inter .family-tag { color: var(--magenta); }
+  .family-card.mono .family-tag { color: var(--cyan); }
+  .family-name {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .family-card.heebo .family-name { font-family: 'IBM Plex Sans Hebrew', sans-serif; }
+  .family-card.inter .family-name { font-family: 'Inter', sans-serif; direction: ltr; text-align: left; }
+  .family-card.mono .family-name { font-family: 'JetBrains Mono', monospace; direction: ltr; text-align: left; font-size: 28px; }
+  .family-role {
+    font-size: 13px;
+    color: var(--fg-dim);
+    margin-bottom: 20px;
+    font-family: var(--mono);
+    direction: ltr;
+    text-align: left;
+  }
+  .family-sample {
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+    margin-top: 6px;
+  }
+  .family-sample .big {
+    font-size: 22px;
+    margin-bottom: 8px;
+    color: var(--fg);
+  }
+  .family-sample .small {
+    font-size: 14px;
+    color: var(--fg-dim);
+    line-height: 1.6;
+  }
+  .family-card.heebo .family-sample * { font-family: 'IBM Plex Sans Hebrew', sans-serif; }
+  .family-card.inter .family-sample * { font-family: 'Inter', sans-serif; direction: ltr; text-align: left; }
+  .family-card.mono .family-sample * { font-family: 'JetBrains Mono', monospace; direction: ltr; text-align: left; }
+  .weight-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .weight-chip {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  /* Type scale */
+  .scale-list {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .scale-row {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 24px;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .scale-row:last-child { border-bottom: none; }
+  .scale-sample { color: var(--fg); }
+  .scale-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-align: left;
+    direction: ltr;
+    line-height: 1.8;
+  }
+  .scale-meta .label {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent-text);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .scale-meta div { display: block; }
+
+  .display-1 {
+    font-size: clamp(48px, 6vw, 72px);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .h1-style {
+    font-size: clamp(36px, 4vw, 48px);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .h2-style { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+  .h3-style { font-size: 24px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.25; }
+  .h4-style { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; }
+  .body-lg-style { font-size: 18px; font-weight: 400; line-height: 1.7; }
+  .body-style { font-size: 16px; font-weight: 400; line-height: 1.7; }
+  .body-sm-style { font-size: 14px; font-weight: 400; line-height: 1.65; color: var(--fg-dim); }
+  .caption-style { font-size: 13px; font-weight: 400; line-height: 1.55; color: var(--fg-dim); }
+  .micro-style {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .mono-code-style {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--magenta);
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* Hebrew vs Latin comparison */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .compare-grid { grid-template-columns: 1fr; } }
+  .compare-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .compare-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    margin-bottom: 16px;
+  }
+  .compare-card.lat .compare-title { color: var(--magenta); direction: ltr; text-align: left; }
+  .compare-headline { font-size: 32px; font-weight: 700; margin-bottom: 12px; line-height: 1.2; letter-spacing: -0.02em; }
+  .compare-body { font-size: 16px; color: var(--fg-dim); line-height: 1.75; margin-bottom: 16px; }
+  .compare-card.lat .compare-headline,
+  .compare-card.lat .compare-body { direction: ltr; text-align: left; }
+  .compare-spec {
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    line-height: 1.7;
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* Combination samples */
+  .combo {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .combo-head {
+    background: var(--bg-elev-2);
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+  }
+  .combo-body { padding: 32px; }
+  .combo-body .micro-up {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--magenta);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+  }
+  .combo-body h3.combo-h {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    margin-bottom: 12px;
+  }
+  .combo-body p.combo-p {
+    font-size: 17px;
+    color: var(--fg-dim);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .combo-mono {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 14px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--cyan);
+    direction: ltr;
+  }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .code-head {
+    background: var(--bg-elev-2);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .code-filename { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); direction: ltr; }
+  .code-copy {
+    background: var(--surface); border: 1px solid var(--border); color: var(--fg-dim);
+    border-radius: 6px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px; cursor: pointer;
+  }
+  .code-body {
+    padding: 20px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.7;
+    color: var(--fg); direction: ltr; text-align: left;
+    overflow-x: auto; white-space: pre;
+  }
+  .c-comment { color: var(--fg-muted); }
+  .c-key { color: var(--accent-text); }
+  .c-string { color: var(--success); }
+  .c-num { color: var(--magenta); }
+  .c-fn { color: var(--cyan); }
+
+  /* Pitfalls */
+  .pitfalls {
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .pitfall-row {
+    display: flex; gap: 14px; padding: 12px 0;
+    border-bottom: 1px solid rgba(251,191,36,0.15);
+  }
+  .pitfall-row:last-child { border-bottom: none; }
+  .pitfall-icon { color: var(--warning); font-weight: 700; flex-shrink: 0; }
+  .pitfall-text { color: var(--fg-dim); font-size: 14px; }
+  .pitfall-text strong { color: var(--fg); }
+  .pitfall-text code {
+    font-family: var(--mono); font-size: 12px;
+    background: var(--bg-deep); padding: 2px 6px; border-radius: 4px;
+    color: var(--magenta); direction: ltr; display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    h1.title { font-size: 36px; }
+    h2.section-h { font-size: 22px; }
+    .scale-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 03 · TYPOGRAPHY · AURORA</div>
+    <h1 class="title">המילים<br>מספרות סיפור.</h1>
+    <p class="subtitle">3 משפחות גופנים · 11 רמות בהיררכיה · הבדלים מובנים בין עברית ולטינית · מערכת weight מדויקת</p>
+  </div>
+
+  <!-- Font families -->
+  <section>
+    <h2 class="section-h">משפחות הגופנים <span class="num">/ 01 families</span></h2>
+    <p class="section-sub">שלוש משפחות. כל אחת לתפקיד מוגדר. Google Fonts (חינמי, CDN, WOFF2).</p>
+
+    <div class="families">
+      <div class="family-card heebo">
+        <div class="family-tag">→ HEBREW + UI PRIMARY</div>
+        <div class="family-name">IBM Plex Sans Hebrew</div>
+        <div class="family-role">--font-sans-he · by Liron Lavi Turkenich</div>
+        <div class="family-sample">
+          <div class="big">המילים שלנו, בעברית.</div>
+          <div class="small">סוכן AI שמכיר את התפקיד שלך, את הכלים שלך, ואת השפה שלך. בלי תכנון מורכב.</div>
+        </div>
+        <div class="weight-row">
+          <span class="weight-chip">300</span>
+          <span class="weight-chip">400</span>
+          <span class="weight-chip">500</span>
+          <span class="weight-chip">600</span>
+          <span class="weight-chip">700</span>
+        </div>
+      </div>
+
+      <div class="family-card inter">
+        <div class="family-tag">→ LATIN + UI SECONDARY</div>
+        <div class="family-name">Inter</div>
+        <div class="family-role">--font-sans-en</div>
+        <div class="family-sample">
+          <div class="big">Built for makers.</div>
+          <div class="small">Tell us how you work — we'll build the agent. No prompts. No YAML. Just a conversation.</div>
+        </div>
+        <div class="weight-row">
+          <span class="weight-chip">300</span>
+          <span class="weight-chip">400</span>
+          <span class="weight-chip">500</span>
+          <span class="weight-chip">600</span>
+          <span class="weight-chip">700</span>
+          <span class="weight-chip">800</span>
+        </div>
+      </div>
+
+      <div class="family-card mono">
+        <div class="family-tag">→ CODE + BOT + TECHNICAL</div>
+        <div class="family-name">JetBrains Mono</div>
+        <div class="family-role">--font-mono</div>
+        <div class="family-sample">
+          <div class="big">const agent = forge()</div>
+          <div class="small">// used for bot bubbles, code blocks, terminal chrome, micro-labels, and AI thinking states.</div>
+        </div>
+        <div class="weight-row">
+          <span class="weight-chip">400</span>
+          <span class="weight-chip">500</span>
+          <span class="weight-chip">600</span>
+          <span class="weight-chip">700</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Type scale -->
+  <section>
+    <h2 class="section-h">סולם הטיפוגרפיה <span class="num">/ 02 scale</span></h2>
+    <p class="section-sub">11 רמות · בסיס 16px · מודולרי 1.25 (major third) · responsive עם clamp()</p>
+
+    <div class="scale-list">
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="display-1">תתחיל עכשיו.</div></div>
+        <div class="scale-meta">
+          <span class="label">display</span>
+          <div>clamp(48px, 6vw, 72px)</div>
+          <div>weight 800 · tracking -0.03em</div>
+          <div>line-height 1.05</div>
+          <div>+ gradient mask</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="h1-style">בונה סוכן בשיחה אחת</div></div>
+        <div class="scale-meta">
+          <span class="label">h1</span>
+          <div>clamp(36px, 4vw, 48px)</div>
+          <div>weight 800 · tracking -0.025em</div>
+          <div>line-height 1.15</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="h2-style">מערכת הצבעים המלאה</div></div>
+        <div class="scale-meta">
+          <span class="label">h2</span>
+          <div>32px</div>
+          <div>weight 700 · tracking -0.02em</div>
+          <div>line-height 1.2</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="h3-style">איזה כיוון מותג בוחר</div></div>
+        <div class="scale-meta">
+          <span class="label">h3</span>
+          <div>24px</div>
+          <div>weight 700 · tracking -0.015em</div>
+          <div>line-height 1.25</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="h4-style">Phase 2 — Color System</div></div>
+        <div class="scale-meta">
+          <span class="label">h4</span>
+          <div>20px</div>
+          <div>weight 600 · tracking -0.01em</div>
+          <div>line-height 1.35</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="body-lg-style">ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה? התשובה שלך תעזור לי להבין את ה-persona שלך.</div></div>
+        <div class="scale-meta">
+          <span class="label">body-lg</span>
+          <div>18px</div>
+          <div>weight 400</div>
+          <div>line-height 1.7</div>
+          <div>= bot bubbles, hero p</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="body-style">המערכת בנויה משלוש שכבות טוקנים: primitives, semantic, ו-component. כל קומפוננטה משתמשת מהשכבה הסמנטית — לעולם לא ישירות מהראשונה.</div></div>
+        <div class="scale-meta">
+          <span class="label">body</span>
+          <div>16px</div>
+          <div>weight 400</div>
+          <div>line-height 1.7</div>
+          <div>= default body</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="body-sm-style">חבילת הסוכן כוללת skills, agents, MCP config, ו-installation guide בעברית.</div></div>
+        <div class="scale-meta">
+          <span class="label">body-sm</span>
+          <div>14px</div>
+          <div>weight 400</div>
+          <div>line-height 1.65 · fg-dim</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="caption-style">→ this helps me detect your persona</div></div>
+        <div class="scale-meta">
+          <span class="label">caption</span>
+          <div>13px</div>
+          <div>weight 400</div>
+          <div>line-height 1.55 · fg-dim</div>
+          <div>= micro-explanations</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="micro-style">PHASE 03 · TYPOGRAPHY · AURORA</div></div>
+        <div class="scale-meta">
+          <span class="label">micro</span>
+          <div>11px · mono</div>
+          <div>weight 600 · tracking +0.12em</div>
+          <div>uppercase · accent-text</div>
+        </div>
+      </div>
+
+      <div class="scale-row">
+        <div class="scale-sample"><div class="mono-code-style">const agent = await generate({ persona: 'knowledge-worker' });</div></div>
+        <div class="scale-meta">
+          <span class="label">mono</span>
+          <div>14px · JetBrains Mono</div>
+          <div>weight 500 · ltr</div>
+          <div>= code, bot, ids</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- HE vs Latin tuning -->
+  <section>
+    <h2 class="section-h">עברית מול לטינית — הבדלים <span class="num">/ 03 i18n tuning</span></h2>
+    <p class="section-sub">עברית דורשת ריווח שורות גדול יותר, ו-letter-spacing מאופק יותר. הנה הכלל המדויק.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card heb">
+        <div class="compare-title">→ HEBREW · HEEBO</div>
+        <div class="compare-headline">בונה סוכן בשיחה אחת.</div>
+        <div class="compare-body">
+          שיחה אדפטיבית שמבינה את התפקיד שלך, את הכלים שאתה עובד איתם,
+          ואת ה-flow שלך — ומפיקה חבילה מוכנה להתקנה. ללא קוד.
+        </div>
+        <div class="compare-spec">
+          font-family: 'IBM Plex Sans Hebrew'<br>
+          letter-spacing: -0.01em (body), -0.025em (h1)<br>
+          line-height: 1.7 (body), 1.15 (h1)<br>
+          weight cap: 700 (IBM Plex max for HE)
+        </div>
+      </div>
+      <div class="compare-card lat">
+        <div class="compare-title">→ LATIN · INTER</div>
+        <div class="compare-headline">Built in one conversation.</div>
+        <div class="compare-body">
+          An adaptive interview understands your role, your stack,
+          and your flow — then ships a ready-to-install package. No code required.
+        </div>
+        <div class="compare-spec">
+          font-family: 'Inter'<br>
+          letter-spacing: -0.005em (body), -0.025em (h1)<br>
+          line-height: 1.65 (body), 1.1 (h1)<br>
+          weight cap: 800
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Real combinations in context -->
+  <section>
+    <h2 class="section-h">קומבינציות בפעולה <span class="num">/ 04 in context</span></h2>
+    <p class="section-sub">איך הסולם מתורגם למסכים אמיתיים</p>
+
+    <div class="combo">
+      <div class="combo-head">→ HERO SECTION (Landing)</div>
+      <div class="combo-body">
+        <div class="micro-up">★ NEW · v1.0</div>
+        <h3 class="combo-h">סוכן AI שמכיר אותך,<br>מהשיחה הראשונה.</h3>
+        <p class="combo-p">
+          ספר לנו במה אתה עובד, אנחנו נבנה לך את הסוכן. החבילה מוכנה תוך 5 דקות —
+          עם הוראות התקנה, הגדרות OAuth, וקוד שעובד מהקופסה.
+        </p>
+        <div class="combo-mono">$ npx generagent install</div>
+      </div>
+    </div>
+
+    <div class="combo">
+      <div class="combo-head">→ BOT BUBBLE (Consultation)</div>
+      <div class="combo-body" style="padding: 32px; max-width: 600px;">
+        <p class="body-lg-style" style="margin-bottom: 8px;">
+          ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה?
+        </p>
+        <div style="font-family: var(--mono); font-size: 12px; color: var(--fg-muted); direction: ltr; text-align: left;">
+          → this helps me detect your persona
+        </div>
+      </div>
+    </div>
+
+    <div class="combo">
+      <div class="combo-head">→ DASHBOARD CARD</div>
+      <div class="combo-body" style="padding: 24px;">
+        <div class="micro-style" style="margin-bottom: 8px;">PACKAGE · v1.2.0</div>
+        <div class="h3-style" style="margin-bottom: 4px;">Personal Email Assistant</div>
+        <div class="body-sm-style" style="margin-bottom: 16px; color: var(--fg-dim);">
+          נוצר עבור: רואה חשבון עצמאי · 8 skills · 2 MCPs
+        </div>
+        <div class="caption-style" style="color: var(--fg-muted);">
+          נוצרה ב-3 ביוני 2026 · הותקנה בהצלחה
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tailwind export -->
+  <section>
+    <h2 class="section-h">ייצוא ל-Tailwind <span class="num">/ 05 tailwind</span></h2>
+    <p class="section-sub">הוסף לטוקנים שכבר יש לך מ-Phase 2</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">tailwind.config.ts (add to theme.extend)</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body">fontFamily: {
+  sans: [<span class="c-string">'IBM Plex Sans Hebrew'</span>, <span class="c-string">'Inter'</span>, <span class="c-string">'system-ui'</span>, <span class="c-string">'sans-serif'</span>], <span class="c-comment">// HE-first</span>
+  <span class="c-key">'sans-en'</span>: [<span class="c-string">'Inter'</span>, <span class="c-string">'IBM Plex Sans Hebrew'</span>, <span class="c-string">'system-ui'</span>, <span class="c-string">'sans-serif'</span>],
+  mono: [<span class="c-string">'JetBrains Mono'</span>, <span class="c-string">'monospace'</span>],
+},
+fontSize: {
+  <span class="c-comment">// [fontSize, { lineHeight, letterSpacing, fontWeight }]</span>
+  micro: [<span class="c-string">'11px'</span>, { lineHeight: <span class="c-string">'1.4'</span>, letterSpacing: <span class="c-string">'0.12em'</span>, fontWeight: <span class="c-string">'600'</span> }],
+  caption: [<span class="c-string">'13px'</span>, { lineHeight: <span class="c-string">'1.55'</span> }],
+  <span class="c-key">'body-sm'</span>: [<span class="c-string">'14px'</span>, { lineHeight: <span class="c-string">'1.65'</span> }],
+  body: [<span class="c-string">'16px'</span>, { lineHeight: <span class="c-string">'1.7'</span> }],
+  <span class="c-key">'body-lg'</span>: [<span class="c-string">'18px'</span>, { lineHeight: <span class="c-string">'1.7'</span> }],
+  h4: [<span class="c-string">'20px'</span>, { lineHeight: <span class="c-string">'1.35'</span>, letterSpacing: <span class="c-string">'-0.01em'</span>, fontWeight: <span class="c-string">'600'</span> }],
+  h3: [<span class="c-string">'24px'</span>, { lineHeight: <span class="c-string">'1.25'</span>, letterSpacing: <span class="c-string">'-0.015em'</span>, fontWeight: <span class="c-string">'700'</span> }],
+  h2: [<span class="c-string">'32px'</span>, { lineHeight: <span class="c-string">'1.2'</span>, letterSpacing: <span class="c-string">'-0.02em'</span>, fontWeight: <span class="c-string">'700'</span> }],
+  h1: [<span class="c-string">'clamp(36px, 4vw, 48px)'</span>, { lineHeight: <span class="c-string">'1.15'</span>, letterSpacing: <span class="c-string">'-0.025em'</span>, fontWeight: <span class="c-string">'800'</span> }],
+  display: [<span class="c-string">'clamp(48px, 6vw, 72px)'</span>, { lineHeight: <span class="c-string">'1.05'</span>, letterSpacing: <span class="c-string">'-0.03em'</span>, fontWeight: <span class="c-string">'800'</span> }],
+},</div>
+    </div>
+  </section>
+
+  <!-- Display gradient helper -->
+  <section>
+    <h2 class="section-h">Display gradient mixin <span class="num">/ 06 utility</span></h2>
+    <p class="section-sub">ה-gradient לבן→אפור שמשמש בכותרות display — class יחיד לשימוש בכל מקום</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">app/globals.css</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body"><span class="c-comment">/* ============================================
+   AURORA · Display gradient utility
+   ============================================ */</span>
+.text-display-gradient {
+  background: linear-gradient(180deg, <span class="c-string">#FFFFFF</span> 0%, <span class="c-string">#B5B9C2</span> 100%);
+  <span class="c-key">-webkit-background-clip</span>: text;
+  <span class="c-key">background-clip</span>: text;
+  <span class="c-key">-webkit-text-fill-color</span>: transparent;
+  color: transparent;
+}
+
+<span class="c-comment">/* Magenta variant for AI moments */</span>
+.text-ai-gradient {
+  background: linear-gradient(135deg, <span class="c-string">#C084FC</span> 0%, <span class="c-string">#A5B4FC</span> 100%);
+  <span class="c-key">-webkit-background-clip</span>: text;
+  <span class="c-key">background-clip</span>: text;
+  <span class="c-key">-webkit-text-fill-color</span>: transparent;
+}
+
+<span class="c-comment">/* Font loading optimization */</span>
+@font-face {
+  font-family: <span class="c-string">'IBM Plex Sans Hebrew'</span>;
+  font-display: swap; <span class="c-comment">/* avoid FOIT */</span>
+}</div>
+    </div>
+  </section>
+
+  <!-- Pitfalls -->
+  <section>
+    <h2 class="section-h">חוקי-זהב + אזהרות <span class="num">/ 07 do's &amp; don'ts</span></h2>
+    <p class="section-sub">דברים שמעצבים מקצועיים בודקים בכל סקירה — תעבור עליהם לפני שמסיימים מסך</p>
+
+    <div class="pitfalls">
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>display-gradient רק על H1 אחד בעמוד.</strong>
+          אם יש שני כותרות עם gradient, אף אחת לא קוראת לעין. שאר הכותרות — צבע אחיד <code>--fg</code>.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תערבב Heebo עם Inter באותו משפט.</strong>
+          השפה קובעת — RTL = Heebo, LTR = Inter. ל-mixed content השתמש ב-<code>&lt;span dir="ltr"&gt;</code>.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>קוד ו-IDs תמיד ב-mono + ltr.</strong>
+          גם בעברית: <code>&lt;code dir="ltr"&gt;npx generagent&lt;/code&gt;</code>. אחרת ה-slashes הופכים.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תרד מתחת ל-14px לטקסט אמיתי.</strong>
+          13px = caption בלבד, 11px = micro/uppercase. body חייב להיות 14+ לקריאות.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>weight 300 (light) רק על fontSize 18+.</strong>
+          weight דק על טקסט קטן נראה דהוי במצב dark. ב-body 16 השתמש ב-400 או 500.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>letter-spacing שלילי רק על 20px+.</strong>
+          על body 16 או מתחת — letter-spacing שלילי מצמצם קריאות בעברית במיוחד.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>preload רק את 2 ה-weights הקריטיים.</strong>
+          preload-ing את כל ה-IBM Plex Sans Hebrew (5 weights × 2 גופנים) = 180KB+. preload רק weight 400 ו-700.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>IBM Plex max weight = 700.</strong>
+          לעברית ב-IBM Plex אין 800/900. ה-display שלנו משתמש ב-700 + tracking שלילי + gradient כדי להגיע לעוצמה הויזואלית של 800.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

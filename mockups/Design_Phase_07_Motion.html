@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Motion System</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --indigo: #5E6AD2;
+    --indigo-hover: #7B85DC;
+    --indigo-text: #818CF8;
+    --indigo-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+
+    /* === MOTION TOKENS === */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);   /* cinematic, expo-out — default */
+    --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);    /* smooth, balanced */
+    --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1); /* bouncy — celebratory */
+    --ease-linear:   linear;                          /* spinners, infinite rotation */
+    --ease-in:       cubic-bezier(0.4, 0, 1, 1);      /* exit, dismiss */
+
+    --dur-instant: 100ms;
+    --dur-fast:    200ms;
+    --dur-base:    300ms;
+    --dur-slow:    500ms;
+    --dur-cinema:  800ms;
+    --dur-breath:  4500ms;
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: -1;
+  }
+  body::before { top: -15%; right: -10%; width: 540px; height: 540px; background: rgba(94,106,210,0.15); }
+  body::after  { bottom: -15%; left: -10%; width: 460px; height: 460px; background: rgba(192,132,252,0.08); }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 32px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--indigo-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 10px var(--indigo); }
+  h1.title {
+    font-size: 48px; font-weight: 700; letter-spacing: -0.028em; line-height: 1.1; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B0B5C0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 640px; margin: 0 auto; }
+
+  /* Sections */
+  section { margin-bottom: 64px; }
+  h2.sh {
+    font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.015em;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2.sh .n {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--indigo-text);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.2);
+    border-radius: 6px; padding: 3px 8px; letter-spacing: 0.08em;
+  }
+  .ssub { color: var(--fg-dim); font-size: 15px; margin-bottom: 24px; }
+
+  /* === PRINCIPLES === */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .principles { grid-template-columns: 1fr; } }
+  .principle {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .principle-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--magenta);
+    margin-bottom: 10px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .principle-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.015em; }
+  .principle-desc { color: var(--fg-dim); font-size: 13px; line-height: 1.65; }
+  .principle-desc strong { color: var(--fg); }
+
+  /* === EASING VISUALIZATIONS === */
+  .easings {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .easing-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 220px;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .easing-row:last-child { border-bottom: none; }
+  .easing-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--indigo-text);
+    font-weight: 600;
+  }
+  .easing-canvas {
+    height: 64px;
+    position: relative;
+    background: var(--bg-deep);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .easing-ball {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--indigo), var(--magenta));
+    box-shadow: 0 0 12px rgba(94,106,210,0.5);
+    top: 50%;
+    transform: translateY(-50%);
+    right: 8px;
+  }
+  .easing-row.active .easing-ball {
+    animation: easing-demo 2s infinite;
+  }
+  .easing-row[data-ease="out-expo"]   .easing-ball { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important; }
+  .easing-row[data-ease="in-out"]     .easing-ball { animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; }
+  .easing-row[data-ease="out-back"]   .easing-ball { animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
+  .easing-row[data-ease="linear"]     .easing-ball { animation-timing-function: linear !important; }
+  .easing-row[data-ease="in"]         .easing-ball { animation-timing-function: cubic-bezier(0.4, 0, 1, 1) !important; }
+  @keyframes easing-demo {
+    0% { right: 8px; }
+    50% { right: calc(100% - 20px); }
+    100% { right: 8px; }
+  }
+  .easing-use {
+    font-size: 12px;
+    color: var(--fg-dim);
+    line-height: 1.55;
+  }
+  .easing-use code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-deep); color: var(--magenta);
+    padding: 1px 6px; border-radius: 4px; font-size: 11px;
+  }
+  @media (max-width: 768px) {
+    .easing-row { grid-template-columns: 1fr; }
+  }
+
+  /* === DURATIONS === */
+  .durations {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .duration {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease-out-expo);
+  }
+  .duration:hover {
+    border-color: rgba(94,106,210,0.3);
+    transform: translateY(-2px);
+  }
+  .duration-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto 12px;
+    max-width: 60%;
+    position: relative;
+  }
+  .duration-bar-fill {
+    position: absolute;
+    top: 0; right: 0; left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--indigo), var(--magenta));
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform var(--dur, 300ms) var(--ease-out-expo);
+  }
+  .duration:hover .duration-bar-fill { transform: scaleX(1); }
+  .duration-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--indigo-text);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .duration-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin-bottom: 8px;
+  }
+  .duration-use {
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 1.5;
+  }
+
+  /* === PATTERN LIBRARY === */
+  .patterns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .patterns { grid-template-columns: 1fr; } }
+  .pattern {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .pattern-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elev-2);
+  }
+  .pattern-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--indigo-text);
+    font-weight: 600;
+    margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .pattern-spec {
+    font-size: 11px;
+    color: var(--fg-muted);
+    font-family: 'JetBrains Mono', monospace;
+    direction: ltr;
+  }
+  .pattern-stage {
+    padding: 36px 24px;
+    min-height: 180px;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      repeating-linear-gradient(45deg, transparent 0 8px, rgba(255,255,255,0.015) 8px 16px),
+      var(--bg-deep);
+  }
+  .pattern-replay {
+    text-align: center;
+    padding: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .replay-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--fg-dim);
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease-out-expo);
+  }
+  .replay-btn:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+  .replay-btn::before { content: '↺ '; }
+
+  /* PATTERN DEMOS */
+
+  /* 1. Button hover */
+  .demo-btn {
+    background: var(--indigo); color: #fff;
+    padding: 12px 24px; border-radius: 10px;
+    border: none; cursor: pointer; font-weight: 600;
+    font-family: inherit; font-size: 14px;
+    transition: all var(--dur-fast) var(--ease-out-expo);
+    box-shadow: 0 0 24px rgba(94,106,210,0.25), inset 0 1px 0 rgba(255,255,255,0.18);
+    position: relative; overflow: hidden;
+  }
+  .demo-btn::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    transition: left 700ms var(--ease-out-expo);
+  }
+  .demo-btn:hover { background: var(--indigo-hover); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(94,106,210,0.4); }
+  .demo-btn:hover::before { left: 100%; }
+
+  /* 2. Card hover */
+  .demo-card {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    width: 220px;
+    cursor: pointer;
+    transition: all var(--dur-base) var(--ease-out-expo);
+  }
+  .demo-card:hover {
+    border-color: rgba(94,106,210,0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 32px rgba(94,106,210,0.12);
+  }
+  .demo-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .demo-card-desc { color: var(--fg-dim); font-size: 12px; }
+
+  /* 3. Input focus */
+  .demo-input {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--fg);
+    font-family: inherit; font-size: 14px;
+    width: 240px;
+    transition: all var(--dur-fast) var(--ease-out-expo);
+  }
+  .demo-input::placeholder { color: var(--fg-muted); }
+  .demo-input:focus {
+    outline: none;
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px rgba(94,106,210,0.15);
+  }
+
+  /* 4. Scroll reveal */
+  .demo-reveal {
+    display: flex; flex-direction: column; gap: 8px; width: 240px;
+  }
+  .reveal-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px; color: var(--fg-dim);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity var(--dur-slow) var(--ease-out-expo), transform var(--dur-slow) var(--ease-out-expo);
+  }
+  .demo-reveal.active .reveal-item { opacity: 1; transform: translateY(0); }
+  .demo-reveal.active .reveal-item:nth-child(2) { transition-delay: 80ms; }
+  .demo-reveal.active .reveal-item:nth-child(3) { transition-delay: 160ms; }
+  .demo-reveal.active .reveal-item:nth-child(4) { transition-delay: 240ms; }
+
+  /* 5. Toast slide-in */
+  .demo-toast-wrap { position: relative; width: 280px; height: 100px; }
+  .demo-toast {
+    position: absolute; bottom: 0; right: 0;
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex; gap: 10px; align-items: center;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity var(--dur-base) var(--ease-out-back), transform var(--dur-base) var(--ease-out-back);
+  }
+  .demo-toast.active { opacity: 1; transform: translateY(0); }
+  .toast-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 10px var(--success);
+    flex-shrink: 0;
+  }
+  .toast-text { font-size: 13px; }
+
+  /* 6. Modal */
+  .demo-modal-wrap { position: relative; width: 280px; height: 180px; background: var(--bg-deep); border-radius: 10px; overflow: hidden; }
+  .demo-modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(2,2,3,0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out-expo);
+  }
+  .demo-modal {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 16px 20px;
+    width: 80%;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out-back), transform var(--dur-base) var(--ease-out-back);
+  }
+  .demo-modal-wrap.active .demo-modal-backdrop { opacity: 1; }
+  .demo-modal-wrap.active .demo-modal { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .modal-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .modal-desc { font-size: 12px; color: var(--fg-dim); }
+
+  /* 7. Spinner / breathing dot */
+  .demo-spinner {
+    display: flex; gap: 14px; align-items: center;
+  }
+  .breath-orb {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--indigo-bright), var(--indigo) 40%, var(--bg-elev-2));
+    box-shadow: 0 0 24px rgba(94,106,210,0.5);
+    animation: orb-breath var(--dur-breath) ease-in-out infinite;
+  }
+  @keyframes orb-breath {
+    0%, 100% { transform: scale(0.85); }
+    50%      { transform: scale(1.1); }
+  }
+  .breath-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--magenta);
+    direction: ltr;
+  }
+
+  /* 8. Page transition (mock) */
+  .demo-pageline { position: relative; width: 280px; height: 100px; background: var(--bg-deep); border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .demo-pageline-fill {
+    position: absolute;
+    top: 0; right: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--indigo), var(--magenta), transparent);
+    transform: translateX(100%);
+    transition: transform var(--dur-cinema) var(--ease-out-expo);
+  }
+  .demo-pageline.active .demo-pageline-fill { transform: translateX(-100%); }
+  .demo-pageline-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fg-muted); direction: ltr; }
+
+  /* === REDUCED MOTION === */
+  .reduced-box {
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .reduced-row {
+    display: flex; gap: 14px; padding: 10px 0;
+    border-bottom: 1px solid rgba(251,191,36,0.15);
+  }
+  .reduced-row:last-child { border-bottom: none; }
+  .reduced-icon { color: var(--warning); font-weight: 700; flex-shrink: 0; }
+  .reduced-text { color: var(--fg-dim); font-size: 14px; line-height: 1.65; }
+  .reduced-text strong { color: var(--fg); }
+  .reduced-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-deep); color: var(--magenta);
+    padding: 2px 6px; border-radius: 4px; font-size: 12px;
+  }
+
+  /* === CODE EXPORT === */
+  .code-block {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .code-head {
+    background: var(--bg-elev-2);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .code-filename { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg-dim); direction: ltr; }
+  .code-body {
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.75;
+    color: var(--fg); direction: ltr; text-align: left;
+    overflow-x: auto; white-space: pre;
+  }
+  .c-comment { color: var(--fg-muted); }
+  .c-key { color: var(--indigo-text); }
+  .c-num { color: var(--magenta); }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="phase-header">
+    <div class="phase-tag">phase 07 · motion system</div>
+    <h1 class="title">תנועה<br>היא שפה.</h1>
+    <p class="subtitle">5 עקרונות · 5 easing curves · 6 רמות duration · 8 motion patterns אמיתיים · reduced-motion native</p>
+  </div>
+
+  <!-- === PRINCIPLES === -->
+  <section>
+    <h2 class="sh"><span class="n">01</span> עקרונות</h2>
+    <p class="ssub">החוקים שמכתיבים כל אנימציה במערכת. אם הפרת את אחד מהם — בטל את האנימציה.</p>
+
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-num">→ 01</div>
+        <div class="principle-title">תכליתית, לא דקורטיבית</div>
+        <div class="principle-desc">כל תנועה <strong>אומרת משהו</strong> — אישור, ניווט, חזרה, רגש. אם היא רק "יפה" — מוחקים.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">→ 02</div>
+        <div class="principle-title">מהירה, לא ממהרת</div>
+        <div class="principle-desc">100-300ms לרוב האינטראקציות. 500ms+ רק לרגעי "מעבר סצנה". <strong>לעולם לא תחת 100ms</strong> — נראה buggy.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">→ 03</div>
+        <div class="principle-title">expo-out כברירת מחדל</div>
+        <div class="principle-desc">cubic-bezier(0.16, 1, 0.3, 1) — תחושה סינמטית של "התיישבות". משמש ב-80% מהמעברים.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">→ 04</div>
+        <div class="principle-title">רק transform + opacity</div>
+        <div class="principle-desc">אסור לאנמת <code>width</code>, <code>height</code>, <code>top/left</code>. <strong>GPU only</strong> — 60fps תמיד.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">→ 05</div>
+        <div class="principle-title">prefers-reduced-motion קדוש</div>
+        <div class="principle-desc">בכל אנימציה: או להאט מאוד (24s+) או להחליף ב-fade בלבד. <strong>לא לבטל</strong> — לשנות.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-num">→ 06</div>
+        <div class="principle-title">stagger במידה</div>
+        <div class="principle-desc">בקבוצה של 3+ — delay של 80ms ביניהם. <strong>פחות מ-3</strong> — בלי stagger.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === EASING CURVES === -->
+  <section>
+    <h2 class="sh"><span class="n">02</span> Easing curves</h2>
+    <p class="ssub">5 עקומות — לחץ על כל שורה כדי לראות את התנועה.</p>
+
+    <div class="easings">
+      <div class="easing-row active" data-ease="out-expo">
+        <div class="easing-name">--ease-out-expo</div>
+        <div class="easing-canvas"><div class="easing-ball"></div></div>
+        <div class="easing-use">
+          ברירת מחדל — מעברים, hover, reveal. <code>cubic-bezier(0.16, 1, 0.3, 1)</code>
+        </div>
+      </div>
+      <div class="easing-row active" data-ease="in-out">
+        <div class="easing-name">--ease-in-out</div>
+        <div class="easing-canvas"><div class="easing-ball"></div></div>
+        <div class="easing-use">
+          breathing, looping animations. <code>cubic-bezier(0.4, 0, 0.2, 1)</code>
+        </div>
+      </div>
+      <div class="easing-row active" data-ease="out-back">
+        <div class="easing-name">--ease-out-back</div>
+        <div class="easing-canvas"><div class="easing-ball"></div></div>
+        <div class="easing-use">
+          toasts, success states, celebratory. <code>cubic-bezier(0.34, 1.56, 0.64, 1)</code>
+        </div>
+      </div>
+      <div class="easing-row active" data-ease="linear">
+        <div class="easing-name">--ease-linear</div>
+        <div class="easing-canvas"><div class="easing-ball"></div></div>
+        <div class="easing-use">
+          spinners, infinite rotation, conic gradients. <code>linear</code>
+        </div>
+      </div>
+      <div class="easing-row active" data-ease="in">
+        <div class="easing-name">--ease-in</div>
+        <div class="easing-canvas"><div class="easing-ball"></div></div>
+        <div class="easing-use">
+          exit / dismiss אנימציות. <code>cubic-bezier(0.4, 0, 1, 1)</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === DURATIONS === -->
+  <section>
+    <h2 class="sh"><span class="n">03</span> Duration scale</h2>
+    <p class="ssub">6 רמות — hover על כרטיס לראות כמה זה מהיר באמת.</p>
+
+    <div class="durations">
+      <div class="duration" style="--dur: 100ms;">
+        <div class="duration-bar"><div class="duration-bar-fill"></div></div>
+        <div class="duration-name">--dur-instant</div>
+        <div class="duration-value">100ms</div>
+        <div class="duration-use">צבע קליק, focus ring</div>
+      </div>
+      <div class="duration" style="--dur: 200ms;">
+        <div class="duration-bar"><div class="duration-bar-fill"></div></div>
+        <div class="duration-name">--dur-fast</div>
+        <div class="duration-value">200ms</div>
+        <div class="duration-use">hover, button states</div>
+      </div>
+      <div class="duration" style="--dur: 300ms;">
+        <div class="duration-bar"><div class="duration-bar-fill"></div></div>
+        <div class="duration-name">--dur-base</div>
+        <div class="duration-value">300ms</div>
+        <div class="duration-use">cards, modal, toast</div>
+      </div>
+      <div class="duration" style="--dur: 500ms;">
+        <div class="duration-bar"><div class="duration-bar-fill"></div></div>
+        <div class="duration-name">--dur-slow</div>
+        <div class="duration-value">500ms</div>
+        <div class="duration-use">reveal, page section</div>
+      </div>
+      <div class="duration" style="--dur: 800ms;">
+        <div class="duration-bar"><div class="duration-bar-fill"></div></div>
+        <div class="duration-name">--dur-cinema</div>
+        <div class="duration-value">800ms</div>
+        <div class="duration-use">page transitions</div>
+      </div>
+      <div class="duration" style="--dur: 4500ms;">
+        <div class="duration-bar"><div class="duration-bar-fill"></div></div>
+        <div class="duration-name">--dur-breath</div>
+        <div class="duration-value">4500ms</div>
+        <div class="duration-use">orb, ambient loops</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === PATTERN LIBRARY === -->
+  <section>
+    <h2 class="sh"><span class="n">04</span> Pattern library</h2>
+    <p class="ssub">8 דפוסים — לחץ "↺ replay" כדי לראות שוב.</p>
+
+    <div class="patterns">
+
+      <div class="pattern">
+        <div class="pattern-head">
+          <div class="pattern-name">→ button · hover</div>
+          <div class="pattern-spec">200ms · ease-out-expo · translateY(-2px) + shimmer</div>
+        </div>
+        <div class="pattern-stage">
+          <button class="demo-btn">Hover me <span>←</span></button>
+        </div>
+      </div>
+
+      <div class="pattern">
+        <div class="pattern-head">
+          <div class="pattern-name">→ card · hover lift</div>
+          <div class="pattern-spec">300ms · ease-out-expo · translateY(-3px) + glow</div>
+        </div>
+        <div class="pattern-stage">
+          <div class="demo-card">
+            <div class="demo-card-title">Personal Email Assistant</div>
+            <div class="demo-card-desc">8 skills · 2 MCPs · installed</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pattern">
+        <div class="pattern-head">
+          <div class="pattern-name">→ input · focus</div>
+          <div class="pattern-spec">200ms · ease-out-expo · border + ring</div>
+        </div>
+        <div class="pattern-stage">
+          <input class="demo-input" placeholder="לחץ כדי לראות focus...">
+        </div>
+      </div>
+
+      <div class="pattern" id="pattern-reveal">
+        <div class="pattern-head">
+          <div class="pattern-name">→ scroll reveal · stagger</div>
+          <div class="pattern-spec">500ms · ease-out-expo · 80ms stagger</div>
+        </div>
+        <div class="pattern-stage">
+          <div class="demo-reveal active" id="demo-reveal">
+            <div class="reveal-item">פריט ראשון</div>
+            <div class="reveal-item">פריט שני</div>
+            <div class="reveal-item">פריט שלישי</div>
+            <div class="reveal-item">פריט רביעי</div>
+          </div>
+        </div>
+        <div class="pattern-replay"><button class="replay-btn" data-replay="reveal">replay</button></div>
+      </div>
+
+      <div class="pattern" id="pattern-toast">
+        <div class="pattern-head">
+          <div class="pattern-name">→ toast · slide in</div>
+          <div class="pattern-spec">300ms · ease-out-back · translateY + opacity</div>
+        </div>
+        <div class="pattern-stage">
+          <div class="demo-toast-wrap">
+            <div class="demo-toast active" id="demo-toast">
+              <div class="toast-dot"></div>
+              <div class="toast-text">החבילה נוצרה בהצלחה</div>
+            </div>
+          </div>
+        </div>
+        <div class="pattern-replay"><button class="replay-btn" data-replay="toast">replay</button></div>
+      </div>
+
+      <div class="pattern" id="pattern-modal">
+        <div class="pattern-head">
+          <div class="pattern-name">→ modal · scale + backdrop blur</div>
+          <div class="pattern-spec">300ms · ease-out-back · scale 0.92→1</div>
+        </div>
+        <div class="pattern-stage">
+          <div class="demo-modal-wrap active" id="demo-modal">
+            <div class="demo-modal-backdrop"></div>
+            <div class="demo-modal">
+              <div class="modal-title">למחוק את החבילה?</div>
+              <div class="modal-desc">הפעולה לא הפיכה.</div>
+            </div>
+          </div>
+        </div>
+        <div class="pattern-replay"><button class="replay-btn" data-replay="modal">replay</button></div>
+      </div>
+
+      <div class="pattern">
+        <div class="pattern-head">
+          <div class="pattern-name">→ orb · breath (infinite)</div>
+          <div class="pattern-spec">4500ms · ease-in-out · scale 0.85↔1.1</div>
+        </div>
+        <div class="pattern-stage">
+          <div class="demo-spinner">
+            <div class="breath-orb"></div>
+            <div class="breath-text">analyzing...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pattern" id="pattern-page">
+        <div class="pattern-head">
+          <div class="pattern-name">→ page transition · line sweep</div>
+          <div class="pattern-spec">800ms · ease-out-expo · translateX 100%→-100%</div>
+        </div>
+        <div class="pattern-stage">
+          <div class="demo-pageline active" id="demo-pageline">
+            <div class="demo-pageline-fill"></div>
+            <div class="demo-pageline-label">loading next view...</div>
+          </div>
+        </div>
+        <div class="pattern-replay"><button class="replay-btn" data-replay="page">replay</button></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- === REDUCED MOTION === -->
+  <section>
+    <h2 class="sh"><span class="n">05</span> Reduced motion</h2>
+    <p class="ssub">prefers-reduced-motion הוא קריטי. הכלל: מאטים או מחליפים — לא מבטלים.</p>
+
+    <div class="reduced-box">
+      <div class="reduced-row">
+        <div class="reduced-icon">!</div>
+        <div class="reduced-text">
+          <strong>אסור</strong> <code>animation: none !important;</code> על כל ה-DOM. המוצר ירגיש שבור (orb סטטי, סטייט לא משתנה).
+        </div>
+      </div>
+      <div class="reduced-row">
+        <div class="reduced-icon">!</div>
+        <div class="reduced-text">
+          <strong>נכון</strong> להאט אנימציות אמביינטיות: <code>animation-duration: 24s</code> במקום 4.5s. עדיין נראה חי.
+        </div>
+      </div>
+      <div class="reduced-row">
+        <div class="reduced-icon">!</div>
+        <div class="reduced-text">
+          <strong>נכון</strong> להחליף transforms ב-opacity בלבד: card hover ב-reduced — רק שינוי border-color, בלי lift.
+        </div>
+      </div>
+      <div class="reduced-row">
+        <div class="reduced-icon">!</div>
+        <div class="reduced-text">
+          <strong>בדוק עם:</strong> macOS Settings → Accessibility → Display → Reduce Motion. כל אנימציה צריכה עדיין להעביר את המסר.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === EXPORT === -->
+  <section>
+    <h2 class="sh"><span class="n">06</span> ייצוא · CSS variables</h2>
+    <p class="ssub">העתק ל-globals.css. כל הקומפוננטות במערכת מושכות מכאן.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">app/globals.css (motion tokens)</span>
+      </div>
+      <div class="code-body"><span class="c-comment">/* === MOTION === */</span>
+:root {
+  <span class="c-comment">/* easing */</span>
+  <span class="c-key">--ease-out-expo</span>: cubic-bezier(<span class="c-num">0.16</span>, <span class="c-num">1</span>, <span class="c-num">0.3</span>, <span class="c-num">1</span>);
+  <span class="c-key">--ease-in-out</span>:   cubic-bezier(<span class="c-num">0.4</span>, <span class="c-num">0</span>, <span class="c-num">0.2</span>, <span class="c-num">1</span>);
+  <span class="c-key">--ease-out-back</span>: cubic-bezier(<span class="c-num">0.34</span>, <span class="c-num">1.56</span>, <span class="c-num">0.64</span>, <span class="c-num">1</span>);
+  <span class="c-key">--ease-in</span>:       cubic-bezier(<span class="c-num">0.4</span>, <span class="c-num">0</span>, <span class="c-num">1</span>, <span class="c-num">1</span>);
+  <span class="c-key">--ease-linear</span>:   linear;
+
+  <span class="c-comment">/* duration */</span>
+  <span class="c-key">--dur-instant</span>: <span class="c-num">100ms</span>;
+  <span class="c-key">--dur-fast</span>:    <span class="c-num">200ms</span>;
+  <span class="c-key">--dur-base</span>:    <span class="c-num">300ms</span>;
+  <span class="c-key">--dur-slow</span>:    <span class="c-num">500ms</span>;
+  <span class="c-key">--dur-cinema</span>:  <span class="c-num">800ms</span>;
+  <span class="c-key">--dur-breath</span>:  <span class="c-num">4500ms</span>;
+}
+
+<span class="c-comment">/* Global reduced motion handler */</span>
+@media (prefers-reduced-motion: reduce) {
+  <span class="c-comment">/* Ambient loops slow way down */</span>
+  *:not(.essential-anim) {
+    animation-duration: <span class="c-num">24s</span> !important;
+  }
+  <span class="c-comment">/* Disable transform-based hovers, keep color changes */</span>
+  *:hover { transform: none !important; }
+}</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Replay handlers
+  document.querySelectorAll('.replay-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.replay;
+      let target;
+      switch(id) {
+        case 'reveal':  target = document.getElementById('demo-reveal'); break;
+        case 'toast':   target = document.getElementById('demo-toast'); break;
+        case 'modal':   target = document.getElementById('demo-modal'); break;
+        case 'page':    target = document.getElementById('demo-pageline'); break;
+      }
+      if (!target) return;
+      target.classList.remove('active');
+      void target.offsetWidth; // force reflow
+      target.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Aurora Orb v6 (Premium)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.12);
+    --indigo-deep: #1E2347;
+    --indigo: #5E6AD2;
+    --indigo-bright: #818CF8;
+    --indigo-glow: #A5B4FC;
+    --magenta: #C084FC;
+    --magenta-soft: #DDB8FF;
+    --warm: #F5E6D3;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 56px 24px;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Subtle page-level ambient blobs (very soft, slow) */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: -1;
+  }
+  body::before {
+    top: -15%; right: -10%;
+    width: 600px; height: 600px;
+    background: rgba(94,106,210,0.18);
+  }
+  body::after {
+    bottom: -15%; left: -10%;
+    width: 500px; height: 500px;
+    background: rgba(192,132,252,0.10);
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  .header { text-align: center; padding: 12px 0 56px; }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--indigo-bright);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.22);
+    border-radius: 20px;
+    padding: 6px 14px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 10px var(--indigo); }
+  h1 {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: -0.028em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.05;
+    margin-bottom: 14px;
+  }
+  .sub { color: var(--fg-dim); font-size: 17px; max-width: 600px; margin: 0 auto; font-weight: 400; }
+
+  /* ============================================
+     HERO STAGE — premium product showcase feel
+     ============================================ */
+  .stage {
+    position: relative;
+    margin: 0 auto;
+    max-width: 880px;
+    aspect-ratio: 16/11;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow:
+      0 32px 80px rgba(0,0,0,0.7),
+      0 0 120px rgba(94,106,210,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  /* Top edge highlight (premium glass feel) */
+  .stage::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.15) 50%, transparent 80%);
+    z-index: 10;
+  }
+
+  /* Background ambient — 2 very soft blobs that drift */
+  .stage-ambient-1, .stage-ambient-2 {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  .stage-ambient-1 {
+    top: 5%; right: 8%;
+    width: 320px; height: 320px;
+    background: rgba(94,106,210,0.55);
+    animation: drift-1 18s ease-in-out infinite;
+  }
+  .stage-ambient-2 {
+    bottom: 5%; left: 12%;
+    width: 280px; height: 280px;
+    background: rgba(192,132,252,0.40);
+    animation: drift-2 22s ease-in-out infinite;
+  }
+  @keyframes drift-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-30px, 20px) scale(1.08); }
+  }
+  @keyframes drift-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(40px, -25px) scale(1.05); }
+  }
+
+  /* Film grain — SVG noise overlay for premium texture */
+  .stage-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  /* Center vignette to focus on orb */
+  .stage-vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(2,2,3,0.5) 100%);
+    pointer-events: none;
+  }
+
+  /* ============================================
+     THE ORB — premium volumetric sphere
+     ============================================ */
+  .orb {
+    position: absolute;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 220px;
+    z-index: 5;
+  }
+
+  /* Outermost: atmospheric haze (very soft) */
+  .orb-haze {
+    position: absolute;
+    inset: -120%;
+    background: radial-gradient(circle,
+      rgba(192,132,252,0.18) 0%,
+      rgba(94,106,210,0.10) 30%,
+      transparent 65%);
+    border-radius: 50%;
+    filter: blur(30px);
+    animation: haze-pulse 7s ease-in-out infinite;
+  }
+  @keyframes haze-pulse {
+    0%, 100% { transform: scale(0.85); opacity: 0.5; }
+    50%      { transform: scale(1.25); opacity: 1.00; }
+  }
+
+  /* Inner rim glow (very subtle ring around sphere) */
+  .orb-rim {
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      transparent 60%,
+      rgba(192,132,252,0.25) 75%,
+      rgba(94,106,210,0.15) 85%,
+      transparent 100%);
+    filter: blur(2px);
+    animation: rim-pulse 4.5s ease-in-out infinite;
+  }
+  @keyframes rim-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.97); }
+    50%      { opacity: 1.0; transform: scale(1.04); }
+  }
+
+  /* The sphere — proper volumetric shading */
+  .orb-sphere {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    /* Deep indigo base with offset highlight = sphere illusion */
+    background:
+      /* Specular highlight (subtle) */
+      radial-gradient(circle at 38% 30%,
+        rgba(255,255,255,0.35) 0%,
+        transparent 18%),
+      /* Mid highlight */
+      radial-gradient(circle at 38% 30%,
+        rgba(245,230,211,0.45) 0%,
+        rgba(192,132,252,0.20) 25%,
+        transparent 50%),
+      /* Body — indigo deep with falloff */
+      radial-gradient(circle at 50% 50%,
+        #4B56B8 0%,
+        #2E3478 50%,
+        #1A1F4F 85%,
+        #0A0E2A 100%);
+    box-shadow:
+      /* Inner ambient occlusion at edges */
+      inset -25px -35px 80px rgba(0,0,0,0.7),
+      inset 20px 20px 60px rgba(192,132,252,0.15),
+      /* Outer cast glow */
+      0 0 60px rgba(94,106,210,0.4),
+      0 0 120px rgba(192,132,252,0.15);
+    animation: orb-breathe 4.5s ease-in-out infinite;
+  }
+  @keyframes orb-breathe {
+    0%, 100% { transform: scale(0.93); }
+    50%      { transform: scale(1.07); }
+  }
+
+  /* Liquid flow inside — animated mask for the "thinking" feeling */
+  .orb-flow {
+    position: absolute;
+    inset: 2%;
+    border-radius: 50%;
+    background:
+      radial-gradient(ellipse 60% 80% at 30% 70%,
+        rgba(192,132,252,0.35) 0%,
+        transparent 50%),
+      radial-gradient(ellipse 50% 70% at 70% 30%,
+        rgba(103,232,249,0.20) 0%,
+        transparent 45%),
+      radial-gradient(ellipse 70% 50% at 50% 80%,
+        rgba(94,106,210,0.30) 0%,
+        transparent 50%);
+    mix-blend-mode: screen;
+    filter: blur(4px);
+    animation: flow-shift 6s linear infinite;
+    opacity: 1;
+  }
+  @keyframes flow-shift {
+    0%   { transform: rotate(0deg)   scale(1.0); }
+    50%  { transform: rotate(180deg) scale(1.15); }
+    100% { transform: rotate(360deg) scale(1.0); }
+  }
+
+  /* Bright specular point (the wet shine on top) */
+  .orb-spec {
+    position: absolute;
+    top: 22%;
+    left: 32%;
+    width: 18%;
+    height: 14%;
+    background: radial-gradient(ellipse,
+      rgba(255,255,255,0.95) 0%,
+      rgba(255,255,255,0.4) 30%,
+      transparent 60%);
+    border-radius: 50%;
+    filter: blur(3px);
+    animation: spec-shimmer 4.5s ease-in-out infinite;
+  }
+  @keyframes spec-shimmer {
+    0%, 100% { opacity: 0.5; transform: translate(0, 0) scale(0.85); }
+    50%      { opacity: 1.0; transform: translate(8%, -4%) scale(1.1); }
+  }
+
+  /* ============================================
+     Hairline arc/horizon (premium product feel)
+     A thin glowing line behind the orb suggesting context
+     ============================================ */
+  .stage-horizon {
+    position: absolute;
+    bottom: 18%;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(94,106,210,0.2) 20%,
+      rgba(192,132,252,0.4) 50%,
+      rgba(94,106,210,0.2) 80%,
+      transparent 100%);
+    z-index: 2;
+  }
+  .stage-horizon::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 80px;
+    background: linear-gradient(180deg, rgba(192,132,252,0.1), transparent);
+    transform-origin: top;
+  }
+
+  /* Caption (more restrained, more confident) */
+  .caption {
+    position: absolute;
+    bottom: 24px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--fg-muted);
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    z-index: 8;
+  }
+  .caption span {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .caption span::before {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--magenta);
+    box-shadow: 0 0 8px var(--magenta);
+    animation: caption-dot 2s ease-in-out infinite;
+  }
+  @keyframes caption-dot {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+  }
+
+  /* ============================================
+     Spec strip below stage
+     ============================================ */
+  .specs {
+    margin: 24px auto 0;
+    max-width: 880px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 768px) { .specs { grid-template-columns: repeat(2, 1fr); } }
+  .spec {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .spec-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .spec-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--indigo-bright);
+    direction: ltr;
+  }
+
+  /* ============================================
+     VARIANTS
+     ============================================ */
+  .variants-title {
+    text-align: center;
+    margin: 72px 0 24px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--fg);
+  }
+  .variants-sub {
+    text-align: center;
+    color: var(--fg-dim);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .variants {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .variants { grid-template-columns: 1fr; } }
+  .v-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 400ms var(--ease-out-expo), border-color 250ms;
+  }
+  .v-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+  }
+  .v-stage {
+    aspect-ratio: 1/1;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 30% 30%, rgba(94,106,210,0.1), transparent 50%),
+      var(--bg-deep);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .v-stage .orb {
+    top: 50%; left: 50%;
+    width: 55%; height: 55%;
+  }
+  .v-stage.small .orb { width: 38%; height: 38%; }
+  .v-stage.xs .orb { width: 22%; height: 22%; }
+  .v-meta {
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .v-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--indigo-bright);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .v-size {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--fg-muted);
+    direction: ltr;
+  }
+  .v-desc {
+    padding: 0 18px 18px;
+    color: var(--fg-dim);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  /* ============================================
+     Bot integration
+     ============================================ */
+  .integration {
+    margin-top: 72px;
+    padding: 36px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  .integration-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--indigo-bright);
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .bubble-bot, .bubble-user {
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    max-width: 75%;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .bubble-bot {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    margin-right: auto;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--indigo) 0%, #7B85DC 100%);
+    color: #fff;
+    margin-left: auto;
+    margin-right: 0;
+    text-align: right;
+    box-shadow: 0 4px 16px rgba(94,106,210,0.25);
+  }
+  .bubble-thinking {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(192,132,252,0.22);
+    border-radius: 14px;
+    padding: 10px 18px 10px 14px;
+    max-width: 75%;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-right: auto;
+  }
+  .mini-orb {
+    width: 38px; height: 38px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .mini-orb .orb-haze, .mini-orb .orb-spec { display: none; }
+  .mini-orb .orb-rim { inset: -4px; }
+  .think-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--magenta);
+    direction: ltr;
+  }
+
+  /* Reduced motion — keep orb visibly alive but slow it down significantly */
+  @media (prefers-reduced-motion: reduce) {
+    .orb-haze, .orb-rim, .orb-sphere, .orb-spec,
+    .stage-ambient-1, .stage-ambient-2 { animation-duration: 24s !important; }
+    .orb-flow { animation-duration: 30s !important; }
+  }
+
+  /* ============================================
+     New: subtle "soul" inside the orb — a moving glow that wanders
+     ============================================ */
+  .orb-soul {
+    position: absolute;
+    inset: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(192,132,252,0.8) 0%,
+      rgba(94,106,210,0.4) 40%,
+      transparent 70%);
+    filter: blur(8px);
+    mix-blend-mode: screen;
+    animation: soul-wander 5s ease-in-out infinite;
+  }
+  @keyframes soul-wander {
+    0%   { transform: translate( 0%,  0%) scale(0.8); opacity: 0.6; }
+    25%  { transform: translate( 15%, -10%) scale(1.0); opacity: 0.95; }
+    50%  { transform: translate( -8%, 12%) scale(1.1); opacity: 1.0; }
+    75%  { transform: translate( -15%, -5%) scale(0.9); opacity: 0.8; }
+    100% { transform: translate( 0%,  0%) scale(0.8); opacity: 0.6; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="tag">v6 · premium refinement</div>
+    <h1>אותו רעיון.<br>מקצועיות אחרת.</h1>
+    <p class="sub">פחות "קישוטי", יותר "מוצר ב-$50/חודש": volumetric sphere עם fresnel rim, liquid flow פנימי, ambient haze, film grain, ו-horizon line. בלי particles, בלי conic spins.</p>
+  </div>
+
+  <!-- ====== HERO STAGE ====== -->
+  <div class="stage">
+    <div class="stage-ambient-1"></div>
+    <div class="stage-ambient-2"></div>
+    <div class="stage-grain"></div>
+    <div class="stage-horizon"></div>
+    <div class="stage-vignette"></div>
+
+    <div class="orb">
+      <div class="orb-haze"></div>
+      <div class="orb-rim"></div>
+      <div class="orb-sphere"></div>
+      <div class="orb-soul"></div>
+      <div class="orb-flow"></div>
+      <div class="orb-spec"></div>
+    </div>
+
+    <div class="caption"><span>analyzing your context</span></div>
+  </div>
+
+  <!-- ====== SPEC STRIP ====== -->
+  <div class="specs">
+    <div class="spec">
+      <div class="spec-label">→ Composition</div>
+      <div class="spec-value">5 layers · pure CSS</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">→ Motion</div>
+      <div class="spec-value">4.5s breath · soul wander</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">→ Palette</div>
+      <div class="spec-value">indigo · magenta · cream</div>
+    </div>
+    <div class="spec">
+      <div class="spec-label">→ Performance</div>
+      <div class="spec-value">0 JS · 0 deps · ~3kb</div>
+    </div>
+  </div>
+
+  <!-- ====== VARIANTS ====== -->
+  <h2 class="variants-title">3 גדלים · אותו DNA</h2>
+  <p class="variants-sub">כל אחד מותאם לקונטקסט שלו — Hero מקבל את כל השכבות, Micro מקבל רק את הסביר.</p>
+
+  <div class="variants">
+
+    <div class="v-card">
+      <div class="v-stage">
+        <div class="orb">
+          <div class="orb-haze"></div>
+          <div class="orb-rim"></div>
+          <div class="orb-sphere"></div>
+          <div class="orb-soul"></div>
+          <div class="orb-flow"></div>
+          <div class="orb-spec"></div>
+        </div>
+      </div>
+      <div class="v-meta">
+        <div class="v-name">→ hero</div>
+        <div class="v-size">220px / 4.5s</div>
+      </div>
+      <div class="v-desc">כל השכבות. למסכי welcome, ל-loading סקרים.</div>
+    </div>
+
+    <div class="v-card">
+      <div class="v-stage small">
+        <div class="orb">
+          <div class="orb-rim"></div>
+          <div class="orb-sphere"></div>
+          <div class="orb-soul"></div>
+          <div class="orb-flow"></div>
+          <div class="orb-spec"></div>
+        </div>
+      </div>
+      <div class="v-meta">
+        <div class="v-name">→ thinking</div>
+        <div class="v-size">120px / 4.5s</div>
+      </div>
+      <div class="v-desc">ללא haze. ב-bubble של שיחה, לצד טקסט "analyzing".</div>
+    </div>
+
+    <div class="v-card">
+      <div class="v-stage xs">
+        <div class="orb">
+          <div class="orb-sphere"></div>
+          <div class="orb-soul"></div>
+          <div class="orb-flow"></div>
+        </div>
+      </div>
+      <div class="v-meta">
+        <div class="v-name">→ status</div>
+        <div class="v-size">36px / 4.5s</div>
+      </div>
+      <div class="v-desc">sphere + soul + flow. בסיידבר, ב-status bar, ב-pinned indicators.</div>
+    </div>
+  </div>
+
+  <!-- ====== BOT INTEGRATION ====== -->
+  <div class="integration">
+    <div class="integration-label">→ integration · bot bubble</div>
+
+    <div class="bubble-bot">הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?</div>
+    <div class="bubble-user">הייתי משיב למיילים בזמן.</div>
+    <div class="bubble-bot">עכשיו ספר לי — אילו כלים אתה משתמש?</div>
+    <div class="bubble-user">Gmail, Calendar, Notion.</div>
+
+    <div class="bubble-thinking">
+      <div class="mini-orb orb">
+        <div class="orb-rim"></div>
+        <div class="orb-sphere"></div>
+        <div class="orb-soul"></div>
+        <div class="orb-flow"></div>
+      </div>
+      <div class="think-text">analyzing · 5 signals · 0.78</div>
+    </div>
+
+    <div class="bubble-bot">סיימתי. יש לי 3 ארכיטיפים שמתאימים לך.</div>
+  </div>
+
+</div>
+</body>
+</html>

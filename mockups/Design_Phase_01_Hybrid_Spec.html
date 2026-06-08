@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 1 — Hybrid Direction</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'Heebo', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    /* The hybrid system */
+    --bg: #0A0A0A;
+    --bg-elev: #141414;
+    --bg-elev-2: #1C1C1C;
+    --border: #2A2A2A;
+    --border-strong: #3D3D3D;
+    --fg: #FAFAFA;
+    --fg-dim: #A3A3A3;
+    --fg-muted: #6B6B6B;
+    --accent-primary: #D97757;     /* Anthropic orange */
+    --accent-secondary: #5E6AD2;   /* Linear indigo */
+    --accent-glow: rgba(217,119,87,0.18);
+    --indigo-glow: rgba(94,106,210,0.15);
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    padding: 40px 20px 80px;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* Subtle ambient blobs (from Direction A) */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -10%;
+    right: -10%;
+    width: 50%;
+    height: 60%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+    filter: blur(80px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -10%;
+    left: -10%;
+    width: 40%;
+    height: 50%;
+    background: radial-gradient(circle, var(--indigo-glow) 0%, transparent 60%);
+    filter: blur(100px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* Header */
+  .phase-header {
+    text-align: center;
+    padding: 32px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+  .phase-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-primary);
+    background: rgba(217,119,87,0.08);
+    border: 1px solid rgba(217,119,87,0.25);
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+  h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    color: var(--fg-dim);
+    font-size: 17px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .codename {
+    font-family: var(--mono);
+    color: var(--accent-secondary);
+    font-size: 14px;
+    margin-top: 12px;
+    display: inline-block;
+  }
+
+  /* Section */
+  section { margin-bottom: 56px; }
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+  }
+  .section-sub {
+    color: var(--fg-dim);
+    margin-bottom: 28px;
+    font-size: 15px;
+  }
+
+  /* Rationale */
+  .rationale {
+    background: linear-gradient(135deg, rgba(217,119,87,0.05) 0%, rgba(94,106,210,0.04) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 56px;
+  }
+  .rationale h3 {
+    font-size: 18px;
+    margin-bottom: 14px;
+    color: var(--fg);
+  }
+  .rationale p {
+    color: var(--fg-dim);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .rationale strong { color: var(--fg); }
+
+  /* From-A / From-B split */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) { .split { grid-template-columns: 1fr; } }
+  .source-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .source-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .source-card.from-b .source-tag { color: var(--accent-primary); }
+  .source-card.from-a .source-tag { color: var(--accent-secondary); }
+  .source-card ul {
+    list-style: none;
+    padding: 0;
+  }
+  .source-card li {
+    color: var(--fg-dim);
+    font-size: 14px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .source-card li:last-child { border-bottom: none; }
+  .source-card li strong { color: var(--fg); font-weight: 500; }
+
+  /* Palette grid */
+  .palette {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .palette-row {
+    margin-bottom: 24px;
+  }
+  .palette-row:last-child { margin-bottom: 0; }
+  .palette-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+    margin-bottom: 12px;
+  }
+  .palette-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .swatch {
+    border-radius: 10px;
+    padding: 14px 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .swatch-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .swatch-hex {
+    font-family: var(--mono);
+    font-size: 11px;
+    direction: ltr;
+    text-align: left;
+  }
+  .swatch.light .swatch-name,
+  .swatch.light .swatch-hex { color: #0A0A0A; }
+
+  /* Live preview chat */
+  .preview-window {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .preview-titlebar {
+    background: var(--bg-elev-2);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FEBC2E; }
+  .dot.g { background: #28C840; }
+  .preview-title-text {
+    margin-right: 16px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .preview-body {
+    padding: 32px;
+    min-height: 320px;
+  }
+  .bubble {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    max-width: 75%;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .bubble.bot {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    margin-right: auto;
+    margin-left: 0;
+  }
+  .bubble.bot .micro {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+  }
+  .bubble.user {
+    background: rgba(217,119,87,0.12);
+    border: 1px solid rgba(217,119,87,0.3);
+    color: var(--fg);
+    margin-left: auto;
+    margin-right: 0;
+    text-align: left;
+    direction: rtl;
+  }
+  .bubble.system {
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.25);
+    color: var(--accent-secondary);
+    font-family: var(--mono);
+    font-size: 12px;
+    max-width: 100%;
+    margin: 16px 0;
+  }
+  .preview-input {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .preview-input-field {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--fg-dim);
+    font-family: var(--sans);
+    font-size: 14px;
+  }
+  .preview-btn {
+    background: var(--accent-primary);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 0 24px var(--accent-glow);
+  }
+
+  /* Specs table */
+  .specs-table {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-row.header {
+    background: var(--bg-elev-2);
+    font-weight: 600;
+  }
+  .spec-cell {
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .spec-cell.label {
+    font-family: var(--mono);
+    color: var(--fg-dim);
+    border-left: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .spec-cell code {
+    font-family: var(--mono);
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    direction: ltr;
+    display: inline-block;
+  }
+
+  /* Voice cards */
+  .voice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .voice-grid { grid-template-columns: 1fr; } }
+  .voice-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .voice-card.do { border-color: rgba(74,222,128,0.3); }
+  .voice-card.dont { border-color: rgba(248,113,113,0.3); }
+  .voice-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .voice-card.do .voice-title { color: var(--success); }
+  .voice-card.dont .voice-title { color: var(--danger); }
+  .voice-card ul { list-style: none; padding: 0; }
+  .voice-card li {
+    padding: 8px 0;
+    color: var(--fg-dim);
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .voice-card li:last-child { border-bottom: none; }
+  .voice-example {
+    color: var(--fg);
+    font-style: italic;
+    margin-top: 4px;
+    display: block;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 01 · HYBRID DIRECTION · APPROVED FOR REVIEW</div>
+    <h1>The Hybrid: Anthropic Terminal × Linear Glow</h1>
+    <p class="subtitle">בסיס B (Claude Code DNA) + עומק פרימיום מ-A. נשמע פשוט — אבל יש כאן 4 החלטות מרכזיות שכדאי לאשר לפני שעוברים לצבעים</p>
+    <div class="codename">codename: <strong>"forge"</strong></div>
+  </div>
+
+  <!-- Rationale -->
+  <div class="rationale">
+    <h3>למה היברידי, ולמה בדיוק היחס הזה</h3>
+    <p>
+      B לבד הוא <strong>מינימליסטי מדי</strong> — נראה כמו עוד CLI tool. A לבד <strong>מבדל אותך מ-Claude Code יותר מדי</strong> — סותר את הבקשה.
+      ההיברידיות נכונה <strong>אם מקפידים על אחוזים: 80% B, 20% A</strong>. הבסיס (פלטת הצבעים, הטיפוגרפיה, הקומפוננטות, הריווח)
+      הוא לחלוטין Anthropic Terminal. ה-20% של A נכנס רק ב-<strong>4 רגעים ויזואליים מוגדרים</strong>: ambient glows ב-Landing,
+      glassmorphism במודאלים, indigo כצבע "AI thinking" (טעינה, ניתוח), ו-cinematic easing בטרנזישנים.
+    </p>
+  </div>
+
+  <!-- Split: what comes from where -->
+  <section>
+    <h2>מה מ-B, מה מ-A</h2>
+    <p class="section-sub">החלוקה המדויקת — שום דבר לא "התערבב במקרה"</p>
+
+    <div class="split">
+      <div class="source-card from-b">
+        <div class="source-tag">★ 80% FROM DIRECTION B</div>
+        <ul>
+          <li><strong>פלטת בסיס:</strong> #0A0A0A · #141414 · #FAFAFA</li>
+          <li><strong>Accent ראשי:</strong> Anthropic Orange #D97757</li>
+          <li><strong>Typography:</strong> Heebo (HE) + Inter (EN) + JetBrains Mono</li>
+          <li><strong>קומפוננטות:</strong> כפתורים, קלטים, כרטיסים — minimal flat</li>
+          <li><strong>Border radius:</strong> 8-10px (לא 16)</li>
+          <li><strong>בוט UI:</strong> monospace bubbles, terminal chrome</li>
+          <li><strong>נגישות:</strong> WCAG AAA target</li>
+        </ul>
+      </div>
+      <div class="source-card from-a">
+        <div class="source-tag">✦ 20% FROM DIRECTION A</div>
+        <ul>
+          <li><strong>Ambient glows:</strong> רק ב-Landing + Hero sections</li>
+          <li><strong>Glassmorphism:</strong> רק במודאלים ובדרופ-דאונס</li>
+          <li><strong>Indigo #5E6AD2:</strong> צבע משני ל-AI "thinking" moments</li>
+          <li><strong>Cinematic easing:</strong> cubic-bezier(0.16, 1, 0.3, 1) בטרנזישנים</li>
+          <li><strong>Subtle glow:</strong> מאחורי כפתור primary בלבד</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live preview -->
+  <section>
+    <h2>איך זה מרגיש</h2>
+    <p class="section-sub">דוגמת מסך בוט עם ההיברידיות פעילה</p>
+
+    <div class="preview-window">
+      <div class="preview-titlebar">
+        <div class="dot r"></div>
+        <div class="dot y"></div>
+        <div class="dot g"></div>
+        <div class="preview-title-text">generagent · consultation</div>
+      </div>
+      <div class="preview-body">
+        <div class="bubble bot">
+          ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה?
+          <span class="micro">→ שאלה זו תעזור לי להבין את ה-persona שלך</span>
+        </div>
+        <div class="bubble user">
+          אני רואה חשבון עצמאי, מנהל בערך 40 לקוחות. רוב היום עובר במיילים וקריאות זום.
+        </div>
+        <div class="bubble bot">
+          הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?
+        </div>
+        <div class="bubble user">
+          הייתי משיב למיילים בזמן — אני שבועיים מאחור.
+        </div>
+        <div class="bubble system">
+          ◆ analyzing · persona: knowledge-worker-solo · confidence: 0.78
+        </div>
+      </div>
+      <div class="preview-input">
+        <div class="preview-input-field">הקלד את התשובה שלך...</div>
+        <button class="preview-btn">שלח →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Full color system -->
+  <section>
+    <h2>מערכת הצבעים המלאה</h2>
+    <p class="section-sub">11 טוקנים סמנטיים שיהיו ה-source of truth של כל הפרויקט</p>
+
+    <div class="palette">
+      <div class="palette-row">
+        <div class="palette-label">→ SURFACES</div>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#0A0A0A;">
+            <div class="swatch-name">bg</div>
+            <div class="swatch-hex" style="color:#A3A3A3;">#0A0A0A</div>
+          </div>
+          <div class="swatch" style="background:#141414;">
+            <div class="swatch-name">bg-elev</div>
+            <div class="swatch-hex" style="color:#A3A3A3;">#141414</div>
+          </div>
+          <div class="swatch" style="background:#1C1C1C;">
+            <div class="swatch-name">bg-elev-2</div>
+            <div class="swatch-hex" style="color:#A3A3A3;">#1C1C1C</div>
+          </div>
+          <div class="swatch" style="background:#2A2A2A;">
+            <div class="swatch-name">border</div>
+            <div class="swatch-hex" style="color:#A3A3A3;">#2A2A2A</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="palette-row">
+        <div class="palette-label">→ TEXT</div>
+        <div class="palette-swatches">
+          <div class="swatch light" style="background:#FAFAFA;">
+            <div class="swatch-name">fg</div>
+            <div class="swatch-hex">#FAFAFA</div>
+          </div>
+          <div class="swatch" style="background:#A3A3A3;">
+            <div class="swatch-name">fg-dim</div>
+            <div class="swatch-hex" style="color:#141414;">#A3A3A3</div>
+          </div>
+          <div class="swatch" style="background:#6B6B6B;">
+            <div class="swatch-name">fg-muted</div>
+            <div class="swatch-hex" style="color:#FAFAFA;">#6B6B6B</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="palette-row">
+        <div class="palette-label">→ ACCENTS</div>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#D97757;">
+            <div class="swatch-name">accent-primary</div>
+            <div class="swatch-hex" style="color:#0A0A0A;">#D97757</div>
+          </div>
+          <div class="swatch" style="background:#5E6AD2;">
+            <div class="swatch-name">accent-secondary</div>
+            <div class="swatch-hex" style="color:#FAFAFA;">#5E6AD2</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="palette-row">
+        <div class="palette-label">→ SEMANTIC</div>
+        <div class="palette-swatches">
+          <div class="swatch" style="background:#4ADE80;">
+            <div class="swatch-name">success</div>
+            <div class="swatch-hex" style="color:#0A0A0A;">#4ADE80</div>
+          </div>
+          <div class="swatch" style="background:#FBBF24;">
+            <div class="swatch-name">warning</div>
+            <div class="swatch-hex" style="color:#0A0A0A;">#FBBF24</div>
+          </div>
+          <div class="swatch" style="background:#F87171;">
+            <div class="swatch-name">danger</div>
+            <div class="swatch-hex" style="color:#0A0A0A;">#F87171</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Design DNA specs -->
+  <section>
+    <h2>Design DNA — מאיפה הכל יוצא</h2>
+    <p class="section-sub">החוקים הקבועים — לאחר אישור הופכים ל-design tokens</p>
+
+    <div class="specs-table">
+      <div class="spec-row header">
+        <div class="spec-cell">Token</div>
+        <div class="spec-cell">Value · הסבר</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--radius</div>
+        <div class="spec-cell"><code>10px</code> · כפתורים, קלטים, כרטיסים</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--radius-lg</div>
+        <div class="spec-cell"><code>16px</code> · מודאלים, hero blocks</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--easing</div>
+        <div class="spec-cell"><code>cubic-bezier(0.16, 1, 0.3, 1)</code> · expo-out, סינמטי</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--duration-fast</div>
+        <div class="spec-cell"><code>150ms</code> · hover, focus</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--duration-base</div>
+        <div class="spec-cell"><code>250ms</code> · טרנזישנים רגילים</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--glow-accent</div>
+        <div class="spec-cell"><code>0 0 24px rgba(217,119,87,0.18)</code> · רק כפתור primary</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--blur-glass</div>
+        <div class="spec-cell"><code>backdrop-filter: blur(20px)</code> · רק במודאלים</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--font-ui</div>
+        <div class="spec-cell"><code>'Heebo', 'Inter', system-ui</code> · עברית עדיפות</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--font-mono</div>
+        <div class="spec-cell"><code>'JetBrains Mono', monospace</code> · בוט, קוד</div>
+      </div>
+      <div class="spec-row">
+        <div class="spec-cell label">--spacing-unit</div>
+        <div class="spec-cell"><code>4px</code> · grid base (4, 8, 12, 16, 24, 32, 48, 64)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Voice & Tone -->
+  <section>
+    <h2>Voice &amp; Tone</h2>
+    <p class="section-sub">איך GenerAgent מדבר עם המשתמש — בעברית</p>
+
+    <div class="voice-grid">
+      <div class="voice-card do">
+        <div class="voice-title">✓ DO — חבר מקצועי</div>
+        <ul>
+          <li>
+            ישיר וקצר
+            <span class="voice-example">"בוא נתחיל. ספר לי מה אתה עושה."</span>
+          </li>
+          <li>
+            מסביר את עצמו
+            <span class="voice-example">"שאלה זו תעזור לי להבין X"</span>
+          </li>
+          <li>
+            לא מתנצל יותר מדי
+            <span class="voice-example">"לא הבנתי, נסה לנסח אחרת" (לא: "מצטער מאוד...")</span>
+          </li>
+          <li>
+            משתמש בלשון פעילה
+            <span class="voice-example">"בוא ננתח" (לא: "ייעשה ניתוח")</span>
+          </li>
+        </ul>
+      </div>
+      <div class="voice-card dont">
+        <div class="voice-title">✗ DON'T — בוט מתחנף</div>
+        <ul>
+          <li>
+            רגשי או מתלהב
+            <span class="voice-example">לא: "מדהים! איזה תפקיד מעניין!"</span>
+          </li>
+          <li>
+            מבטיח מה שאי אפשר
+            <span class="voice-example">לא: "אני אבנה לך סוכן מושלם"</span>
+          </li>
+          <li>
+            ז'רגון טכני ללא הסבר
+            <span class="voice-example">לא: "MCP server עם stdio transport"</span>
+          </li>
+          <li>
+            אמוג'ים בגוף השיחה
+            <span class="voice-example">רק אייקונים SVG/Unicode במידה</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

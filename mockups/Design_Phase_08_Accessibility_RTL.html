@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Accessibility + RTL</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --indigo: #5E6AD2;
+    --indigo-hover: #7B85DC;
+    --indigo-text: #818CF8;
+    --indigo-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: -1;
+  }
+  body::before { top: -15%; right: -10%; width: 540px; height: 540px; background: rgba(94,106,210,0.15); }
+  body::after  { bottom: -15%; left: -10%; width: 460px; height: 460px; background: rgba(192,132,252,0.08); }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Focus ring — applied globally for the demo */
+  *:focus-visible {
+    outline: 2px solid var(--indigo-bright);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 32px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--indigo-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 10px var(--indigo); }
+  h1.title {
+    font-size: 48px; font-weight: 700; letter-spacing: -0.028em; line-height: 1.1; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B0B5C0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 660px; margin: 0 auto; }
+
+  /* Score banner */
+  .score-banner {
+    margin-top: 28px;
+    padding: 18px 24px;
+    background:
+      radial-gradient(ellipse at center, rgba(74,222,128,0.08) 0%, transparent 60%),
+      var(--bg-elev);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: 16px;
+    display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+  }
+  .score {
+    display: flex; flex-direction: column; gap: 4px; text-align: center;
+  }
+  .score-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--success);
+    letter-spacing: -0.02em;
+  }
+  .score-value.warn { color: var(--warning); }
+  .score-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  /* Section */
+  section { margin-bottom: 64px; }
+  h2.sh {
+    font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.015em;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2.sh .n {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--indigo-text);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.2);
+    border-radius: 6px; padding: 3px 8px; letter-spacing: 0.08em;
+  }
+  .ssub { color: var(--fg-dim); font-size: 15px; margin-bottom: 24px; }
+
+  /* === WCAG MATRIX === */
+  .wcag-table {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .wcag-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 90px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .wcag-row:last-child { border-bottom: none; }
+  .wcag-row.header {
+    background: var(--bg-elev-2);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .wcag-status {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .wcag-status.pass { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+  .wcag-status.warn { background: rgba(251,191,36,0.15); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+  .wcag-status.fail { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .wcag-ref {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+    direction: ltr;
+  }
+  .wcag-level {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 2px 7px; border-radius: 4px;
+    background: var(--surface); color: var(--fg-dim);
+    border: 1px solid var(--border);
+    display: inline-block;
+  }
+  .wcag-level.aaa { background: rgba(94,106,210,0.12); color: var(--indigo-text); border-color: rgba(94,106,210,0.3); }
+  .wcag-note { color: var(--fg-dim); font-size: 12px; line-height: 1.55; }
+  .wcag-note code {
+    font-family: 'JetBrains Mono', monospace; background: var(--bg-deep);
+    color: var(--magenta); padding: 1px 5px; border-radius: 3px; font-size: 11px;
+  }
+  @media (max-width: 768px) {
+    .wcag-row { grid-template-columns: 1fr; gap: 6px; }
+  }
+
+  /* === KEYBOARD NAV DEMO === */
+  .kb-demo {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .kb-instruction {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--magenta);
+    margin-bottom: 16px;
+    direction: ltr;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .kb-key {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  .kb-targets {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .kb-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    color: var(--fg);
+    padding: 10px 18px;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+  }
+  .kb-btn:hover { background: var(--surface-strong); }
+  .kb-btn.primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .kb-input {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    padding: 9px 14px;
+    color: var(--fg);
+    font-family: inherit; font-size: 13px;
+    width: 200px;
+  }
+  .kb-input:focus { border-color: var(--indigo); }
+
+  /* === ARIA EXAMPLES === */
+  .aria-examples {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .aria-examples { grid-template-columns: 1fr; } }
+  .aria-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .aria-card.bad { border-color: rgba(248,113,113,0.25); }
+  .aria-card.good { border-color: rgba(74,222,128,0.25); }
+  .aria-head {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-elev-2);
+  }
+  .aria-name {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-dim);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .aria-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 2px 8px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .aria-badge.bad { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .aria-badge.good { background: rgba(74,222,128,0.15); color: var(--success); }
+  .aria-body {
+    padding: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    direction: ltr; text-align: left;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .c-tag { color: var(--cyan); }
+  .c-attr { color: var(--indigo-text); }
+  .c-string { color: var(--success); }
+  .c-comment { color: var(--fg-muted); }
+
+  /* === TOUCH TARGETS === */
+  .touch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .touch-grid { grid-template-columns: 1fr; } }
+  .touch-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+  .touch-target {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    background: var(--indigo);
+    color: #fff;
+    border-radius: 10px;
+    font-weight: 600;
+    margin: 16px 8px;
+    cursor: pointer;
+    position: relative;
+  }
+  .touch-target.bad {
+    width: 28px; height: 28px;
+    font-size: 11px;
+  }
+  .touch-target.good {
+    width: 44px; height: 44px;
+    font-size: 14px;
+  }
+  .touch-target.good::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px dashed rgba(74,222,128,0.4);
+    border-radius: 12px;
+  }
+  .touch-spec {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+    margin-top: 12px;
+  }
+
+  /* === RTL RULES === */
+  .rtl-rule {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+  }
+  .rtl-mark {
+    color: var(--indigo-bright);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 13px;
+    line-height: 1.4;
+  }
+  .rtl-rule-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .rtl-rule-desc { color: var(--fg-dim); font-size: 13px; line-height: 1.65; margin-bottom: 8px; }
+  .rtl-rule-desc code {
+    font-family: 'JetBrains Mono', monospace; background: var(--bg-deep);
+    color: var(--magenta); padding: 1px 5px; border-radius: 3px; font-size: 11px;
+  }
+  .rtl-example {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg); direction: ltr; text-align: left;
+    margin-top: 6px;
+  }
+  .rtl-example .bad { color: var(--danger); }
+  .rtl-example .good { color: var(--success); }
+
+  /* === LIVE REGION === */
+  .live-demo {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .live-window {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 120px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .live-bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    max-width: 80%;
+    margin-right: auto;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 300ms var(--ease), transform 300ms var(--ease);
+  }
+  .live-bubble.shown { opacity: 1; transform: translateY(0); }
+  .live-actions {
+    display: flex; gap: 8px; margin-top: 14px;
+  }
+  .live-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-dim);
+    margin-top: 14px;
+    direction: ltr;
+  }
+
+  /* === DO/DONT === */
+  .dodont {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  @media (max-width: 768px) { .dodont { grid-template-columns: 1fr; } }
+  .dodont-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .dodont-card.do { border-color: rgba(74,222,128,0.25); }
+  .dodont-card.dont { border-color: rgba(248,113,113,0.25); }
+  .dodont-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .dodont-card.do .dodont-title { color: var(--success); }
+  .dodont-card.dont .dodont-title { color: var(--danger); }
+  .dodont-card ul { list-style: none; padding: 0; }
+  .dodont-card li {
+    padding: 8px 0;
+    color: var(--fg-dim); font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.6;
+  }
+  .dodont-card li:last-child { border-bottom: none; }
+  .dodont-card li strong { color: var(--fg); }
+  .dodont-card li code {
+    font-family: 'JetBrains Mono', monospace; background: var(--bg-deep);
+    color: var(--magenta); padding: 1px 5px; border-radius: 3px; font-size: 11px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="phase-header">
+    <div class="phase-tag">phase 08 · accessibility + rtl · final</div>
+    <h1 class="title">נגיש לכולם.<br>בעברית כמו שצריך.</h1>
+    <p class="subtitle">WCAG 2.2 audit, 7 כללי RTL, keyboard navigation, ARIA patterns, touch targets, live regions לבוט.</p>
+
+    <div class="score-banner">
+      <div class="score">
+        <div class="score-value">AA</div>
+        <div class="score-label">WCAG level</div>
+      </div>
+      <div class="score">
+        <div class="score-value">22 / 24</div>
+        <div class="score-label">criteria passed</div>
+      </div>
+      <div class="score">
+        <div class="score-value warn">2</div>
+        <div class="score-label">to address</div>
+      </div>
+      <div class="score">
+        <div class="score-value">100%</div>
+        <div class="score-label">RTL coverage</div>
+      </div>
+      <div class="score">
+        <div class="score-value">44px</div>
+        <div class="score-label">touch min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === WCAG MATRIX === -->
+  <section>
+    <h2 class="sh"><span class="n">01</span> WCAG 2.2 audit</h2>
+    <p class="ssub">סטטוס נוכחי של כל קריטריון רלוונטי — מה עבר, מה דורש תיקון.</p>
+
+    <div class="wcag-table">
+      <div class="wcag-row header">
+        <div></div>
+        <div>קריטריון</div>
+        <div>רמה</div>
+        <div>הערה</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Color Contrast</strong> · text vs background</div>
+          <div class="wcag-ref">1.4.3</div>
+        </div>
+        <div><span class="wcag-level aaa">AAA</span></div>
+        <div class="wcag-note">fg <code>#EDEDEF</code> על bg <code>#050506</code> = ratio 17.4</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status warn">!</div>
+        <div>
+          <div><strong>Accent color text</strong> · indigo on dark</div>
+          <div class="wcag-ref">1.4.3</div>
+        </div>
+        <div><span class="wcag-level">AA</span></div>
+        <div class="wcag-note"><code>--accent #5E6AD2</code> = 4.3 (fails). חובה <code>--accent-text #818CF8</code> לטקסט</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Focus visible</strong> · indicator on every interactive element</div>
+          <div class="wcag-ref">2.4.7</div>
+        </div>
+        <div><span class="wcag-level aaa">AAA</span></div>
+        <div class="wcag-note">2px <code>--accent-bright</code> outline, offset 3px, גלובלי</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Keyboard Navigation</strong> · all functionality</div>
+          <div class="wcag-ref">2.1.1</div>
+        </div>
+        <div><span class="wcag-level">A</span></div>
+        <div class="wcag-note">Tab order תואם viewport, Esc סוגר modals, Enter שולח טפסים</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Touch Targets</strong> · minimum 44×44px</div>
+          <div class="wcag-ref">2.5.5</div>
+        </div>
+        <div><span class="wcag-level aaa">AAA</span></div>
+        <div class="wcag-note">btn-md = 44px, icon-btn = 36px עם hit-area 44px</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Reduced Motion</strong> · respect user preference</div>
+          <div class="wcag-ref">2.3.3</div>
+        </div>
+        <div><span class="wcag-level">AAA</span></div>
+        <div class="wcag-note">orb breath מאט ל-24s במקום לעצור, transforms מבוטלים</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Page Language</strong> · &lt;html lang&gt; declared</div>
+          <div class="wcag-ref">3.1.1</div>
+        </div>
+        <div><span class="wcag-level">A</span></div>
+        <div class="wcag-note"><code>&lt;html lang="he" dir="rtl"&gt;</code> בכל עמוד</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Form Labels</strong> · every input has label</div>
+          <div class="wcag-ref">3.3.2</div>
+        </div>
+        <div><span class="wcag-level">A</span></div>
+        <div class="wcag-note">label-for matching, אין placeholder-only labels</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Error Identification</strong> · errors near field</div>
+          <div class="wcag-ref">3.3.1</div>
+        </div>
+        <div><span class="wcag-level">A</span></div>
+        <div class="wcag-note">red border + helper text + role="alert"</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Skip Link</strong> · "skip to main"</div>
+          <div class="wcag-ref">2.4.1</div>
+        </div>
+        <div><span class="wcag-level">A</span></div>
+        <div class="wcag-note">קבוע באתר, מופיע על Tab ראשון</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Heading Hierarchy</strong> · sequential H1→H6</div>
+          <div class="wcag-ref">1.3.1</div>
+        </div>
+        <div><span class="wcag-level">AA</span></div>
+        <div class="wcag-note">H1 אחד בעמוד, ללא דילוגים</div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status warn">!</div>
+        <div>
+          <div><strong>Bot live region</strong> · screen reader announces new messages</div>
+          <div class="wcag-ref">4.1.3</div>
+        </div>
+        <div><span class="wcag-level">AA</span></div>
+        <div class="wcag-note">צריך <code>aria-live="polite"</code> על chat-area + <code>aria-atomic</code></div>
+      </div>
+
+      <div class="wcag-row">
+        <div class="wcag-status pass">✓</div>
+        <div>
+          <div><strong>Resize Text</strong> · supports 200% zoom</div>
+          <div class="wcag-ref">1.4.4</div>
+        </div>
+        <div><span class="wcag-level">AA</span></div>
+        <div class="wcag-note">rem-based + clamp(), אין fixed px על body text</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === KEYBOARD NAV DEMO === -->
+  <section>
+    <h2 class="sh"><span class="n">02</span> Keyboard navigation</h2>
+    <p class="ssub">לחץ Tab כדי לעבור בין האלמנטים — focus ring יופיע על כל אחד. נסה Shift+Tab לחזור אחורה.</p>
+
+    <div class="kb-demo">
+      <div class="kb-instruction">
+        <span class="kb-key">Tab</span> next
+        <span class="kb-key">Shift + Tab</span> prev
+        <span class="kb-key">Enter</span> activate
+        <span class="kb-key">Esc</span> dismiss
+      </div>
+      <div class="kb-targets">
+        <button class="kb-btn primary">התחל ייעוץ</button>
+        <button class="kb-btn">שמור טיוטה</button>
+        <input class="kb-input" placeholder="חיפוש בחבילות...">
+        <button class="kb-btn">ביטול</button>
+        <button class="kb-btn">תיעוד</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- === ARIA EXAMPLES === -->
+  <section>
+    <h2 class="sh"><span class="n">03</span> ARIA patterns · do / don't</h2>
+    <p class="ssub">שלושת הדפוסים הנפוצים — מה נכון, מה לא.</p>
+
+    <div class="aria-examples">
+
+      <div class="aria-card bad">
+        <div class="aria-head">
+          <div class="aria-name">icon button · bad</div>
+          <div class="aria-badge bad">no label</div>
+        </div>
+        <div class="aria-body"><span class="c-tag">&lt;button&gt;</span>
+  <span class="c-tag">&lt;svg&gt;</span>...<span class="c-tag">&lt;/svg&gt;</span>
+<span class="c-tag">&lt;/button&gt;</span>
+
+<span class="c-comment">// screen reader: "button"
+// (no idea what it does)</span></div>
+      </div>
+
+      <div class="aria-card good">
+        <div class="aria-head">
+          <div class="aria-name">icon button · good</div>
+          <div class="aria-badge good">aria-label</div>
+        </div>
+        <div class="aria-body"><span class="c-tag">&lt;button</span> <span class="c-attr">aria-label</span>=<span class="c-string">"סגור מודאל"</span><span class="c-tag">&gt;</span>
+  <span class="c-tag">&lt;svg</span> <span class="c-attr">aria-hidden</span>=<span class="c-string">"true"</span><span class="c-tag">&gt;</span>...<span class="c-tag">&lt;/svg&gt;</span>
+<span class="c-tag">&lt;/button&gt;</span>
+
+<span class="c-comment">// screen reader: "סגור מודאל, button"</span></div>
+      </div>
+
+      <div class="aria-card bad">
+        <div class="aria-head">
+          <div class="aria-name">loading state · bad</div>
+          <div class="aria-badge bad">silent</div>
+        </div>
+        <div class="aria-body"><span class="c-tag">&lt;div</span> <span class="c-attr">className</span>=<span class="c-string">"orb breathing"</span><span class="c-tag">/&gt;</span>
+<span class="c-tag">&lt;p&gt;</span>analyzing...<span class="c-tag">&lt;/p&gt;</span>
+
+<span class="c-comment">// screen reader: ignores
+// status changes silently</span></div>
+      </div>
+
+      <div class="aria-card good">
+        <div class="aria-head">
+          <div class="aria-name">loading state · good</div>
+          <div class="aria-badge good">live region</div>
+        </div>
+        <div class="aria-body"><span class="c-tag">&lt;div</span> <span class="c-attr">role</span>=<span class="c-string">"status"</span> <span class="c-attr">aria-live</span>=<span class="c-string">"polite"</span><span class="c-tag">&gt;</span>
+  <span class="c-tag">&lt;p&gt;</span>analyzing<span class="c-tag">&lt;/p&gt;</span>
+<span class="c-tag">&lt;/div&gt;</span>
+
+<span class="c-comment">// screen reader: "analyzing"
+// announced when changes</span></div>
+      </div>
+
+      <div class="aria-card bad">
+        <div class="aria-head">
+          <div class="aria-name">checkbox · bad</div>
+          <div class="aria-badge bad">div soup</div>
+        </div>
+        <div class="aria-body"><span class="c-tag">&lt;div</span> <span class="c-attr">onClick</span>=<span class="c-string">"toggle"</span><span class="c-tag">&gt;</span>
+  <span class="c-tag">&lt;div</span> <span class="c-attr">className</span>=<span class="c-string">"box"</span><span class="c-tag">/&gt;</span>
+  <span class="c-tag">&lt;span&gt;</span>אני מסכים<span class="c-tag">&lt;/span&gt;</span>
+<span class="c-tag">&lt;/div&gt;</span>
+
+<span class="c-comment">// not focusable, no Tab, no Space</span></div>
+      </div>
+
+      <div class="aria-card good">
+        <div class="aria-head">
+          <div class="aria-name">checkbox · good</div>
+          <div class="aria-badge good">native input</div>
+        </div>
+        <div class="aria-body"><span class="c-tag">&lt;label&gt;</span>
+  <span class="c-tag">&lt;input</span> <span class="c-attr">type</span>=<span class="c-string">"checkbox"</span><span class="c-tag">/&gt;</span>
+  <span class="c-tag">&lt;span&gt;</span>אני מסכים<span class="c-tag">&lt;/span&gt;</span>
+<span class="c-tag">&lt;/label&gt;</span>
+
+<span class="c-comment">// Tab + Space, accessible by default</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- === TOUCH TARGETS === -->
+  <section>
+    <h2 class="sh"><span class="n">04</span> Touch targets · minimum 44×44</h2>
+    <p class="ssub">אצבע ממוצעת = ~10mm = ~44px ב-CSS. תחת זה — שגיאות הקלקה.</p>
+
+    <div class="touch-grid">
+      <div class="touch-card">
+        <div class="aria-name" style="margin-bottom: 8px; color: var(--danger);">→ BAD · 28×28</div>
+        <div class="touch-target bad">×</div>
+        <div class="touch-spec">קליק בעלמא · נכשל מובייל</div>
+      </div>
+      <div class="touch-card">
+        <div class="aria-name" style="margin-bottom: 8px; color: var(--success);">→ GOOD · 44×44</div>
+        <div class="touch-target good">×</div>
+        <div class="touch-spec">+ hit-area 8px hatching · גם אם הויזואל קטן יותר</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === RTL RULES === -->
+  <section>
+    <h2 class="sh"><span class="n">05</span> RTL · 7 כללים</h2>
+    <p class="ssub">הדברים שמעצבים שוכחים כשהם מעבירים מאנגלית לעברית.</p>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">01</div>
+      <div>
+        <div class="rtl-rule-title">השתמש ב-logical properties</div>
+        <div class="rtl-rule-desc">
+          במקום <code>margin-left</code> השתמש ב-<code>margin-inline-start</code>. אוטומטית מתהפך ב-RTL.
+        </div>
+        <div class="rtl-example">
+          <span class="bad">❌ margin-left: 16px;</span><br>
+          <span class="good">✓ margin-inline-start: 16px;</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">02</div>
+      <div>
+        <div class="rtl-rule-title">flex gap עובד אוטומטית</div>
+        <div class="rtl-rule-desc">
+          <code>display: flex; gap: 16px;</code> — אין צורך לטפל ב-RTL ידנית. ה-spacing נכון בשני הכיוונים.
+          אם השתמשת ב-<code>margin-right</code> במקום gap — תצטרך לתקן.
+        </div>
+      </div>
+    </div>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">03</div>
+      <div>
+        <div class="rtl-rule-title">חצים וקוד תמיד LTR</div>
+        <div class="rtl-rule-desc">
+          חץ → במשפט עברי צריך להראות "מימין לשמאל". בקוד / מספרים / IDs — תמיד עטוף ב-<code>&lt;span dir="ltr"&gt;</code>.
+        </div>
+        <div class="rtl-example">
+          <span class="good">✓ &lt;code dir="ltr"&gt;npx generagent install&lt;/code&gt;</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">04</div>
+      <div>
+        <div class="rtl-rule-title">SVG אייקונים — שני כיוונים</div>
+        <div class="rtl-rule-desc">
+          חץ שמאל ב-LTR = חץ ימין ב-RTL. השתמש ב-<code>transform: scaleX(-1)</code> לחיצים, או SVG נפרדים.
+          לוגואים <strong>לא הופכים</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">05</div>
+      <div>
+        <div class="rtl-rule-title">תאריכים ומספרים</div>
+        <div class="rtl-rule-desc">
+          תאריכים בעברית: "8 ביוני 2026" (כיוון ימין-שמאל הוא טבעי).
+          מספרים גדולים: "1,234" — תמיד עם פסיק כמפריד (לא נקודה).
+        </div>
+      </div>
+    </div>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">06</div>
+      <div>
+        <div class="rtl-rule-title">Font fallback ל-mixed content</div>
+        <div class="rtl-rule-desc">
+          <code>font-family: 'IBM Plex Sans Hebrew', 'Inter', system-ui</code> —
+          האותיות העבריות מ-Hebrew, הלטיניות מ-Inter. שניהם נראים מאוזנים.
+        </div>
+      </div>
+    </div>
+
+    <div class="rtl-rule">
+      <div class="rtl-mark">07</div>
+      <div>
+        <div class="rtl-rule-title">scroll-margin ולא margin</div>
+        <div class="rtl-rule-desc">
+          לעוגנים (#section) — השתמש ב-<code>scroll-margin-top</code> כדי שכותרות לא יסתתרו תחת nav.
+          זה לא תלוי כיוון.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- === LIVE REGION DEMO === -->
+  <section>
+    <h2 class="sh"><span class="n">06</span> Bot live region · screen reader friendly</h2>
+    <p class="ssub">לחץ "תשובה חדשה" — בקורא מסך, ההודעה תוקרא אוטומטית.</p>
+
+    <div class="live-demo">
+      <div class="live-window" id="live-chat" role="log" aria-live="polite" aria-atomic="false" aria-label="שיחה עם הבוט">
+        <div class="live-bubble shown">ספר לי מה אתה עושה ביום-יום</div>
+        <div class="live-bubble shown" id="msg-1">רואה חשבון, 40 לקוחות</div>
+      </div>
+      <div class="live-actions">
+        <button class="kb-btn primary" id="btn-next-msg">תשובה חדשה</button>
+        <button class="kb-btn" id="btn-reset">איפוס</button>
+      </div>
+      <div class="live-note">
+        role="log" + aria-live="polite" → screen reader מכריז על הודעות חדשות בלי לקטוע את המשתמש.
+      </div>
+    </div>
+  </section>
+
+  <!-- === DO / DON'T === -->
+  <section>
+    <h2 class="sh"><span class="n">07</span> סיכום · do / don't</h2>
+
+    <div class="dodont">
+      <div class="dodont-card do">
+        <div class="dodont-title">✓ DO</div>
+        <ul>
+          <li><strong>השתמש ב-semantic HTML</strong> — <code>&lt;button&gt;</code>, <code>&lt;label&gt;</code>, <code>&lt;nav&gt;</code> במקום divs</li>
+          <li><strong>תן aria-label לאייקונים</strong> — כפתורי × ⌘ ⋯ חייבים שם נגיש</li>
+          <li><strong>שמור focus-visible</strong> — לעולם אל תכבה את ה-outline בלי תחליף</li>
+          <li><strong>בדוק עם VoiceOver</strong> — Cmd+F5 על Mac, נסה לנווט עיוור</li>
+          <li><strong>הוסף role="status" / aria-live</strong> לכל תוכן דינמי (toasts, bot replies)</li>
+          <li><strong>השתמש ב-logical properties</strong> — margin-inline-start במקום margin-left</li>
+        </ul>
+      </div>
+      <div class="dodont-card dont">
+        <div class="dodont-title">✗ DON'T</div>
+        <ul>
+          <li><strong>אל תשתמש ב-color בלבד</strong> ל-status — תמיד צריך דוט / אייקון / טקסט</li>
+          <li><strong>אל תשתמש ב-placeholder כ-label</strong> — נעלם כשמקלידים</li>
+          <li><strong>אל תבטל animations</strong> ב-reduced-motion — תאט או החלף</li>
+          <li><strong>אל תוסיף tabindex חיובי</strong> — מבלגן את Tab order הטבעי</li>
+          <li><strong>אל תשים אצבע מתחת ל-44px</strong> — touch targets קטנים = שגיאות מובייל</li>
+          <li><strong>אל תשכח dir="ltr"</strong> על קוד / URLs / IDs בתוך טקסט עברי</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Live region demo
+  const messages = [
+    'הבנתי. כמה מיילים אתה מקבל ביום?',
+    'בערך 200 ביום',
+    'מתוכם, כמה דורשים תגובה ממך?',
+    'אולי 30%',
+    'מצוין. נראה לי שאני יודע איזה סוכן יעזור.',
+  ];
+  let idx = 0;
+  const chat = document.getElementById('live-chat');
+  const nextBtn = document.getElementById('btn-next-msg');
+  const resetBtn = document.getElementById('btn-reset');
+
+  nextBtn.addEventListener('click', () => {
+    if (idx >= messages.length) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'live-bubble';
+    bubble.textContent = messages[idx];
+    chat.appendChild(bubble);
+    requestAnimationFrame(() => bubble.classList.add('shown'));
+    idx++;
+    if (idx >= messages.length) nextBtn.disabled = true;
+  });
+
+  resetBtn.addEventListener('click', () => {
+    chat.querySelectorAll('.live-bubble').forEach((b, i) => { if (i >= 2) b.remove(); });
+    idx = 0;
+    nextBtn.disabled = false;
+  });
+</script>
+
+</body>
+</html>

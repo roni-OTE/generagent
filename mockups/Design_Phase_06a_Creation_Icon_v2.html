@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px;
+        overflow: hidden;
+        background: #020203;
+        background-image:
+          radial-gradient(ellipse at 35% 50%, rgba(94,106,210,0.18), transparent 55%),
+          radial-gradient(ellipse at 65% 50%, rgba(192,132,252,0.12), transparent 55%),
+          linear-gradient(to bottom, #0A0A0F 0%, #050506 30%, #020203 100%);
+      }
+      .stage {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Soft caption */
+      .caption {
+        position: absolute;
+        bottom: 80px;
+        left: 0; right: 0;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        color: rgba(192,132,252,0.75);
+        font-size: 28px;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+      }
+      .caption::before {
+        content: '◆ ';
+        color: rgba(192,132,252,1);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="4"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="stage clip" id="stage" data-start="0" data-duration="4" data-track-index="1">
+
+        <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" width="1920" height="1080">
+          <defs>
+            <!-- Adam (left) — warm cream/gold gradient -->
+            <linearGradient id="adamGrad" x1="0%" y1="50%" x2="100%" y2="50%">
+              <stop offset="0%" stop-color="#9C7E5A" stop-opacity="0.6"/>
+              <stop offset="50%" stop-color="#D4B896" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#F5E6D3" stop-opacity="1"/>
+            </linearGradient>
+            <linearGradient id="adamHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#FFF4E0" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#9C7E5A" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- God/AI (right) — indigo to bright -->
+            <linearGradient id="aiGrad" x1="100%" y1="50%" x2="0%" y2="50%">
+              <stop offset="0%" stop-color="#3A4296" stop-opacity="0.6"/>
+              <stop offset="50%" stop-color="#5E6AD2" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#A5B4FC" stop-opacity="1"/>
+            </linearGradient>
+            <linearGradient id="aiHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#C7D2FE" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#3A4296" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- Spark gradient -->
+            <radialGradient id="sparkCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+              <stop offset="20%" stop-color="#F5E6D3" stop-opacity="0.95"/>
+              <stop offset="50%" stop-color="#C084FC" stop-opacity="0.7"/>
+              <stop offset="100%" stop-color="#5E6AD2" stop-opacity="0"/>
+            </radialGradient>
+
+            <radialGradient id="sparkOuter" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#C084FC" stop-opacity="0.5"/>
+              <stop offset="60%" stop-color="#C084FC" stop-opacity="0.1"/>
+              <stop offset="100%" stop-color="#C084FC" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Filters -->
+            <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="bigBloom" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="20" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Far behind: soft ambient halo at meeting point -->
+          <circle id="halo" cx="960" cy="540" r="320"
+                  fill="url(#sparkOuter)" opacity="0.3" filter="url(#bigBloom)"/>
+
+          <!-- ============ ADAM (Left, human, relaxed) ============ -->
+          <!-- Shape: arm + hand + extended index finger
+               coming from bottom-left, reaching up and to the right -->
+          <g id="adam">
+            <!-- Forearm + back of hand -->
+            <path
+              d="
+                M 0 720
+                C 120 690, 240 650, 380 615
+                C 480 590, 560 575, 640 565
+                C 720 555, 790 552, 830 552
+                C 870 552, 895 553, 912 555
+                L 925 558
+                C 930 559, 933 561, 935 563
+                L 938 567
+                L 940 572
+                L 940 578
+                L 938 583
+                L 935 587
+                L 930 590
+                L 912 593
+                C 895 595, 870 596, 830 596
+                C 790 596, 720 595, 640 590
+                C 560 585, 480 575, 380 555
+                C 240 530, 120 495, 0 460
+                Z
+              "
+              fill="url(#adamGrad)"
+              filter="url(#bloom)"
+            />
+            <!-- Subtle highlight on top edge -->
+            <path
+              d="
+                M 200 580
+                C 320 555, 480 540, 640 535
+                C 740 532, 820 533, 880 538
+              "
+              stroke="url(#adamHighlight)"
+              stroke-width="2"
+              fill="none"
+              opacity="0.7"
+            />
+            <!-- Fingertip — small bright orb -->
+            <circle cx="935" cy="575" r="6" fill="#FFF4E0" opacity="0.9"/>
+          </g>
+
+          <!-- ============ GOD / AI (Right, extended, taut) ============ -->
+          <!-- Shape: arm + hand + extended index finger
+               coming from top-right (clouds), reaching down and to the left -->
+          <g id="god">
+            <path
+              d="
+                M 1920 360
+                C 1800 380, 1680 410, 1540 450
+                C 1440 478, 1360 500, 1280 515
+                C 1200 530, 1130 538, 1090 540
+                C 1050 542, 1025 542, 1008 541
+                L 995 540
+                C 990 539, 987 537, 985 535
+                L 982 531
+                L 980 526
+                L 980 520
+                L 982 515
+                L 985 511
+                L 990 508
+                L 1008 505
+                C 1025 503, 1050 502, 1090 502
+                C 1130 502, 1200 504, 1280 508
+                C 1360 512, 1440 520, 1540 538
+                C 1680 562, 1800 590, 1920 620
+                Z
+              "
+              fill="url(#aiGrad)"
+              filter="url(#bloom)"
+            />
+            <!-- Highlight on bottom edge (light from below) -->
+            <path
+              d="
+                M 1720 540
+                C 1600 525, 1440 510, 1280 505
+                C 1180 502, 1100 503, 1040 510
+              "
+              stroke="url(#aiHighlight)"
+              stroke-width="2"
+              fill="none"
+              opacity="0.7"
+            />
+            <!-- Fingertip orb -->
+            <circle cx="985" cy="523" r="6" fill="#C7D2FE" opacity="0.9"/>
+          </g>
+
+          <!-- ============ SPARK at meeting point ============ -->
+          <!-- Layered: outer halo + middle glow + bright core -->
+          <g id="sparkGroup" opacity="0" style="transform-origin: 960px 549px;">
+            <circle cx="960" cy="549" r="80" fill="url(#sparkOuter)" opacity="0.6" filter="url(#bigBloom)"/>
+            <circle cx="960" cy="549" r="35" fill="url(#sparkCore)" filter="url(#bloom)"/>
+            <circle cx="960" cy="549" r="8" fill="#FFFFFF" opacity="1"/>
+          </g>
+
+          <!-- ============ ENERGY ARC between fingertips ============ -->
+          <path id="energyArc"
+                d="M 935 575 Q 960 549, 985 523"
+                stroke="url(#sparkCore)"
+                stroke-width="0"
+                fill="none"
+                stroke-linecap="round"
+                opacity="0"
+                filter="url(#bloom)"/>
+        </svg>
+
+        <div class="caption">GenerAgent &middot; thinking</div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Initial state — hands at neutral position (slightly apart)
+      gsap.set("#adam",  { x: -25, transformOrigin: "0% 50%" });
+      gsap.set("#god",   { x:  25, transformOrigin: "100% 50%" });
+      gsap.set("#sparkGroup", { opacity: 0, scale: 0.3 });
+      gsap.set("#halo", { opacity: 0.15, scale: 0.8, transformOrigin: "960px 549px" });
+      gsap.set("#energyArc", { opacity: 0, strokeWidth: 0 });
+
+      // ============ PHASE 1: Approach (0 → 1.6s) ============
+      tl.to("#adam", {
+        x: 0,
+        duration: 1.6,
+        ease: "power2.inOut",
+      }, 0);
+      tl.to("#god", {
+        x: 0,
+        duration: 1.6,
+        ease: "power2.inOut",
+      }, 0);
+      tl.to("#halo", {
+        opacity: 0.4,
+        scale: 1.1,
+        duration: 1.6,
+        ease: "sine.inOut",
+      }, 0);
+
+      // ============ PHASE 2: Near-touch + spark (1.6 → 2.2s) ============
+      tl.to("#energyArc", {
+        opacity: 0.9,
+        strokeWidth: 3,
+        duration: 0.4,
+        ease: "power3.out",
+      }, 1.6);
+
+      tl.to("#sparkGroup", {
+        opacity: 1,
+        scale: 1,
+        duration: 0.5,
+        ease: "back.out(2)",
+      }, 1.65);
+
+      tl.to("#halo", {
+        opacity: 0.9,
+        scale: 1.4,
+        duration: 0.5,
+        ease: "power2.out",
+      }, 1.6);
+
+      // hold the moment
+      tl.to({}, { duration: 0.3 }, 2.1);
+
+      // ============ PHASE 3: Retreat + fade spark (2.4 → 4s) ============
+      tl.to("#adam", {
+        x: -25,
+        duration: 1.6,
+        ease: "power2.inOut",
+      }, 2.4);
+      tl.to("#god", {
+        x: 25,
+        duration: 1.6,
+        ease: "power2.inOut",
+      }, 2.4);
+      tl.to("#sparkGroup", {
+        opacity: 0,
+        scale: 0.3,
+        duration: 0.8,
+        ease: "power2.in",
+      }, 2.4);
+      tl.to("#energyArc", {
+        opacity: 0,
+        strokeWidth: 0,
+        duration: 0.6,
+        ease: "power2.in",
+      }, 2.4);
+      tl.to("#halo", {
+        opacity: 0.15,
+        scale: 0.8,
+        duration: 1.6,
+        ease: "sine.inOut",
+      }, 2.4);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

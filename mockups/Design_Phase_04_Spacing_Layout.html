@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 4 — Spacing & Layout (aurora)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'IBM Plex Sans Hebrew', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-text: #818CF8;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --easing: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: 0; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 40px 0 48px; border-bottom: 1px solid var(--border); margin-bottom: 56px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 24px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1.title {
+    font-size: 52px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 680px; margin: 0 auto; }
+
+  /* Section */
+  section { margin-bottom: 64px; }
+  h2.section-h {
+    font-size: 28px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em;
+  }
+  h2.section-h .num { color: var(--accent-text); font-family: var(--mono); font-size: 14px; font-weight: 500; margin-left: 12px; }
+  .section-sub { color: var(--fg-dim); margin-bottom: 28px; font-size: 16px; }
+
+  /* Spacing scale visual */
+  .scale-list {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .scale-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 280px;
+    align-items: center;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    transition: background 150ms ease;
+  }
+  .scale-row:last-child { border-bottom: none; }
+  .scale-row:hover { background: var(--surface); }
+  .scale-row.header {
+    background: var(--bg-elev-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .sp-token {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  .sp-bar {
+    height: 24px;
+    background: linear-gradient(90deg, var(--accent), var(--magenta));
+    border-radius: 4px;
+    box-shadow: 0 0 16px rgba(94,106,210,0.3);
+  }
+  .sp-usage {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--fg-dim);
+    direction: ltr;
+    text-align: left;
+  }
+  .sp-usage strong { color: var(--fg); }
+
+  /* Grid demo */
+  .grid-demo {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .grid-12 {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .gcol {
+    background: linear-gradient(135deg, rgba(94,106,210,0.15), rgba(94,106,210,0.05));
+    border: 1px solid rgba(94,106,210,0.25);
+    height: 64px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-text);
+  }
+  .grid-pattern {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .gp-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  .gpatt-row {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .gp-12 { grid-template-columns: repeat(12, 1fr); }
+  .gp-6 { grid-template-columns: repeat(6, 1fr); }
+  .gp-3 { grid-template-columns: repeat(3, 1fr); }
+  .gp-hero { grid-template-columns: 8fr 4fr; }
+  .gp-side { grid-template-columns: 280px 1fr; }
+  .gpatt-cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-dim);
+    text-align: center;
+  }
+  .gpatt-cell.fill { background: rgba(94,106,210,0.12); border-color: rgba(94,106,210,0.3); color: var(--accent-text); }
+
+  /* Breakpoints visual */
+  .bp-table {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .bp-row {
+    display: grid;
+    grid-template-columns: 100px 110px 1fr 1fr;
+    align-items: center;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .bp-row:last-child { border-bottom: none; }
+  .bp-row.header {
+    background: var(--bg-elev-2);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+  }
+  .bp-name {
+    font-family: var(--mono);
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  .bp-size {
+    font-family: var(--mono);
+    color: var(--fg-dim);
+    direction: ltr;
+    text-align: left;
+  }
+  .bp-use { color: var(--fg-dim); }
+  .bp-cont {
+    font-family: var(--mono);
+    color: var(--magenta);
+    font-size: 12px;
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* Radius */
+  .radius-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+  .radius-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 28px 20px;
+    text-align: center;
+    transition: all 200ms var(--easing);
+  }
+  .radius-card.r-2 { border-radius: 2px; }
+  .radius-card.r-4 { border-radius: 4px; }
+  .radius-card.r-6 { border-radius: 6px; }
+  .radius-card.r-8 { border-radius: 8px; }
+  .radius-card.r-10 { border-radius: 10px; }
+  .radius-card.r-12 { border-radius: 12px; }
+  .radius-card.r-16 { border-radius: 16px; }
+  .radius-card.r-20 { border-radius: 20px; }
+  .radius-card.r-full { border-radius: 999px; }
+  .r-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent-text);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .r-value {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin-bottom: 8px;
+  }
+  .r-use {
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 1.5;
+  }
+
+  /* Z-index */
+  .z-stack {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .z-layer {
+    background: var(--surface);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    padding: 14px 20px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+  }
+  .z-name { font-family: var(--mono); color: var(--accent-text); font-size: 13px; }
+  .z-value {
+    font-family: var(--mono);
+    color: var(--magenta);
+    font-size: 12px;
+    direction: ltr;
+  }
+  .z-use { color: var(--fg-dim); font-size: 13px; }
+
+  /* Density showcase */
+  .density-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .density-grid { grid-template-columns: 1fr; } }
+  .density-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .density-head {
+    background: var(--bg-elev-2);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+  }
+  .density-body { padding: 18px; }
+  .density-body.compact { padding: 12px; }
+  .density-body.loose { padding: 28px; }
+  .demo-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: var(--fg-dim);
+  }
+  .density-body.compact .demo-item { padding: 6px 10px; margin-bottom: 4px; font-size: 12px; }
+  .density-body.loose .demo-item { padding: 16px 18px; margin-bottom: 12px; font-size: 14px; }
+
+  /* Layout primitives */
+  .primitive {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .prim-head {
+    background: var(--bg-elev-2);
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .prim-name {
+    font-family: var(--mono);
+    color: var(--accent-text);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .prim-desc {
+    color: var(--fg-dim);
+    font-size: 13px;
+  }
+  .prim-demo {
+    padding: 24px;
+    background: var(--bg-base);
+  }
+  /* Stack */
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stack-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    border-radius: 10px;
+    color: var(--fg-dim);
+    font-size: 14px;
+  }
+  /* Cluster */
+  .cluster {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .cluster-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 8px;
+    color: var(--fg-dim);
+    font-size: 13px;
+  }
+  /* Switcher */
+  .switcher {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .switcher > * {
+    flex-grow: 1;
+    flex-basis: calc((30rem - 100%) * 999);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 10px;
+    color: var(--fg-dim);
+    font-size: 14px;
+  }
+  /* Sidebar layout */
+  .sidebar-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+  }
+  .sidebar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 10px;
+    color: var(--fg-dim);
+    font-size: 13px;
+  }
+  .main-content {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 10px;
+    color: var(--fg-dim);
+    font-size: 14px;
+    min-height: 120px;
+  }
+
+  /* Code */
+  .code-block {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .code-head {
+    background: var(--bg-elev-2);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .code-filename { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); direction: ltr; }
+  .code-copy {
+    background: var(--surface); border: 1px solid var(--border); color: var(--fg-dim);
+    border-radius: 6px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px; cursor: pointer;
+  }
+  .code-body {
+    padding: 20px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.7;
+    color: var(--fg); direction: ltr; text-align: left;
+    overflow-x: auto; white-space: pre;
+  }
+  .c-comment { color: var(--fg-muted); }
+  .c-key { color: var(--accent-text); }
+  .c-string { color: var(--success); }
+  .c-num { color: var(--magenta); }
+
+  /* Pitfalls */
+  .pitfalls {
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.25);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .pitfall-row {
+    display: flex; gap: 14px; padding: 12px 0;
+    border-bottom: 1px solid rgba(251,191,36,0.15);
+  }
+  .pitfall-row:last-child { border-bottom: none; }
+  .pitfall-icon { color: var(--warning); font-weight: 700; flex-shrink: 0; }
+  .pitfall-text { color: var(--fg-dim); font-size: 14px; }
+  .pitfall-text strong { color: var(--fg); }
+  .pitfall-text code {
+    font-family: var(--mono); font-size: 12px;
+    background: var(--bg-deep); padding: 2px 6px; border-radius: 4px;
+    color: var(--magenta); direction: ltr; display: inline-block;
+  }
+
+  @media (max-width: 768px) {
+    h1.title { font-size: 36px; }
+    h2.section-h { font-size: 22px; }
+    .scale-row { grid-template-columns: 80px 1fr; }
+    .sp-usage { grid-column: 1 / -1; padding-top: 4px; }
+    .bp-row { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 04 · SPACING &amp; LAYOUT · AURORA</div>
+    <h1 class="title">המקצב של הריווח<br>בונה את האמון.</h1>
+    <p class="subtitle">בסיס 4px · 12 רמות בסקייל · 12-col grid · 5 breakpoints · 9 רמות radius · z-index מובנה</p>
+  </div>
+
+  <!-- Spacing scale -->
+  <section>
+    <h2 class="section-h">סקייל הריווח <span class="num">/ 01 spacing scale</span></h2>
+    <p class="section-sub">בסיס 4px. <strong>אין ערכים בין-ביניים</strong> — אם דרוש משהו שלא בסקייל, סימן שצריך עיון מחדש.</p>
+
+    <div class="scale-list">
+      <div class="scale-row header">
+        <div>Token</div>
+        <div>Visual</div>
+        <div>Usage</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-0</div>
+        <div><div class="sp-bar" style="width: 1px; opacity: 0.3;"></div></div>
+        <div class="sp-usage">0px · <strong>reset</strong></div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-1</div>
+        <div><div class="sp-bar" style="width: 4px;"></div></div>
+        <div class="sp-usage">4px · icon padding, dot gap</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-2</div>
+        <div><div class="sp-bar" style="width: 8px;"></div></div>
+        <div class="sp-usage">8px · chip gap, tight stacks</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-3</div>
+        <div><div class="sp-bar" style="width: 12px;"></div></div>
+        <div class="sp-usage">12px · default button padding-y, list gap</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-4</div>
+        <div><div class="sp-bar" style="width: 16px;"></div></div>
+        <div class="sp-usage">16px · <strong>default body gap</strong>, card padding-sm</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-5</div>
+        <div><div class="sp-bar" style="width: 20px;"></div></div>
+        <div class="sp-usage">20px · between paragraphs, form fields</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-6</div>
+        <div><div class="sp-bar" style="width: 24px;"></div></div>
+        <div class="sp-usage">24px · card padding default, modal content</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-8</div>
+        <div><div class="sp-bar" style="width: 32px;"></div></div>
+        <div class="sp-usage">32px · section gap-sm, hero padding</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-10</div>
+        <div><div class="sp-bar" style="width: 40px;"></div></div>
+        <div class="sp-usage">40px · section gap-md</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-12</div>
+        <div><div class="sp-bar" style="width: 48px;"></div></div>
+        <div class="sp-usage">48px · between major sections</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-16</div>
+        <div><div class="sp-bar" style="width: 64px;"></div></div>
+        <div class="sp-usage">64px · hero vertical, page top</div>
+      </div>
+      <div class="scale-row">
+        <div class="sp-token">space-24</div>
+        <div><div class="sp-bar" style="width: 96px;"></div></div>
+        <div class="sp-usage">96px · landing hero only</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grid system -->
+  <section>
+    <h2 class="section-h">12-col grid <span class="num">/ 02 grid</span></h2>
+    <p class="section-sub">12 עמודות · gap 16px · עם דפוסי לייאאוט שכיחים מוכנים</p>
+
+    <div class="grid-demo">
+      <div class="gp-label">→ BASE GRID · 12 cols</div>
+      <div class="grid-12">
+        <div class="gcol">1</div><div class="gcol">2</div><div class="gcol">3</div><div class="gcol">4</div>
+        <div class="gcol">5</div><div class="gcol">6</div><div class="gcol">7</div><div class="gcol">8</div>
+        <div class="gcol">9</div><div class="gcol">10</div><div class="gcol">11</div><div class="gcol">12</div>
+      </div>
+
+      <div class="gp-label" style="margin-top: 28px;">→ COMMON PATTERNS</div>
+
+      <div class="gpatt-row gp-12">
+        <div class="gpatt-cell" style="grid-column: span 8;">main · span 8</div>
+        <div class="gpatt-cell fill" style="grid-column: span 4;">aside · span 4</div>
+      </div>
+
+      <div class="gpatt-row gp-3">
+        <div class="gpatt-cell">1/3</div>
+        <div class="gpatt-cell">1/3</div>
+        <div class="gpatt-cell">1/3</div>
+      </div>
+
+      <div class="gpatt-row gp-12">
+        <div class="gpatt-cell" style="grid-column: 4 / span 6;">centered · 6 cols offset 3</div>
+      </div>
+
+      <div class="gpatt-row gp-side">
+        <div class="gpatt-cell fill">sidebar 240px</div>
+        <div class="gpatt-cell">main flex</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Breakpoints -->
+  <section>
+    <h2 class="section-h">Breakpoints + Container widths <span class="num">/ 03 responsive</span></h2>
+    <p class="section-sub">Mobile-first. 5 breakpoints. כל container תואם — אין ערכים אקראיים.</p>
+
+    <div class="bp-table">
+      <div class="bp-row header">
+        <div>Token</div>
+        <div>min-width</div>
+        <div>Use case</div>
+        <div>Container max</div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-name">sm</div>
+        <div class="bp-size">640px</div>
+        <div class="bp-use">Large phone landscape</div>
+        <div class="bp-cont">max-w: 640px</div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-name">md</div>
+        <div class="bp-size">768px</div>
+        <div class="bp-use">Tablet portrait</div>
+        <div class="bp-cont">max-w: 768px</div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-name">lg</div>
+        <div class="bp-size">1024px</div>
+        <div class="bp-use">Tablet landscape / small laptop</div>
+        <div class="bp-cont">max-w: 960px</div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-name">xl</div>
+        <div class="bp-size">1280px</div>
+        <div class="bp-use">Desktop · <strong style="color:var(--accent-text);">primary target</strong></div>
+        <div class="bp-cont">max-w: 1100px</div>
+      </div>
+      <div class="bp-row">
+        <div class="bp-name">2xl</div>
+        <div class="bp-size">1536px</div>
+        <div class="bp-use">Large desktop / 4K</div>
+        <div class="bp-cont">max-w: 1280px</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Radius -->
+  <section>
+    <h2 class="section-h">Border radius <span class="num">/ 04 corners</span></h2>
+    <p class="section-sub">9 רמות · radius גדל ככל שהאלמנט מרכזי יותר במסך</p>
+
+    <div class="radius-grid">
+      <div class="radius-card r-2">
+        <div class="r-name">radius-none</div>
+        <div class="r-value">0px</div>
+        <div class="r-use">dividers</div>
+      </div>
+      <div class="radius-card r-4">
+        <div class="r-name">radius-xs</div>
+        <div class="r-value">4px</div>
+        <div class="r-use">code inline</div>
+      </div>
+      <div class="radius-card r-6">
+        <div class="r-name">radius-sm</div>
+        <div class="r-value">6px</div>
+        <div class="r-use">chips, badges</div>
+      </div>
+      <div class="radius-card r-8">
+        <div class="r-name">radius</div>
+        <div class="r-value">8px</div>
+        <div class="r-use">inputs, small btns</div>
+      </div>
+      <div class="radius-card r-10">
+        <div class="r-name">radius-md</div>
+        <div class="r-value">10px</div>
+        <div class="r-use">buttons primary</div>
+      </div>
+      <div class="radius-card r-12">
+        <div class="r-name">radius-lg</div>
+        <div class="r-value">12px</div>
+        <div class="r-use">bot bubbles, cards</div>
+      </div>
+      <div class="radius-card r-16">
+        <div class="r-name">radius-xl</div>
+        <div class="r-value">16px</div>
+        <div class="r-use">cards, panels</div>
+      </div>
+      <div class="radius-card r-20">
+        <div class="r-name">radius-2xl</div>
+        <div class="r-value">20px</div>
+        <div class="r-use">modals, hero</div>
+      </div>
+      <div class="radius-card r-full">
+        <div class="r-name">radius-full</div>
+        <div class="r-value">999px</div>
+        <div class="r-use">pills, avatars</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Density -->
+  <section>
+    <h2 class="section-h">3 רמות צפיפות <span class="num">/ 05 density</span></h2>
+    <p class="section-sub">לפי קונטקסט — admin panel דחוס, ובוט מרווח</p>
+
+    <div class="density-grid">
+      <div class="density-card">
+        <div class="density-head">→ COMPACT · admin tables</div>
+        <div class="density-body compact">
+          <div class="demo-item">שורת נתון 01</div>
+          <div class="demo-item">שורת נתון 02</div>
+          <div class="demo-item">שורת נתון 03</div>
+          <div class="demo-item">שורת נתון 04</div>
+          <div class="demo-item">שורת נתון 05</div>
+        </div>
+      </div>
+      <div class="density-card">
+        <div class="density-head">→ DEFAULT · forms, content</div>
+        <div class="density-body">
+          <div class="demo-item">פריט בטופס 01</div>
+          <div class="demo-item">פריט בטופס 02</div>
+          <div class="demo-item">פריט בטופס 03</div>
+          <div class="demo-item">פריט בטופס 04</div>
+        </div>
+      </div>
+      <div class="density-card">
+        <div class="density-head">→ LOOSE · bot, hero</div>
+        <div class="density-body loose">
+          <div class="demo-item">בועת בוט</div>
+          <div class="demo-item">בועת משתמש</div>
+          <div class="demo-item">בועת בוט</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Z-index -->
+  <section>
+    <h2 class="section-h">Z-index scale <span class="num">/ 06 stacking</span></h2>
+    <p class="section-sub">8 רמות מוגדרות. <strong>אסור להשתמש בערך אקראי</strong> כמו z-index: 9999.</p>
+
+    <div class="z-stack">
+      <div class="z-layer">
+        <div class="z-name">z-base</div>
+        <div class="z-use">Page content default</div>
+        <div class="z-value">0</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-blob</div>
+        <div class="z-use">Ambient background blobs</div>
+        <div class="z-value">-1</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-sticky</div>
+        <div class="z-use">Sticky navigation, header</div>
+        <div class="z-value">10</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-dropdown</div>
+        <div class="z-use">Dropdowns, popovers</div>
+        <div class="z-value">20</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-overlay</div>
+        <div class="z-use">Backdrop overlays</div>
+        <div class="z-value">30</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-modal</div>
+        <div class="z-use">Modal dialogs</div>
+        <div class="z-value">40</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-toast</div>
+        <div class="z-use">Toast notifications</div>
+        <div class="z-value">50</div>
+      </div>
+      <div class="z-layer">
+        <div class="z-name">z-tooltip</div>
+        <div class="z-use">Tooltips (top of everything)</div>
+        <div class="z-value">60</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Layout primitives -->
+  <section>
+    <h2 class="section-h">Layout primitives <span class="num">/ 07 patterns</span></h2>
+    <p class="section-sub">4 דפוסי לייאאוט שמכסים ~90% מהמקרים. אפשר לבנות איתם כל מסך.</p>
+
+    <div class="primitive">
+      <div class="prim-head">
+        <div class="prim-name">&lt;Stack&gt;</div>
+        <div class="prim-desc">flex column עם gap קבוע</div>
+      </div>
+      <div class="prim-demo">
+        <div class="stack">
+          <div class="stack-item">פריט 01</div>
+          <div class="stack-item">פריט 02</div>
+          <div class="stack-item">פריט 03</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="primitive">
+      <div class="prim-head">
+        <div class="prim-name">&lt;Cluster&gt;</div>
+        <div class="prim-desc">flex wrap עם gap — ל-chips, tags, פעולות</div>
+      </div>
+      <div class="prim-demo">
+        <div class="cluster">
+          <div class="cluster-item">React</div>
+          <div class="cluster-item">Next.js</div>
+          <div class="cluster-item">TypeScript</div>
+          <div class="cluster-item">Tailwind</div>
+          <div class="cluster-item">shadcn/ui</div>
+          <div class="cluster-item">Supabase</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="primitive">
+      <div class="prim-head">
+        <div class="prim-name">&lt;Switcher&gt;</div>
+        <div class="prim-desc">עובר אוטומטית מ-row ל-column כשנעבר breakpoint</div>
+      </div>
+      <div class="prim-demo">
+        <div class="switcher">
+          <div>איזור צד שמאל</div>
+          <div>איזור צד ימין</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="primitive">
+      <div class="prim-head">
+        <div class="prim-name">&lt;SidebarLayout&gt;</div>
+        <div class="prim-desc">sidebar 240px קבוע + main flex</div>
+      </div>
+      <div class="prim-demo">
+        <div class="sidebar-layout">
+          <div class="sidebar">Sidebar · navigation, filters</div>
+          <div class="main-content">Main content · dashboard, table, etc.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tailwind export -->
+  <section>
+    <h2 class="section-h">ייצוא ל-Tailwind <span class="num">/ 08 tailwind</span></h2>
+    <p class="section-sub">להוסיף ל-theme.extend</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">tailwind.config.ts (extend)</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body">spacing: {
+  <span class="c-key">'1'</span>: <span class="c-string">'4px'</span>,    <span class="c-key">'2'</span>: <span class="c-string">'8px'</span>,    <span class="c-key">'3'</span>: <span class="c-string">'12px'</span>,
+  <span class="c-key">'4'</span>: <span class="c-string">'16px'</span>,   <span class="c-key">'5'</span>: <span class="c-string">'20px'</span>,   <span class="c-key">'6'</span>: <span class="c-string">'24px'</span>,
+  <span class="c-key">'8'</span>: <span class="c-string">'32px'</span>,   <span class="c-key">'10'</span>: <span class="c-string">'40px'</span>,  <span class="c-key">'12'</span>: <span class="c-string">'48px'</span>,
+  <span class="c-key">'16'</span>: <span class="c-string">'64px'</span>,  <span class="c-key">'24'</span>: <span class="c-string">'96px'</span>,
+},
+borderRadius: {
+  none: <span class="c-string">'0'</span>,
+  xs: <span class="c-string">'4px'</span>,    sm: <span class="c-string">'6px'</span>,    DEFAULT: <span class="c-string">'8px'</span>,
+  md: <span class="c-string">'10px'</span>,   lg: <span class="c-string">'12px'</span>,
+  xl: <span class="c-string">'16px'</span>,   <span class="c-key">'2xl'</span>: <span class="c-string">'20px'</span>,
+  full: <span class="c-string">'9999px'</span>,
+},
+screens: {
+  sm: <span class="c-string">'640px'</span>,   md: <span class="c-string">'768px'</span>,
+  lg: <span class="c-string">'1024px'</span>,  xl: <span class="c-string">'1280px'</span>,
+  <span class="c-key">'2xl'</span>: <span class="c-string">'1536px'</span>,
+},
+container: {
+  center: <span class="c-num">true</span>,
+  padding: <span class="c-string">'20px'</span>,
+  screens: {
+    sm: <span class="c-string">'640px'</span>,
+    md: <span class="c-string">'768px'</span>,
+    lg: <span class="c-string">'960px'</span>,
+    xl: <span class="c-string">'1100px'</span>,
+    <span class="c-key">'2xl'</span>: <span class="c-string">'1280px'</span>,
+  },
+},
+zIndex: {
+  base: <span class="c-string">'0'</span>,      blob: <span class="c-string">'-1'</span>,
+  sticky: <span class="c-string">'10'</span>,   dropdown: <span class="c-string">'20'</span>,
+  overlay: <span class="c-string">'30'</span>,  modal: <span class="c-string">'40'</span>,
+  toast: <span class="c-string">'50'</span>,    tooltip: <span class="c-string">'60'</span>,
+},</div>
+    </div>
+  </section>
+
+  <!-- Pitfalls -->
+  <section>
+    <h2 class="section-h">חוקי-זהב + אזהרות <span class="num">/ 09 do's &amp; don'ts</span></h2>
+
+    <div class="pitfalls">
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אסור ערכי ריווח בין-ביניים.</strong>
+          אם נדרש <code>padding: 18px</code> — או 16px או 20px. אם באמת חייבים 18, סימן שהקומפוננטה לא יושבת בסקייל.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אסור <code>z-index: 9999</code>.</strong>
+          השתמש בטוקנים. אם הסצנה מצריכה משהו מעל tooltip — סימן שצריך לשנות את ה-stacking context, לא להוסיף מספר ענק.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>RTL gap עובד אוטומטית.</strong>
+          ב-flex/grid עם <code>gap</code> אין צורך לטפל ב-RTL ידנית. אבל <code>margin-left/right</code> כן צריך החלפה. העדף gap על margin.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>Container max-width הוא 1100px ב-xl.</strong>
+          לא 1200, לא 1280. רוחב הקריאה האופטימלי לטיפוגרפיה שלנו. 1280 רק במסכי 2xl.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>Border-radius עוקב היררכיה.</strong>
+          input (8) &lt; button (10) &lt; bubble (12) &lt; card (16) &lt; modal (20). שבירה של ההיררכיה = מסך שמרגיש לא מסונכרן.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>Hero padding-y תמיד 64px+ (space-16).</strong>
+          פחות מזה — הוא לא hero. מבחינה ויזואלית, hero דורש נשימה.
+        </div>
+      </div>
+      <div class="pitfall-row">
+        <div class="pitfall-icon">!</div>
+        <div class="pitfall-text">
+          <strong>אל תערבב density באותו מסך.</strong>
+          dashboard = compact כל הדרך. bot screen = loose כל הדרך. switching בתוך מסך = לא עקבי.
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

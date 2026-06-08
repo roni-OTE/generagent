@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Creation Icon v5 (Aurora Orb)</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=IBM+Plex+Sans+Hebrew:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --warm: #F5E6D3;
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 40px 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  .header { text-align: center; padding: 20px 0 40px; }
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-bright);
+    background: rgba(94,106,210,0.1);
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px;
+    padding: 5px 12px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .sub { color: var(--fg-dim); font-size: 15px; max-width: 620px; margin: 0 auto; }
+
+  /* ============================================
+     AURORA BACKGROUND (inspired by Aceternity UI)
+     Layered conic gradients + slow drift animation
+     ============================================ */
+  .aurora-stage {
+    position: relative;
+    margin: 32px auto;
+    max-width: 720px;
+    aspect-ratio: 16/10;
+    background: var(--bg-deep);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 80px rgba(94,106,210,0.1);
+  }
+
+  /* Aurora layers — 3 conic-gradients that slowly drift */
+  .aurora-layer {
+    position: absolute;
+    inset: -50%;
+    pointer-events: none;
+    opacity: 0.6;
+    filter: blur(60px);
+    mix-blend-mode: screen;
+  }
+  .aurora-1 {
+    background:
+      conic-gradient(from 0deg at 50% 50%,
+        rgba(94,106,210,0.7) 0%,
+        rgba(192,132,252,0.5) 25%,
+        rgba(103,232,249,0.4) 50%,
+        rgba(94,106,210,0.7) 75%,
+        rgba(192,132,252,0.5) 100%);
+    animation: aurora-spin 28s linear infinite;
+  }
+  .aurora-2 {
+    background:
+      conic-gradient(from 90deg at 30% 70%,
+        rgba(192,132,252,0.5) 0%,
+        rgba(94,106,210,0.4) 33%,
+        rgba(103,232,249,0.3) 66%,
+        rgba(192,132,252,0.5) 100%);
+    animation: aurora-spin-rev 36s linear infinite;
+    opacity: 0.4;
+  }
+  .aurora-3 {
+    background:
+      radial-gradient(ellipse at 50% 50%,
+        rgba(245,230,211,0.15) 0%,
+        transparent 30%);
+    animation: aurora-pulse 4s ease-in-out infinite;
+  }
+  @keyframes aurora-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes aurora-spin-rev {
+    to { transform: rotate(-360deg); }
+  }
+  @keyframes aurora-pulse {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(1.15); }
+  }
+
+  /* Vignette to focus attention */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(2,2,3,0.7) 100%);
+    pointer-events: none;
+  }
+
+  /* ============================================
+     THE ORB (inspired by Paper.design Orb shader)
+     Multi-layered sphere with breathing + halo
+     ============================================ */
+  .orb-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    z-index: 2;
+  }
+
+  /* Outer atmospheric glow */
+  .orb-atmos {
+    position: absolute;
+    inset: -100px;
+    background: radial-gradient(circle,
+      rgba(192,132,252,0.4) 0%,
+      rgba(94,106,210,0.25) 25%,
+      transparent 65%);
+    border-radius: 50%;
+    filter: blur(30px);
+    animation: atmos-breathe 4s ease-in-out infinite;
+  }
+  @keyframes atmos-breathe {
+    0%, 100% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.15); opacity: 1; }
+  }
+
+  /* Mid-layer halo (ring of energy) */
+  .orb-ring {
+    position: absolute;
+    inset: -30px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+      rgba(94,106,210,0) 0%,
+      rgba(192,132,252,0.6) 25%,
+      rgba(94,106,210,0.8) 50%,
+      rgba(103,232,249,0.5) 75%,
+      rgba(94,106,210,0) 100%);
+    filter: blur(8px);
+    animation: ring-spin 6s linear infinite;
+    opacity: 0.7;
+  }
+  @keyframes ring-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* The orb sphere itself — layered radial gradients for depth */
+  .orb-sphere {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%,
+        rgba(255,255,255,0.95) 0%,
+        rgba(245,230,211,0.7) 8%,
+        rgba(192,132,252,0.5) 25%,
+        rgba(94,106,210,0.8) 50%,
+        rgba(58,66,150,0.95) 75%,
+        rgba(20,20,40,1) 100%);
+    box-shadow:
+      inset 0 0 60px rgba(192,132,252,0.4),
+      inset -20px -20px 80px rgba(20,20,40,0.8),
+      0 0 40px rgba(94,106,210,0.6),
+      0 0 80px rgba(192,132,252,0.3);
+    animation: orb-breathe 4s ease-in-out infinite;
+  }
+  @keyframes orb-breathe {
+    0%, 100% { transform: scale(0.95); }
+    50%      { transform: scale(1.05); }
+  }
+
+  /* Inner energy swirl (the magic) */
+  .orb-swirl {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      conic-gradient(from 0deg at 40% 35%,
+        transparent 0%,
+        rgba(192,132,252,0.3) 30%,
+        transparent 60%,
+        rgba(103,232,249,0.25) 80%,
+        transparent 100%);
+    mix-blend-mode: screen;
+    animation: swirl-spin 5s linear infinite;
+  }
+  @keyframes swirl-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Highlight (top-left specular) */
+  .orb-shine {
+    position: absolute;
+    top: 18%;
+    left: 22%;
+    width: 35%;
+    height: 35%;
+    background: radial-gradient(circle,
+      rgba(255,255,255,0.9) 0%,
+      rgba(255,255,255,0.4) 30%,
+      transparent 70%);
+    border-radius: 50%;
+    filter: blur(8px);
+    animation: shine-pulse 4s ease-in-out infinite;
+  }
+  @keyframes shine-pulse {
+    0%, 100% { opacity: 0.6; transform: scale(0.9); }
+    50%      { opacity: 1.0; transform: scale(1.0); }
+  }
+
+  /* Orbiting particles (3 small dots circling) */
+  .particle-orbit {
+    position: absolute;
+    inset: -50px;
+    border-radius: 50%;
+    animation: orbit-rotate 8s linear infinite;
+  }
+  .particle-orbit-2 {
+    inset: -70px;
+    animation-duration: 12s;
+    animation-direction: reverse;
+  }
+  .particle {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--magenta);
+    border-radius: 50%;
+    box-shadow: 0 0 16px var(--magenta);
+  }
+  .particle.cyan { background: var(--cyan); box-shadow: 0 0 16px var(--cyan); }
+  .particle.warm { background: var(--warm); box-shadow: 0 0 16px var(--warm); }
+  @keyframes orbit-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Caption */
+  .caption {
+    position: absolute;
+    bottom: 24px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: rgba(192,132,252,0.85);
+    font-size: 13px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    z-index: 3;
+  }
+  .caption::before { content: '◆ '; color: rgba(192,132,252,1); }
+
+  /* ============================================
+     Variant grid
+     ============================================ */
+  .variants {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 48px;
+  }
+  @media (max-width: 768px) { .variants { grid-template-columns: 1fr; } }
+
+  .v-card {
+    background: var(--bg-elev);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+  .v-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-bright);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .v-stage {
+    aspect-ratio: 1/1;
+    background: var(--bg-deep);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .v-orb-wrap { width: 60%; height: 60%; }
+  .v-orb-wrap.sm { width: 40%; height: 40%; }
+  .v-orb-wrap.xs { width: 24%; height: 24%; }
+  .v-orb-wrap .orb-center { width: 100%; height: 100%; }
+  .v-orb-wrap .orb-atmos { inset: -40%; }
+  .v-orb-wrap .orb-ring { inset: -15%; }
+
+  .v-desc {
+    font-size: 11px;
+    color: var(--fg-dim);
+    line-height: 1.5;
+  }
+
+  /* ============================================
+     Integration: bot bubble
+     ============================================ */
+  .integration {
+    margin-top: 56px;
+    padding: 32px;
+    background: var(--bg-base);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+  }
+  .integration-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-bright);
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .bubble-bot, .bubble-user {
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    max-width: 75%;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .bubble-bot {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--fg);
+    margin-right: auto;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--accent), #7B85DC);
+    color: #fff;
+    margin-left: auto;
+    margin-right: 0;
+    text-align: right;
+    box-shadow: 0 4px 16px rgba(94,106,210,0.25);
+  }
+  .bubble-thinking {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 14px;
+    padding: 10px 16px;
+    max-width: 75%;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-right: auto;
+  }
+  .mini-orb-wrap {
+    width: 36px; height: 36px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .mini-orb-wrap .orb-center { width: 100%; height: 100%; }
+  .mini-orb-wrap .orb-atmos { inset: -8px; }
+  .mini-orb-wrap .orb-ring { inset: -4px; }
+  .mini-orb-wrap .orb-shine { display: none; }
+  .think-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--magenta);
+    direction: ltr;
+  }
+
+  /* Decision panel */
+  .decision {
+    margin-top: 56px;
+    background: linear-gradient(135deg, rgba(94,106,210,0.06), rgba(192,132,252,0.04));
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .decision-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .decision-body { color: var(--fg-dim); font-size: 14px; line-height: 1.7; }
+  .decision-body strong { color: var(--fg); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-1, .aurora-2, .aurora-3,
+    .orb-atmos, .orb-ring, .orb-sphere, .orb-swirl, .orb-shine,
+    .particle-orbit, .particle-orbit-2 {
+      animation: none !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="header">
+    <div class="tag">PHASE 06A · CREATION ICON · V5 · AURORA ORB</div>
+    <h1>Aurora Orb.<br>סטנדרט מודרני ל-AI thinking.</h1>
+    <p class="sub">בהשראת Aceternity Aurora Background + Paper Design Orb. אותה שפה ויזואלית של ChatGPT / Claude / Perplexity — אבל בצבעים של aurora.</p>
+  </div>
+
+  <!-- ====== HERO STAGE ====== -->
+  <div class="aurora-stage">
+    <div class="aurora-layer aurora-1"></div>
+    <div class="aurora-layer aurora-2"></div>
+    <div class="aurora-layer aurora-3"></div>
+    <div class="vignette"></div>
+
+    <div class="orb-center">
+      <div class="orb-atmos"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-sphere"></div>
+      <div class="orb-swirl"></div>
+      <div class="orb-shine"></div>
+
+      <div class="particle-orbit">
+        <div class="particle"></div>
+      </div>
+      <div class="particle-orbit particle-orbit-2">
+        <div class="particle cyan" style="transform: translateX(-50%) rotate(120deg) translateY(0)"></div>
+        <div class="particle warm" style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);"></div>
+      </div>
+    </div>
+
+    <div class="caption">GenerAgent · thinking</div>
+  </div>
+
+  <!-- ====== VARIANTS ====== -->
+  <h2 style="text-align: center; margin: 56px 0 24px; font-size: 22px; font-weight: 700;">
+    3 וריאנטים — אותו DNA, גדלים שונים
+  </h2>
+  <div class="variants">
+
+    <div class="v-card">
+      <div class="v-label">→ HERO · WELCOME</div>
+      <div class="v-stage">
+        <div class="aurora-layer aurora-1" style="opacity: 0.4; filter: blur(40px);"></div>
+        <div class="vignette"></div>
+        <div class="orb-center v-orb-wrap" style="width: 60%; height: 60%;">
+          <div class="orb-atmos" style="inset: -40%;"></div>
+          <div class="orb-ring" style="inset: -10%;"></div>
+          <div class="orb-sphere"></div>
+          <div class="orb-swirl"></div>
+          <div class="orb-shine"></div>
+        </div>
+      </div>
+      <div class="v-desc">220px · רקע aurora מלא · 3 חלקיקים</div>
+    </div>
+
+    <div class="v-card">
+      <div class="v-label">→ THINKING · BUBBLE</div>
+      <div class="v-stage">
+        <div class="orb-center v-orb-wrap" style="width: 45%; height: 45%;">
+          <div class="orb-atmos" style="inset: -25%;"></div>
+          <div class="orb-ring" style="inset: -8%;"></div>
+          <div class="orb-sphere"></div>
+          <div class="orb-swirl"></div>
+          <div class="orb-shine"></div>
+        </div>
+      </div>
+      <div class="v-desc">120px · ללא רקע · halo בלבד</div>
+    </div>
+
+    <div class="v-card">
+      <div class="v-label">→ MICRO · STATUS</div>
+      <div class="v-stage">
+        <div class="orb-center" style="width: 32%; height: 32%;">
+          <div class="orb-atmos" style="inset: -15%;"></div>
+          <div class="orb-sphere"></div>
+          <div class="orb-swirl"></div>
+        </div>
+      </div>
+      <div class="v-desc">48px · ללא halo · pulse בלבד</div>
+    </div>
+  </div>
+
+  <!-- ====== INTEGRATION ====== -->
+  <div class="integration">
+    <div class="integration-label">→ INTEGRATION: BOT BUBBLE WITH AURORA ORB</div>
+
+    <div class="bubble-bot">הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?</div>
+    <div class="bubble-user">הייתי משיב למיילים בזמן.</div>
+    <div class="bubble-bot">עכשיו ספר לי — אילו כלים אתה משתמש?</div>
+    <div class="bubble-user">Gmail, Calendar, Notion.</div>
+
+    <div class="bubble-thinking">
+      <div class="mini-orb-wrap orb-center">
+        <div class="orb-atmos"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-sphere"></div>
+        <div class="orb-swirl"></div>
+      </div>
+      <div class="think-text">analyzing · 5 signals · confidence rising</div>
+    </div>
+
+    <div class="bubble-bot">סיימתי לנתח — יש לי 3 ארכיטיפים עבורך.</div>
+  </div>
+
+  <!-- ====== DECISION ====== -->
+  <div class="decision">
+    <div class="decision-title">למה זה עובד טוב יותר מהידיים</div>
+    <div class="decision-body">
+      <strong>1. דפוס מוכר.</strong> משתמש שראה ChatGPT/Claude/Perplexity יודע מיד "המכונה חושבת". אין צורך ללמד metaphor חדש.
+      <br><br>
+      <strong>2. Pure CSS — אפס תלות.</strong> אין SVG path מורכב, אין GSAP, אין assets חיצוניים. כל האנימציה היא CSS conic-gradient + radial-gradient + transform.
+      <br><br>
+      <strong>3. Aurora native.</strong> ה-orb משתמש בדיוק בצבעי הפלטה: indigo במרכז, magenta בהילה, cyan בחלקיקים, warm cream ב-highlight. כמו אחות צעירה של ה-blobs ברקע של ה-Landing.
+      <br><br>
+      <strong>4. Scales perfectly.</strong> מ-32px (status indicator) ועד 480px (hero). אותו קוד, רק שינוי font-size/inset.
+      <br><br>
+      <strong>5. WCAG-friendly.</strong> respects <code>prefers-reduced-motion</code>, אין flicker, ה-orb נשאר נראה גם כשהאנימציה כבויה.
+      <br><br>
+      אם בעתיד תרצה לחזור למטאפורת הידיים — אפשר. אבל לדעתי הזה הדרך הנכונה ל-MVP.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Creation Icon — Animated Thinking State</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'IBM Plex Sans Hebrew', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-text: #818CF8;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    /* Creation Icon palette */
+    --human-finger: #F5E6D3;
+    --human-finger-dim: rgba(245,230,211,0.85);
+    --ai-finger: #818CF8;
+    --ai-finger-bright: #A5B4FC;
+    --spark: #C084FC;
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  .phase-header { text-align: center; padding: 32px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1.title {
+    font-size: 44px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.15;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 700px; margin: 0 auto; }
+
+  section { margin-bottom: 56px; }
+  h2.sh {
+    font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.015em;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2.sh .n {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--accent-text); background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.2);
+    border-radius: 6px; padding: 3px 8px;
+    letter-spacing: 0.08em;
+  }
+  .ssub { color: var(--fg-dim); font-size: 15px; margin-bottom: 24px; }
+
+  /* ===========================================
+     CREATION ICON — the main attraction
+     =========================================== */
+  .creation-stage {
+    background: radial-gradient(ellipse at center, var(--bg-elev-2) 0%, var(--bg-base) 80%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 60px 20px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 360px;
+  }
+  /* faint ambient glow behind the icon */
+  .creation-stage::before {
+    content: '';
+    position: absolute;
+    width: 60%; height: 60%;
+    background: radial-gradient(circle, rgba(192,132,252,0.08) 0%, transparent 60%);
+    filter: blur(40px);
+    animation: pulse-bg 4s var(--ease, cubic-bezier(0.16,1,0.3,1)) infinite;
+  }
+  @keyframes pulse-bg {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .creation-icon {
+    position: relative;
+    width: 360px;
+    height: 180px;
+  }
+  .creation-icon.medium { width: 200px; height: 100px; }
+  .creation-icon.small { width: 100px; height: 50px; }
+  .creation-icon svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+
+  /* Animations */
+  @keyframes finger-left {
+    0%, 100%   { transform: translateX(0); }
+    45%, 55%   { transform: translateX(8%); }
+  }
+  @keyframes finger-right {
+    0%, 100%   { transform: translateX(0); }
+    45%, 55%   { transform: translateX(-8%); }
+  }
+  @keyframes spark-pulse {
+    0%, 35%, 65%, 100% { opacity: 0; transform: scale(0.5); }
+    45%, 55%           { opacity: 1; transform: scale(1); }
+  }
+  @keyframes spark-ring {
+    0%, 35%, 65%, 100% { opacity: 0; transform: scale(0.6); }
+    50%                { opacity: 0.6; transform: scale(1.6); }
+  }
+  @keyframes glow-line {
+    0%, 100% { opacity: 0; stroke-width: 0.5; }
+    50%      { opacity: 0.9; stroke-width: 1.5; }
+  }
+
+  .creation-icon .hand-left {
+    transform-origin: 0% 50%;
+    animation: finger-left 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .creation-icon .hand-right {
+    transform-origin: 100% 50%;
+    animation: finger-right 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .creation-icon .spark {
+    transform-origin: center;
+    animation: spark-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .creation-icon .spark-ring {
+    transform-origin: center;
+    animation: spark-ring 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .creation-icon .energy-line {
+    animation: glow-line 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Speed variant for thinking state (faster) */
+  .creation-icon.thinking .hand-left,
+  .creation-icon.thinking .hand-right,
+  .creation-icon.thinking .spark,
+  .creation-icon.thinking .spark-ring,
+  .creation-icon.thinking .energy-line {
+    animation-duration: 2.4s;
+  }
+
+  /* Static / hover-only variant (no animation by default) */
+  .creation-icon.static .hand-left,
+  .creation-icon.static .hand-right,
+  .creation-icon.static .spark,
+  .creation-icon.static .spark-ring,
+  .creation-icon.static .energy-line {
+    animation: none;
+  }
+
+  /* Reduce motion respect */
+  @media (prefers-reduced-motion: reduce) {
+    .creation-icon * { animation: none !important; }
+    .creation-icon .spark { opacity: 0.8; }
+  }
+
+  /* ===========================================
+     Variants showcase grid
+     =========================================== */
+  .variants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .variant-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 220px;
+  }
+  .variant-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .variant-desc {
+    font-size: 12px;
+    color: var(--fg-dim);
+    line-height: 1.5;
+  }
+
+  /* ===========================================
+     Thinking-bubble integration preview
+     =========================================== */
+  .integration-frame {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    overflow: hidden;
+  }
+  .bubble-bot {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: var(--fg);
+    max-width: 75%;
+    font-size: 15px;
+    margin-right: auto; margin-left: 0; margin-bottom: 12px;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--accent), #7B85DC);
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    max-width: 75%;
+    margin-left: auto; margin-right: 0;
+    font-size: 15px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(94,106,210,0.25);
+  }
+  /* The thinking bubble — now with creation icon */
+  .bubble-thinking-v2 {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 14px;
+    padding: 8px 16px;
+    max-width: 75%;
+    margin-right: auto; margin-left: 0;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .bubble-thinking-v2 .icon-holder {
+    flex-shrink: 0;
+    width: 48px; height: 24px;
+  }
+  .bubble-thinking-v2 .thinking-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--magenta);
+    direction: ltr;
+  }
+
+  /* ===========================================
+     Welcome state with big icon
+     =========================================== */
+  .welcome-preview {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 60px 32px;
+    text-align: center;
+  }
+  .welcome-preview .creation-icon {
+    margin: 0 auto 24px;
+  }
+  .welcome-preview h3 {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.02em; margin-bottom: 8px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .welcome-preview p {
+    color: var(--fg-dim); font-size: 14px; max-width: 360px; margin: 0 auto;
+  }
+
+  /* ===========================================
+     Code blocks
+     =========================================== */
+  .code-block {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .code-head {
+    background: var(--bg-elev-2);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .code-filename { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); direction: ltr; }
+  .code-copy {
+    background: var(--surface); border: 1px solid var(--border); color: var(--fg-dim);
+    border-radius: 6px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px; cursor: pointer;
+  }
+  .code-body {
+    padding: 20px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.7;
+    color: var(--fg); direction: ltr; text-align: left;
+    overflow-x: auto; white-space: pre;
+  }
+  .c-comment { color: var(--fg-muted); }
+  .c-key { color: var(--accent-text); }
+  .c-string { color: var(--success, #4ADE80); }
+  .c-num { color: var(--magenta); }
+  .c-tag { color: var(--cyan); }
+
+  /* Concept note */
+  .concept {
+    background: linear-gradient(135deg, rgba(94,106,210,0.06) 0%, rgba(192,132,252,0.04) 100%);
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  @media (max-width: 768px) { .concept { flex-direction: column; } }
+  .concept-icon {
+    flex-shrink: 0;
+    width: 160px; height: 80px;
+  }
+  .concept-text { flex: 1; }
+  .concept-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .concept-body { color: var(--fg-dim); font-size: 14px; line-height: 1.7; }
+  .concept-body strong { color: var(--fg); }
+
+  @media (max-width: 768px) {
+    h1.title { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- ============================================
+     REUSABLE SVG SYMBOL — CREATION ICON
+     ============================================ -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <!-- Gradient for the AI (right) hand: indigo to bright -->
+    <linearGradient id="aiGradient" x1="100%" y1="50%" x2="0%" y2="50%">
+      <stop offset="0%" stop-color="#5E6AD2"/>
+      <stop offset="100%" stop-color="#A5B4FC"/>
+    </linearGradient>
+    <!-- Gradient for the human (left) hand: warm cream -->
+    <linearGradient id="humanGradient" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#D4C5A9"/>
+      <stop offset="100%" stop-color="#F5E6D3"/>
+    </linearGradient>
+    <!-- Radial gradient for the spark -->
+    <radialGradient id="sparkGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#C084FC" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#C084FC" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Glow filter -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="sparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- ==== THE CREATION ICON SYMBOL ==== -->
+    <symbol id="creation-icon-svg" viewBox="0 0 200 100">
+      <!-- LEFT HAND (Adam — human, relaxed, fingertip pointing right) -->
+      <g class="hand-left">
+        <!-- Hand silhouette: wrist on left, fingertip pointing right -->
+        <path
+          d="
+            M 5 62
+            Q 8 55, 18 53
+            L 30 52
+            Q 38 51, 48 50.5
+            L 65 50
+            Q 72 49.8, 80 50
+            L 88 50.2
+            Q 92 50.4, 94 50.8
+            L 95 51
+            L 94 51.5
+            Q 92 51.8, 88 51.6
+            L 80 51.5
+            Q 72 51.5, 65 52
+            L 48 52.5
+            Q 38 53, 30 54
+            L 18 56
+            Q 8 58, 5 62
+            Z
+          "
+          fill="url(#humanGradient)"
+          opacity="0.95"
+          filter="url(#softGlow)"
+        />
+        <!-- Subtle fingertip highlight -->
+        <circle cx="93" cy="50.8" r="1.2" fill="#F5E6D3" opacity="0.9"/>
+      </g>
+
+      <!-- RIGHT HAND (God/AI — extended, reaching with energy) -->
+      <g class="hand-right">
+        <!-- Hand silhouette: wrist on right, fingertip pointing left -->
+        <path
+          d="
+            M 195 58
+            Q 192 52, 182 50.5
+            L 170 50
+            Q 160 49.5, 150 49.8
+            L 130 50
+            Q 120 50, 112 50.2
+            L 107 50.5
+            L 105 50.7
+            L 107 51.3
+            L 112 51.6
+            Q 120 51.8, 130 51.8
+            L 150 51.7
+            Q 160 51.8, 170 52
+            L 182 52.5
+            Q 192 54, 195 58
+            Z
+          "
+          fill="url(#aiGradient)"
+          opacity="0.95"
+          filter="url(#softGlow)"
+        />
+        <!-- Subtle fingertip highlight -->
+        <circle cx="106" cy="50.8" r="1.2" fill="#A5B4FC" opacity="0.9"/>
+      </g>
+
+      <!-- ENERGY LINE between fingertips (faint, pulses with rhythm) -->
+      <line
+        class="energy-line"
+        x1="95" y1="50.8"
+        x2="105" y2="50.8"
+        stroke="url(#sparkGradient)"
+        stroke-width="1"
+        stroke-linecap="round"
+        opacity="0"
+      />
+
+      <!-- SPARK at the meeting point -->
+      <g class="spark-ring">
+        <circle cx="100" cy="50.8" r="6" fill="none" stroke="#C084FC" stroke-width="0.5" opacity="0"/>
+      </g>
+      <g class="spark">
+        <circle cx="100" cy="50.8" r="3" fill="url(#sparkGradient)" filter="url(#sparkGlow)"/>
+        <circle cx="100" cy="50.8" r="1" fill="#FFFFFF"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 06A · CREATION ICON · ANIMATED</div>
+    <h1 class="title">"Creation of Adam"<br>למסך הבוט.</h1>
+    <p class="subtitle">אייקון מונפש בהשראת הפרסקו של מיכלאנג'לו — אדם (אנושי) ובינה (AI) כמעט נוגעים. הרגע שבין כמעט-נגיעה לניתוק עדין.</p>
+  </div>
+
+  <!-- Concept note -->
+  <div class="concept">
+    <div class="concept-icon">
+      <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+        <use href="#creation-icon-svg"/>
+      </svg>
+    </div>
+    <div class="concept-text">
+      <div class="concept-title">המטאפורה</div>
+      <div class="concept-body">
+        בפרסקו של מיכלאנג'לו, האצבע של האדם <strong>אינה נוגעת</strong> באצבע של אלוהים — הרווח הוא הסוד.
+        ב-GenerAgent, הרגע הזה הוא המהות של <strong>thinking state</strong>: המכונה מנסה להבין את האדם, האדם מבטא צורך,
+        והאנרגיה ביניהם פועמת בלי להתאחד לחלוטין. אדם = קרם חמים. AI = אינדיגו בוהק. הניצוץ ביניהם = מג'נטה.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1. THE ICON — LARGE ============ -->
+  <section>
+    <h2 class="sh"><span class="n">01</span> האייקון בגדול</h2>
+    <p class="ssub">360×180px · אנימציה איטית (4s) · perfect-loop · respect prefers-reduced-motion</p>
+
+    <div class="creation-stage">
+      <div class="creation-icon">
+        <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+          <use href="#creation-icon-svg"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. VARIANTS ============ -->
+  <section>
+    <h2 class="sh"><span class="n">02</span> וריאנטים לפי גודל וקצב</h2>
+    <p class="ssub">3 גדלים × 2 קצבים. אותו SVG, רק class שונה.</p>
+
+    <div class="variants-grid">
+      <div class="variant-card">
+        <div class="variant-label">→ HERO · 4s</div>
+        <div class="creation-icon">
+          <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><use href="#creation-icon-svg"/></svg>
+        </div>
+        <div class="variant-desc">Welcome screen · big · slow rhythm</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-label">→ THINKING · 2.4s</div>
+        <div class="creation-icon medium thinking">
+          <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><use href="#creation-icon-svg"/></svg>
+        </div>
+        <div class="variant-desc">Thinking bubble · medium · faster rhythm</div>
+      </div>
+
+      <div class="variant-card">
+        <div class="variant-label">→ INLINE · 2.4s</div>
+        <div class="creation-icon small thinking">
+          <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><use href="#creation-icon-svg"/></svg>
+        </div>
+        <div class="variant-desc">Inline badge · small · sidebar status</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. INTEGRATION — THINKING BUBBLE ============ -->
+  <section>
+    <h2 class="sh"><span class="n">03</span> מוטמע ב-thinking bubble</h2>
+    <p class="ssub">החלפת ה-spinner הישן באייקון "Creation" — תוך שמירה על הצבע magenta וה-mono של הטקסט</p>
+
+    <div class="integration-frame">
+      <div class="bubble-bot">הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?</div>
+      <div class="bubble-user">הייתי משיב למיילים בזמן — אני שבועיים מאחור.</div>
+      <div class="bubble-bot">עכשיו ספר לי — אילו כלים אתה משתמש בהם הכי הרבה?</div>
+      <div class="bubble-user">Gmail, Calendar, Notion, ואקסל לדוחות.</div>
+
+      <!-- New thinking bubble -->
+      <div class="bubble-thinking-v2">
+        <div class="icon-holder">
+          <div class="creation-icon small thinking" style="width: 100%; height: 100%;">
+            <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><use href="#creation-icon-svg"/></svg>
+          </div>
+        </div>
+        <div class="thinking-text">analyzing · matching against 12 archetypes · 0.78</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. WELCOME SCREEN INTEGRATION ============ -->
+  <section>
+    <h2 class="sh"><span class="n">04</span> מוטמע במסך Welcome</h2>
+    <p class="ssub">במקום ה-icon הסטטי הקודם, כאן האייקון רץ בקצב איטי — מסביר את הקשר בלי מילים</p>
+
+    <div class="welcome-preview">
+      <div class="creation-icon">
+        <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg"><use href="#creation-icon-svg"/></svg>
+      </div>
+      <h3>בוא נבנה לך סוכן.</h3>
+      <p>5 דקות · 7-15 שאלות · בלי קוד</p>
+    </div>
+  </section>
+
+  <!-- ============ 5. ANIMATION TIMELINE ============ -->
+  <section>
+    <h2 class="sh"><span class="n">05</span> תזמון האנימציה</h2>
+    <p class="ssub">מחזור של 4 שניות (או 2.4 ב-thinking). 4 שלבים בכל מחזור.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">animation-timeline.txt</span>
+      </div>
+      <div class="code-body">┌─────────────────────────────────────────────────────────────┐
+│  CYCLE · 4000ms (hero) · 2400ms (thinking)                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│   0%  ────  hands apart, neutral position                   │
+│             ├─ left fingertip at x=93                        │
+│             └─ right fingertip at x=107                      │
+│                                                              │
+│  45%  ────  approaching                                      │
+│             ├─ both fingertips translate inward 8%           │
+│             ├─ energy-line begins to glow                    │
+│             └─ spark fades in (opacity 0 → 1)                │
+│                                                              │
+│  50%  ────  ★ MOMENT OF NEAR-TOUCH                          │
+│             ├─ spark at peak (scale 1.0, glow max)           │
+│             ├─ spark-ring expands (scale 1.6, opacity 0.6)   │
+│             └─ energy-line stroke-width 1.5px                │
+│                                                              │
+│  55%  ────  begin retreat                                    │
+│             └─ spark begins fading                           │
+│                                                              │
+│  100% ────  back to neutral, loop                            │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+
+EASING:  cubic-bezier(0.4, 0, 0.6, 1)  // ease-in-out, natural breath
+LOOP:    infinite, no jank (transforms only, no layout shift)
+A11Y:    @media (prefers-reduced-motion) → freeze at 50% (spark visible)</div>
+    </div>
+  </section>
+
+  <!-- ============ 6. THE CODE ============ -->
+  <section>
+    <h2 class="sh"><span class="n">06</span> ייצוא · SVG + CSS</h2>
+    <p class="ssub">קומפוננטה אחת. SVG בודד עם 3 ניצולים (3 גדלים). שימוש: &lt;use href="#creation-icon-svg"/&gt;</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">components/CreationIcon.tsx</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body"><span class="c-key">import</span> <span class="c-tag">React</span> <span class="c-key">from</span> <span class="c-string">'react'</span>;
+<span class="c-key">import</span> <span class="c-tag">styles</span> <span class="c-key">from</span> <span class="c-string">'./CreationIcon.module.css'</span>;
+
+<span class="c-key">type</span> <span class="c-tag">Props</span> = {
+  size?: <span class="c-string">'hero'</span> | <span class="c-string">'thinking'</span> | <span class="c-string">'inline'</span>;
+  animated?: <span class="c-tag">boolean</span>;
+};
+
+<span class="c-key">export const</span> <span class="c-tag">CreationIcon</span> = ({ size = <span class="c-string">'thinking'</span>, animated = <span class="c-num">true</span> }: <span class="c-tag">Props</span>) =&gt; (
+  <span class="c-tag">&lt;svg</span> <span class="c-key">viewBox</span>=<span class="c-string">"0 0 200 100"</span> <span class="c-key">className</span>={`${styles.icon} ${styles[size]} ${animated ? styles.live : <span class="c-string">''</span>}`}<span class="c-tag">&gt;</span>
+    <span class="c-tag">&lt;defs&gt;</span>
+      <span class="c-tag">&lt;linearGradient</span> <span class="c-key">id</span>=<span class="c-string">"ai-grad"</span> <span class="c-key">x1</span>=<span class="c-string">"100%"</span> <span class="c-key">y1</span>=<span class="c-string">"50%"</span> <span class="c-key">x2</span>=<span class="c-string">"0%"</span> <span class="c-key">y2</span>=<span class="c-string">"50%"</span><span class="c-tag">&gt;</span>
+        <span class="c-tag">&lt;stop</span> <span class="c-key">offset</span>=<span class="c-string">"0%"</span> <span class="c-key">stopColor</span>=<span class="c-string">"#5E6AD2"</span> <span class="c-tag">/&gt;</span>
+        <span class="c-tag">&lt;stop</span> <span class="c-key">offset</span>=<span class="c-string">"100%"</span> <span class="c-key">stopColor</span>=<span class="c-string">"#A5B4FC"</span> <span class="c-tag">/&gt;</span>
+      <span class="c-tag">&lt;/linearGradient&gt;</span>
+      <span class="c-comment">// ... humanGradient + sparkGradient + filters</span>
+    <span class="c-tag">&lt;/defs&gt;</span>
+
+    <span class="c-comment">{/* LEFT HAND (Adam) — animated translateX */}</span>
+    <span class="c-tag">&lt;g</span> <span class="c-key">className</span>={styles.handLeft}<span class="c-tag">&gt;</span>
+      <span class="c-tag">&lt;path</span> <span class="c-key">d</span>=<span class="c-string">"M 5 62 Q 8 55, 18 53 ..."</span> <span class="c-key">fill</span>=<span class="c-string">"url(#human-grad)"</span> <span class="c-tag">/&gt;</span>
+    <span class="c-tag">&lt;/g&gt;</span>
+
+    <span class="c-comment">{/* RIGHT HAND (AI) — animated translateX (mirrored) */}</span>
+    <span class="c-tag">&lt;g</span> <span class="c-key">className</span>={styles.handRight}<span class="c-tag">&gt;</span>
+      <span class="c-tag">&lt;path</span> <span class="c-key">d</span>=<span class="c-string">"M 195 58 Q 192 52, 182 50.5 ..."</span> <span class="c-key">fill</span>=<span class="c-string">"url(#ai-grad)"</span> <span class="c-tag">/&gt;</span>
+    <span class="c-tag">&lt;/g&gt;</span>
+
+    <span class="c-comment">{/* SPARK at meeting point */}</span>
+    <span class="c-tag">&lt;g</span> <span class="c-key">className</span>={styles.spark}<span class="c-tag">&gt;</span>
+      <span class="c-tag">&lt;circle</span> <span class="c-key">cx</span>=<span class="c-string">"100"</span> <span class="c-key">cy</span>=<span class="c-string">"50.8"</span> <span class="c-key">r</span>=<span class="c-string">"3"</span> <span class="c-key">fill</span>=<span class="c-string">"url(#spark-grad)"</span> <span class="c-tag">/&gt;</span>
+    <span class="c-tag">&lt;/g&gt;</span>
+  <span class="c-tag">&lt;/svg&gt;</span>
+);</div>
+    </div>
+
+    <div class="code-block" style="margin-top: 16px;">
+      <div class="code-head">
+        <span class="code-filename">components/CreationIcon.module.css</span>
+        <button class="code-copy">copy</button>
+      </div>
+      <div class="code-body"><span class="c-comment">/* === Animations === */</span>
+<span class="c-tag">@keyframes</span> finger-left {
+  <span class="c-num">0%</span>, <span class="c-num">100%</span> { transform: translateX(<span class="c-num">0</span>); }
+  <span class="c-num">45%</span>, <span class="c-num">55%</span>  { transform: translateX(<span class="c-num">8%</span>); }
+}
+<span class="c-tag">@keyframes</span> finger-right {
+  <span class="c-num">0%</span>, <span class="c-num">100%</span> { transform: translateX(<span class="c-num">0</span>); }
+  <span class="c-num">45%</span>, <span class="c-num">55%</span>  { transform: translateX(<span class="c-num">-8%</span>); }
+}
+<span class="c-tag">@keyframes</span> spark-pulse {
+  <span class="c-num">0%</span>, <span class="c-num">35%</span>, <span class="c-num">65%</span>, <span class="c-num">100%</span> { opacity: <span class="c-num">0</span>; transform: scale(<span class="c-num">0.5</span>); }
+  <span class="c-num">45%</span>, <span class="c-num">55%</span>             { opacity: <span class="c-num">1</span>; transform: scale(<span class="c-num">1</span>); }
+}
+
+<span class="c-comment">/* === Sizes === */</span>
+.icon.hero      { width: <span class="c-num">360px</span>; height: <span class="c-num">180px</span>; }
+.icon.thinking  { width: <span class="c-num">48px</span>;  height: <span class="c-num">24px</span>; }
+.icon.inline    { width: <span class="c-num">24px</span>;  height: <span class="c-num">12px</span>; }
+
+<span class="c-comment">/* === Live state === */</span>
+.icon.live .handLeft   { animation: finger-left  <span class="c-num">4s</span> cubic-bezier(<span class="c-num">.4</span>,<span class="c-num">0</span>,<span class="c-num">.6</span>,<span class="c-num">1</span>) infinite; }
+.icon.live .handRight  { animation: finger-right <span class="c-num">4s</span> cubic-bezier(<span class="c-num">.4</span>,<span class="c-num">0</span>,<span class="c-num">.6</span>,<span class="c-num">1</span>) infinite; }
+.icon.live .spark      { animation: spark-pulse  <span class="c-num">4s</span> cubic-bezier(<span class="c-num">.4</span>,<span class="c-num">0</span>,<span class="c-num">.6</span>,<span class="c-num">1</span>) infinite;
+                         transform-origin: center; }
+
+<span class="c-comment">/* Faster cycle when inside thinking bubble */</span>
+.icon.thinking.live * { animation-duration: <span class="c-num">2.4s</span> !important; }
+
+<span class="c-comment">/* === Accessibility === */</span>
+<span class="c-tag">@media</span> (prefers-reduced-motion: reduce) {
+  .icon * { animation: none !important; }
+  .icon .spark { opacity: <span class="c-num">0.8</span>; }
+}</div>
+    </div>
+  </section>
+
+  <!-- ============ 7. DESIGN NOTES ============ -->
+  <section>
+    <h2 class="sh"><span class="n">07</span> הערות מעצב</h2>
+    <p class="ssub">למה ההחלטות האלה — לא סתם נראה יפה</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-filename">design-rationale.md</span>
+      </div>
+      <div class="code-body"><span class="c-comment">## למה האנימציה רק "כמעט נוגעת"?</span>
+   בפרסקו של מיכלאנג'לו, האצבעות לא נוגעות — זה הקסם.
+   ה-gap הוא המקום שבו הצופה חושב, מצפה, מאמין.
+   ב-thinking state, ה-gap הוא הרגע שבו הבוט חושב — לא ידוע
+   עדיין מה התשובה. כשהוא יודע — האנימציה נעצרת.
+
+<span class="c-comment">## למה הקצב 4s/2.4s ולא מהיר יותר?</span>
+   thinking spinner רגיל = 1s. מהיר מדי, גורם לחרדה.
+   קצב 2.4-4s = ריתמוס נשימה. רגוע, מהורהר, premium.
+   המוצר אומר: "אני לא ממהר — אני חושב נכון".
+
+<span class="c-comment">## למה צבעים שונים לכל יד?</span>
+   אדם (שמאל) = קרם חמים (#F5E6D3) — אנושי, חי, ביולוגי.
+   AI (ימין)  = אינדיגו בוהק (#5E6AD2 → #A5B4FC) — דיגיטלי, צונן.
+   הצופה מזהה מיד מי-מי בלי תווית.
+
+<span class="c-comment">## למה ה-spark מג'נטה?</span>
+   מג'נטה (#C084FC) הוא צבע ה-AI thinking של aurora.
+   הוא נולד בדיוק במפגש בין כתום-חם של אדם לאינדיגו-קר של AI.
+   ויזואלית: זה הצבע שלא קיים באף יד — נוצר רק במפגש.
+
+<span class="c-comment">## למה הידיים מסוגננות ולא מפורטות?</span>
+   אייקון קטן ב-bot bubble = 48×24px. אצבעות מפורטות נעלמות.
+   silhouette פשוט = קריא בכל גודל, עובד באייקון 16px בנייד.
+   זה לא איור — זה signage.
+
+<span class="c-comment">## למה לא להוסיף trailing particles / sparkles?</span>
+   מינימליזם של aurora אומר: דבר אחד פועם, השאר שקט.
+   particles = "ארטיסטי-יתר", סותר את הDNA של "engineering premium".
+   אם בעתיד נוסיף — רק לרגעי success (חבילה נבנתה), לא לחשיבה.</div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 5 — Component Library (aurora)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'IBM Plex Sans Hebrew', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #71778A;
+    --accent: #5E6AD2;
+    --accent-hover: #7B85DC;
+    --accent-text: #818CF8;
+    --accent-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --easing: cubic-bezier(0.16, 1, 0.3, 1);
+    --glow-accent: 0 0 24px rgba(94,106,210,0.25);
+    --glow-magenta: 0 0 24px rgba(192,132,252,0.3);
+  }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: var(--sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    background-image: linear-gradient(to bottom, var(--bg-elev) 0%, var(--bg-base) 30%, var(--bg-deep) 100%);
+  }
+  .blob { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; pointer-events: none; opacity: 0.4; }
+  .blob-1 { top: -10%; right: -10%; width: 500px; height: 500px; background: rgba(94,106,210,0.25); }
+  .blob-2 { bottom: -10%; left: -10%; width: 400px; height: 400px; background: rgba(192,132,252,0.15); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; position: relative; z-index: 1; }
+
+  /* Header */
+  .phase-header { text-align: center; padding: 32px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 48px; }
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 11px; color: var(--accent-text);
+    background: rgba(94,106,210,0.1); border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 20px; padding: 6px 14px; margin-bottom: 20px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .phase-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  h1.title {
+    font-size: 48px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1;
+  }
+  .subtitle { color: var(--fg-dim); font-size: 17px; max-width: 720px; margin: 0 auto; }
+
+  /* Component section */
+  .comp-section { margin-bottom: 48px; }
+  .comp-header { margin-bottom: 16px; display: flex; align-items: baseline; gap: 12px; }
+  .comp-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-text);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+    letter-spacing: 0.08em;
+  }
+  .comp-name { font-size: 24px; font-weight: 700; letter-spacing: -0.015em; }
+  .comp-desc { color: var(--fg-dim); font-size: 14px; margin-bottom: 18px; }
+
+  .comp-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .comp-demo {
+    padding: 36px 28px;
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+  }
+  .comp-demo.col { flex-direction: column; align-items: stretch; }
+  .comp-demo.center { justify-content: center; }
+  .comp-specs {
+    padding: 16px 24px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    line-height: 1.6;
+    direction: ltr;
+    text-align: left;
+  }
+  .comp-specs span strong { color: var(--accent-text); }
+
+  /* ========== BUTTONS ========== */
+  .btn {
+    font-family: var(--sans);
+    font-weight: 600;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+  /* sizes */
+  .btn-sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
+  .btn-md { padding: 11px 20px; font-size: 14px; }
+  .btn-lg { padding: 14px 26px; font-size: 16px; border-radius: 12px; }
+  .btn-icon-only-md { padding: 11px; }
+  .btn-icon-only-sm { padding: 8px; border-radius: 8px; }
+
+  /* variants */
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 24px rgba(94,106,210,0.25), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 0 32px rgba(94,106,210,0.35), inset 0 1px 0 rgba(255,255,255,0.15); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 2px; }
+
+  .btn-secondary {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    color: var(--fg);
+    border-color: var(--border-strong);
+  }
+  .btn-secondary:hover { background: var(--surface-strong); border-color: rgba(255,255,255,0.2); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--fg-dim);
+  }
+  .btn-ghost:hover { color: var(--fg); background: var(--surface); }
+
+  .btn-danger {
+    background: rgba(248,113,113,0.1);
+    color: var(--danger);
+    border-color: rgba(248,113,113,0.3);
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.5); }
+
+  .btn-spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ========== INPUTS ========== */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 220px;
+  }
+  .field-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fg);
+  }
+  .field-helper {
+    font-size: 12px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+    direction: ltr;
+    text-align: left;
+  }
+  .field-error {
+    font-size: 12px;
+    color: var(--danger);
+  }
+  .input {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 14px;
+    transition: all 200ms var(--easing);
+    width: 100%;
+  }
+  .input::placeholder { color: var(--fg-muted); }
+  .input:hover { border-color: rgba(255,255,255,0.2); }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(94,106,210,0.15);
+  }
+  .input.error {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(248,113,113,0.15);
+  }
+  .textarea { min-height: 100px; resize: vertical; line-height: 1.6; }
+
+  /* Checkbox */
+  .check-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border-radius: 8px;
+    transition: background 150ms ease;
+    cursor: pointer;
+  }
+  .check-row:hover { background: var(--surface); }
+  .check-box {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--bg-deep);
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 200ms var(--easing);
+  }
+  .check-box.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(94,106,210,0.4);
+  }
+  .check-box.checked::after {
+    content: '';
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 5px; height: 10px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(45deg);
+  }
+  .check-text { font-size: 14px; color: var(--fg); }
+  .check-text .helper { display: block; font-size: 12px; color: var(--fg-dim); margin-top: 2px; }
+
+  /* Switch */
+  .switch {
+    width: 36px; height: 20px;
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 1px; right: 1px;
+    width: 16px; height: 16px;
+    background: var(--fg-dim);
+    border-radius: 50%;
+    transition: all 250ms var(--easing);
+  }
+  .switch.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 12px rgba(94,106,210,0.3); }
+  .switch.on::after { right: calc(100% - 17px); background: #fff; }
+
+  /* ========== CHIPS / BADGES ========== */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--fg);
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+    font-family: var(--sans);
+  }
+  .chip:hover { background: var(--surface-strong); border-color: var(--border-strong); }
+  .chip.selected {
+    background: rgba(94,106,210,0.15);
+    border-color: rgba(94,106,210,0.4);
+    color: var(--accent-bright);
+  }
+  .chip.selected::before {
+    content: '✓';
+    color: var(--accent-bright);
+    font-weight: 700;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-success { background: rgba(74,222,128,0.12); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+  .badge-warning { background: rgba(251,191,36,0.12); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+  .badge-danger { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .badge-info { background: rgba(103,232,249,0.12); color: var(--cyan); border: 1px solid rgba(103,232,249,0.3); }
+  .badge-accent { background: rgba(94,106,210,0.15); color: var(--accent-text); border: 1px solid rgba(94,106,210,0.35); }
+  .badge-neutral { background: var(--surface); color: var(--fg-dim); border: 1px solid var(--border); }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .badge.no-dot::before { display: none; }
+
+  /* ========== CARDS ========== */
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .card-interactive {
+    cursor: pointer;
+    transition: all 250ms var(--easing);
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    border-color: rgba(94,106,210,0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 32px rgba(94,106,210,0.1);
+  }
+  .card-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-text);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--fg);
+    letter-spacing: -0.01em;
+  }
+  .card-body {
+    color: var(--fg-dim);
+    font-size: 14px;
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* ========== BOT BUBBLES ========== */
+  .bubble-bot {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: var(--fg);
+    max-width: 75%;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-right: auto; margin-left: 0; margin-bottom: 8px;
+  }
+  .bubble-bot .micro {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--fg-muted);
+    font-family: var(--mono);
+    direction: ltr;
+    text-align: left;
+  }
+  .bubble-user {
+    background: linear-gradient(135deg, var(--accent), #7B85DC);
+    color: #fff;
+    border-radius: 14px;
+    padding: 14px 18px;
+    max-width: 75%;
+    margin-left: auto; margin-right: 0; margin-bottom: 8px;
+    font-size: 15px;
+    box-shadow: 0 4px 16px rgba(94,106,210,0.25);
+  }
+  .bubble-thinking {
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(192,132,252,0.25);
+    border-radius: 14px;
+    padding: 12px 16px;
+    color: var(--magenta);
+    font-family: var(--mono);
+    font-size: 12px;
+    direction: ltr;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .think-orb {
+    width: 10px; height: 10px;
+    border: 2px solid rgba(192,132,252,0.3);
+    border-top-color: var(--magenta);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  /* ========== MODAL ========== */
+  .modal-demo-frame {
+    position: relative;
+    background: var(--bg-base);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 60px 20px 20px;
+    border: 1px solid var(--border);
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(2,2,3,0.7);
+    backdrop-filter: blur(8px);
+  }
+  .modal {
+    position: relative;
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    max-width: 480px;
+    margin: 0 auto;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 80px rgba(94,106,210,0.1);
+  }
+  .modal-eyebrow {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--accent-text);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .modal-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.015em; }
+  .modal-body { color: var(--fg-dim); font-size: 14px; margin-bottom: 20px; line-height: 1.7; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ========== TOAST ========== */
+  .toast {
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    min-width: 320px;
+  }
+  .toast-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .toast-icon.success { background: rgba(74,222,128,0.15); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+  .toast-icon.danger { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+  .toast-icon.info { background: rgba(94,106,210,0.15); color: var(--accent-bright); border: 1px solid rgba(94,106,210,0.3); }
+  .toast-content { flex: 1; }
+  .toast-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .toast-msg { color: var(--fg-dim); font-size: 13px; line-height: 1.5; }
+
+  /* ========== PROGRESS ========== */
+  .progress-linear {
+    height: 6px;
+    background: var(--surface);
+    border-radius: 999px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 320px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--magenta));
+    border-radius: 999px;
+    box-shadow: 0 0 12px rgba(94,106,210,0.4);
+    transition: width 300ms var(--easing);
+  }
+  .progress-pips {
+    display: flex;
+    gap: 6px;
+  }
+  .pip {
+    width: 32px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  .pip.done { background: var(--accent); box-shadow: 0 0 8px rgba(94,106,210,0.5); }
+  .pip.current { background: var(--magenta); box-shadow: 0 0 8px rgba(192,132,252,0.5); }
+
+  /* ========== AVATAR ========== */
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--accent), var(--magenta));
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1.5px solid rgba(255,255,255,0.12);
+  }
+  .avatar-sm { width: 28px; height: 28px; font-size: 12px; }
+  .avatar-lg { width: 48px; height: 48px; font-size: 18px; }
+
+  /* ========== TABS ========== */
+  .tabs {
+    display: inline-flex;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    transition: all 200ms var(--easing);
+    font-weight: 500;
+    font-family: var(--sans);
+    background: transparent;
+    border: none;
+  }
+  .tab:hover { color: var(--fg); }
+  .tab.active {
+    background: var(--surface-strong);
+    color: var(--fg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* ========== TOOLTIP ========== */
+  .tooltip-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--fg);
+    white-space: nowrap;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    font-family: var(--mono);
+    direction: ltr;
+  }
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--bg-elev-3);
+  }
+
+  /* ========== SKELETON ========== */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-elev-2), var(--surface-strong), var(--bg-elev-2));
+    background-size: 200% 100%;
+    border-radius: 8px;
+    animation: shimmer 1.5s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .sk-line { height: 12px; margin-bottom: 8px; width: 100%; border-radius: 4px; }
+  .sk-line.short { width: 60%; }
+  .sk-block { height: 80px; border-radius: 10px; }
+
+  /* ========== EMPTY STATE ========== */
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+  }
+  .empty-icon {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 28px;
+    color: var(--accent-text);
+  }
+  .empty-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .empty-body { color: var(--fg-dim); font-size: 14px; margin-bottom: 18px; max-width: 320px; margin-left: auto; margin-right: auto; }
+
+  /* ========== TOC ========== */
+  .toc {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .toc-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .toc-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 6px;
+  }
+  .toc-list a {
+    color: var(--fg-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-family: var(--mono);
+    padding: 4px 0;
+    display: block;
+  }
+  .toc-list a:hover { color: var(--accent-text); }
+  .toc-list .nm { color: var(--fg-muted); }
+
+  /* Icon helpers (SVG-like via CSS) */
+  .ic { width: 14px; height: 14px; display: inline-block; }
+  .arr-right::before {
+    content: '←';
+    color: currentColor;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    h1.title { font-size: 36px; }
+    .comp-name { font-size: 20px; }
+    .comp-demo { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 05 · COMPONENT LIBRARY · AURORA</div>
+    <h1 class="title">14 קומפוננטות.<br>הספרייה החיה.</h1>
+    <p class="subtitle">כל קומפוננטה חיה — אינטראקטיבית. שני states נראים אמיתיים. הספציפיקציה מתחת לכל אחת. מוכן ל-shadcn/ui adaptation.</p>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-label">→ TABLE OF CONTENTS</div>
+    <ul class="toc-list">
+      <li><a href="#btn"><span class="nm">01</span> Buttons</a></li>
+      <li><a href="#inp"><span class="nm">02</span> Inputs</a></li>
+      <li><a href="#chk"><span class="nm">03</span> Checkbox &amp; Switch</a></li>
+      <li><a href="#chp"><span class="nm">04</span> Chips</a></li>
+      <li><a href="#bdg"><span class="nm">05</span> Badges</a></li>
+      <li><a href="#crd"><span class="nm">06</span> Cards</a></li>
+      <li><a href="#bub"><span class="nm">07</span> Bot Bubbles</a></li>
+      <li><a href="#mdl"><span class="nm">08</span> Modal</a></li>
+      <li><a href="#tst"><span class="nm">09</span> Toast</a></li>
+      <li><a href="#prg"><span class="nm">10</span> Progress</a></li>
+      <li><a href="#avt"><span class="nm">11</span> Avatar</a></li>
+      <li><a href="#tab"><span class="nm">12</span> Tabs</a></li>
+      <li><a href="#tlt"><span class="nm">13</span> Tooltip</a></li>
+      <li><a href="#skl"><span class="nm">14</span> Skeleton + Empty</a></li>
+    </ul>
+  </div>
+
+  <!-- 01 BUTTONS -->
+  <div class="comp-section" id="btn">
+    <div class="comp-header">
+      <div class="comp-num">01</div>
+      <div class="comp-name">Buttons</div>
+    </div>
+    <div class="comp-desc">4 וריאנטים (primary / secondary / ghost / danger) × 3 גדלים. Primary בלבד מקבל glow. Loading state כולל spinner.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo">
+        <button class="btn btn-primary btn-md">צור חבילה <span class="arr-right"></span></button>
+        <button class="btn btn-secondary btn-md">שמור טיוטה</button>
+        <button class="btn btn-ghost btn-md">בטל</button>
+        <button class="btn btn-danger btn-md">מחק חבילה</button>
+      </div>
+      <div class="comp-demo">
+        <button class="btn btn-primary btn-sm">Small</button>
+        <button class="btn btn-primary btn-md">Medium</button>
+        <button class="btn btn-primary btn-lg">Large CTA</button>
+      </div>
+      <div class="comp-demo">
+        <button class="btn btn-primary btn-md"><span class="btn-spinner"></span> מעבד...</button>
+        <button class="btn btn-primary btn-md" disabled>Disabled</button>
+        <button class="btn btn-secondary btn-icon-only-md">⌘</button>
+        <button class="btn btn-ghost btn-icon-only-sm">×</button>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 8/10/12</span>
+        <span><strong>padding:</strong> 8/14, 11/20, 14/26</span>
+        <span><strong>font-size:</strong> 13/14/16</span>
+        <span><strong>weight:</strong> 600</span>
+        <span><strong>glow:</strong> primary only</span>
+        <span><strong>focus ring:</strong> accent-bright 2px outset</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 INPUTS -->
+  <div class="comp-section" id="inp">
+    <div class="comp-header">
+      <div class="comp-num">02</div>
+      <div class="comp-name">Inputs</div>
+    </div>
+    <div class="comp-desc">Text, textarea, error state. Label למעלה, helper מתחת. Focus ring באקסנט.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo col">
+        <div class="field">
+          <label class="field-label">שם החבילה</label>
+          <input class="input" type="text" placeholder="לדוגמה: Personal Email Assistant" value="">
+          <div class="field-helper">→ this name appears in dashboard</div>
+        </div>
+        <div class="field">
+          <label class="field-label">תיאור (אופציונלי)</label>
+          <textarea class="input textarea" placeholder="ספר על הסוכן..."></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label">Email</label>
+          <input class="input error" type="email" value="user@" placeholder="you@example.com">
+          <div class="field-error">⚠ כתובת אימייל לא תקינה</div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 8px</span>
+        <span><strong>padding:</strong> 11/14</span>
+        <span><strong>focus ring:</strong> rgba(94,106,210,0.15) 3px</span>
+        <span><strong>error:</strong> danger border + ring</span>
+        <span><strong>label gap:</strong> 6px</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 CHECKBOX & SWITCH -->
+  <div class="comp-section" id="chk">
+    <div class="comp-header">
+      <div class="comp-num">03</div>
+      <div class="comp-name">Checkbox &amp; Switch</div>
+    </div>
+    <div class="comp-desc">Checkbox = פעולה דיסקרטית (אישור TOS). Switch = הפעלה/כיבוי מצב.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo col">
+        <div class="check-row">
+          <div class="check-box"></div>
+          <div class="check-text">
+            לקבל מיילים שיווקיים
+            <span class="helper">תוכל לבטל בכל עת</span>
+          </div>
+        </div>
+        <div class="check-row">
+          <div class="check-box checked"></div>
+          <div class="check-text">
+            <strong>אני מאשר את תנאי השימוש</strong>
+            <span class="helper">חתימה זו תישמר עם IP ותאריך לצרכים משפטיים</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 14px; align-items: center; padding: 12px 14px;">
+          <div class="switch"></div>
+          <div class="check-text">חיבור Gmail (מושבת)</div>
+        </div>
+        <div style="display: flex; gap: 14px; align-items: center; padding: 12px 14px;">
+          <div class="switch on"></div>
+          <div class="check-text">חיבור Google Calendar (פעיל)</div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>check:</strong> 18×18 · radius 5</span>
+        <span><strong>switch:</strong> 36×20 · radius 999</span>
+        <span><strong>checked glow:</strong> accent 12px</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 CHIPS -->
+  <div class="comp-section" id="chp">
+    <div class="comp-header">
+      <div class="comp-num">04</div>
+      <div class="comp-name">Chips · multi-select</div>
+    </div>
+    <div class="comp-desc">לבוט — בחירה מהירה של אפשרויות. Selected מקבל indigo tint + checkmark.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo">
+        <div class="chip selected">Gmail</div>
+        <div class="chip selected">Google Calendar</div>
+        <div class="chip">Slack</div>
+        <div class="chip">Notion</div>
+        <div class="chip">Linear</div>
+        <div class="chip">GitHub</div>
+        <div class="chip">Asana</div>
+        <div class="chip">Figma</div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 8px</span>
+        <span><strong>padding:</strong> 6/12</span>
+        <span><strong>selected:</strong> bg rgba(94,106,210,.15) + check prefix</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 BADGES -->
+  <div class="comp-section" id="bdg">
+    <div class="comp-header">
+      <div class="comp-num">05</div>
+      <div class="comp-name">Badges · status</div>
+    </div>
+    <div class="comp-desc">לסטטוס של חבילה / pipeline / OAuth. תמיד uppercase + mono + dot.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo">
+        <span class="badge badge-success">READY</span>
+        <span class="badge badge-warning">BUILDING</span>
+        <span class="badge badge-danger">FAILED</span>
+        <span class="badge badge-info">v1.2.0</span>
+        <span class="badge badge-accent">BETA</span>
+        <span class="badge badge-neutral">DRAFT</span>
+        <span class="badge badge-success no-dot">✓ INSTALLED</span>
+        <span class="badge badge-accent no-dot">★ PRO</span>
+      </div>
+      <div class="comp-specs">
+        <span><strong>height:</strong> 18-22px</span>
+        <span><strong>font:</strong> mono 10px 600 +0.05em</span>
+        <span><strong>dot:</strong> 5×5 leading</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 CARDS -->
+  <div class="comp-section" id="crd">
+    <div class="comp-header">
+      <div class="comp-num">06</div>
+      <div class="comp-name">Cards</div>
+    </div>
+    <div class="comp-desc">basic + interactive variants. Interactive מקבל lift + glow ב-hover.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo">
+        <div class="card card-interactive">
+          <div class="card-eyebrow">PACKAGE · v1.2.0</div>
+          <div class="card-title">Personal Email Assistant</div>
+          <div class="card-body">
+            נוצר עבור: רואה חשבון עצמאי. כולל 8 skills ו-2 חיבורי MCP.
+          </div>
+          <div class="card-footer">
+            <span>created Jun 3, 2026</span>
+            <span class="badge badge-success no-dot">✓ INSTALLED</span>
+          </div>
+        </div>
+
+        <div class="card card-interactive">
+          <div class="card-eyebrow">★ RECOMMENDED</div>
+          <div class="card-title">Meeting Co-pilot</div>
+          <div class="card-body">
+            מתאים אם רוב היום שלך עובר בפגישות זום ויש לך צוות לעקוב אחריו.
+          </div>
+          <div class="card-footer">
+            <span>5 skills · 1 MCP</span>
+            <span class="badge badge-accent no-dot">START</span>
+          </div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 14px</span>
+        <span><strong>padding:</strong> 20px</span>
+        <span><strong>hover:</strong> translateY(-2) + glow</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 07 BOT BUBBLES -->
+  <div class="comp-section" id="bub">
+    <div class="comp-header">
+      <div class="comp-num">07</div>
+      <div class="comp-name">Bot bubbles</div>
+    </div>
+    <div class="comp-desc">הלב של GenerAgent. Bot bubbles ב-glass. User bubbles עם indigo gradient + glow.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo col" style="max-width: 640px;">
+        <div class="bubble-bot">
+          ספר לי בכמה משפטים — מה אתה עושה ביום-יום בעבודה?
+          <span class="micro">→ this helps me detect your persona</span>
+        </div>
+        <div class="bubble-user">
+          אני רואה חשבון עצמאי, מנהל בערך 40 לקוחות. רוב היום עובר במיילים.
+        </div>
+        <div class="bubble-bot">
+          הבנתי. אם הייתה לך עוד שעה ביום, מה היית עושה איתה?
+        </div>
+        <div class="bubble-thinking">
+          <div class="think-orb"></div>
+          analyzing · persona: knowledge-worker-solo · confidence 0.78
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 14px</span>
+        <span><strong>padding:</strong> 14/18</span>
+        <span><strong>max-w:</strong> 75%</span>
+        <span><strong>user:</strong> indigo gradient + glow</span>
+        <span><strong>thinking:</strong> magenta + mono + spinner</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 08 MODAL -->
+  <div class="comp-section" id="mdl">
+    <div class="comp-header">
+      <div class="comp-num">08</div>
+      <div class="comp-name">Modal · dialog</div>
+    </div>
+    <div class="comp-desc">Backdrop blurred · radius 20 · max-w 480 · 2 actions בתחתית.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo center" style="padding: 0;">
+        <div class="modal-demo-frame" style="width: 100%;">
+          <div class="modal-backdrop"></div>
+          <div class="modal">
+            <div class="modal-eyebrow">CONFIRM · destructive</div>
+            <div class="modal-title">למחוק את החבילה?</div>
+            <div class="modal-body">
+              "Personal Email Assistant v1.2.0" תימחק לצמיתות. הפעולה לא הפיכה.
+              קבצים שכבר הותקנו אצלך לא יושפעו.
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-ghost btn-md">בטל</button>
+              <button class="btn btn-danger btn-md">מחק לצמיתות</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 20px</span>
+        <span><strong>padding:</strong> 28px</span>
+        <span><strong>max-w:</strong> 480px</span>
+        <span><strong>backdrop:</strong> rgba/.7 + blur(8)</span>
+        <span><strong>z:</strong> modal=40</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 09 TOAST -->
+  <div class="comp-section" id="tst">
+    <div class="comp-header">
+      <div class="comp-num">09</div>
+      <div class="comp-name">Toast notifications</div>
+    </div>
+    <div class="comp-desc">קופצות מתחתית-ימין. 3 וריאנטים: success / danger / info.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo col" style="align-items: flex-end;">
+        <div class="toast">
+          <div class="toast-icon success">✓</div>
+          <div class="toast-content">
+            <div class="toast-title">החבילה נוצרה בהצלחה</div>
+            <div class="toast-msg">Personal Email Assistant v1.0 · 12.4 KB</div>
+          </div>
+        </div>
+        <div class="toast">
+          <div class="toast-icon info">i</div>
+          <div class="toast-content">
+            <div class="toast-title">עדכון זמין</div>
+            <div class="toast-msg">גרסה חדשה לסוכן שלך · ראה ב-dashboard</div>
+          </div>
+        </div>
+        <div class="toast">
+          <div class="toast-icon danger">!</div>
+          <div class="toast-content">
+            <div class="toast-title">בנייה נכשלה</div>
+            <div class="toast-msg">חסר הרשאה ל-Gmail OAuth · נסה שוב</div>
+          </div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 12px</span>
+        <span><strong>min-w:</strong> 320px</span>
+        <span><strong>auto-dismiss:</strong> 5s (info), 0s (errors)</span>
+        <span><strong>z:</strong> toast=50</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10 PROGRESS -->
+  <div class="comp-section" id="prg">
+    <div class="comp-header">
+      <div class="comp-num">10</div>
+      <div class="comp-name">Progress</div>
+    </div>
+    <div class="comp-desc">Linear ל-loading רציף. Pips ל-step indicator בבוט.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo col">
+        <div>
+          <div style="display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--fg-muted); margin-bottom: 6px; direction: ltr;">
+            <span>BUILDING PACKAGE</span>
+            <span>72%</span>
+          </div>
+          <div class="progress-linear"><div class="progress-fill" style="width: 72%;"></div></div>
+        </div>
+
+        <div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--fg-muted); margin-bottom: 8px; direction: ltr;">CONSULTATION · STEP 3 / 7</div>
+          <div class="progress-pips">
+            <div class="pip done"></div>
+            <div class="pip done"></div>
+            <div class="pip current"></div>
+            <div class="pip"></div>
+            <div class="pip"></div>
+            <div class="pip"></div>
+            <div class="pip"></div>
+          </div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>linear height:</strong> 6px</span>
+        <span><strong>pip:</strong> 32×4 · radius 2</span>
+        <span><strong>gradient:</strong> accent → magenta</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 AVATAR -->
+  <div class="comp-section" id="avt">
+    <div class="comp-header">
+      <div class="comp-num">11</div>
+      <div class="comp-name">Avatar</div>
+    </div>
+    <div class="comp-desc">Initials על gradient (accent → magenta). 3 גדלים.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo">
+        <div class="avatar avatar-sm">RA</div>
+        <div class="avatar">RA</div>
+        <div class="avatar avatar-lg">RA</div>
+        <div class="avatar" style="background: linear-gradient(135deg, var(--success), var(--cyan));">YK</div>
+        <div class="avatar" style="background: linear-gradient(135deg, var(--magenta), var(--warning));">SL</div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>sizes:</strong> 28 / 36 / 48</span>
+        <span><strong>radius:</strong> 50%</span>
+        <span><strong>border:</strong> 1.5px rgba/.12</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12 TABS -->
+  <div class="comp-section" id="tab">
+    <div class="comp-header">
+      <div class="comp-num">12</div>
+      <div class="comp-name">Tabs · segmented control</div>
+    </div>
+    <div class="comp-desc">לבחירת תצוגה / סינון רשימה. גודל אחד.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo">
+        <div class="tabs">
+          <button class="tab active">כל החבילות</button>
+          <button class="tab">מותקנות</button>
+          <button class="tab">טיוטות</button>
+          <button class="tab">משותפות</button>
+        </div>
+      </div>
+      <div class="comp-demo">
+        <div class="tabs">
+          <button class="tab active">Claude Code</button>
+          <button class="tab">Codex CLI</button>
+          <button class="tab">Both</button>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>container:</strong> radius 10 · padding 4</span>
+        <span><strong>tab:</strong> radius 7 · padding 8/16</span>
+        <span><strong>active:</strong> surface-strong + shadow</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13 TOOLTIP -->
+  <div class="comp-section" id="tlt">
+    <div class="comp-header">
+      <div class="comp-num">13</div>
+      <div class="comp-name">Tooltip</div>
+    </div>
+    <div class="comp-desc">Mono · ltr · 6/12 padding. למידע טכני קצר.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo center" style="padding: 56px 28px;">
+        <div class="tooltip-wrap">
+          <button class="btn btn-secondary btn-md">hover me</button>
+          <div class="tooltip">⌘K · open command palette</div>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>radius:</strong> 8px</span>
+        <span><strong>padding:</strong> 6/12</span>
+        <span><strong>font:</strong> mono 12px</span>
+        <span><strong>z:</strong> tooltip=60</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14 SKELETON + EMPTY -->
+  <div class="comp-section" id="skl">
+    <div class="comp-header">
+      <div class="comp-num">14</div>
+      <div class="comp-name">Skeleton + Empty state</div>
+    </div>
+    <div class="comp-desc">Skeleton בזמן loading (לא spinner!). Empty state כשאין נתונים.</div>
+
+    <div class="comp-card">
+      <div class="comp-demo col">
+        <div style="background: var(--bg-elev-2); padding: 20px; border-radius: 14px; max-width: 480px; border: 1px solid var(--border);">
+          <div class="skeleton sk-line short" style="height: 14px;"></div>
+          <div class="skeleton sk-line"></div>
+          <div class="skeleton sk-line"></div>
+          <div class="skeleton sk-line short"></div>
+          <div style="height: 12px;"></div>
+          <div class="skeleton sk-block"></div>
+        </div>
+
+        <div class="empty">
+          <div class="empty-icon">◆</div>
+          <div class="empty-title">אין עדיין חבילות</div>
+          <div class="empty-body">
+            התחל שיחה עם הבוט כדי לבנות את הסוכן הראשון שלך. זה לוקח כ-5 דקות.
+          </div>
+          <button class="btn btn-primary btn-md">התחל עכשיו <span class="arr-right"></span></button>
+        </div>
+      </div>
+      <div class="comp-specs">
+        <span><strong>skeleton:</strong> shimmer 1.5s linear</span>
+        <span><strong>line height:</strong> 12px</span>
+        <span><strong>empty padding:</strong> 48/24</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

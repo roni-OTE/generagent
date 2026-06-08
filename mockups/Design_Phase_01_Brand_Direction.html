@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Phase 1 — Brand Direction</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sans: 'Heebo', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  body {
+    background: #050506;
+    color: #EDEDEF;
+    font-family: var(--sans);
+    line-height: 1.7;
+    padding: 40px 20px 80px;
+    min-height: 100vh;
+  }
+  .container { max-width: 1280px; margin: 0 auto; }
+
+  /* Header */
+  .phase-header {
+    text-align: center;
+    padding: 32px 0 48px;
+    border-bottom: 1px solid #1F1F23;
+    margin-bottom: 56px;
+  }
+  .phase-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #8A8F98;
+    background: #11111A;
+    border: 1px solid #1F1F23;
+    border-radius: 20px;
+    padding: 4px 14px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    color: #8A8F98;
+    font-size: 18px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Brief box */
+  .brief {
+    background: #0A0A0F;
+    border: 1px solid #1F1F23;
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 48px;
+  }
+  .brief-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #5E6AD2;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+  .brief-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  @media (max-width: 768px) { .brief-grid { grid-template-columns: 1fr 1fr; } }
+  .brief-item-label {
+    font-size: 12px;
+    color: #8A8F98;
+    margin-bottom: 6px;
+  }
+  .brief-item-value {
+    font-size: 14px;
+    color: #EDEDEF;
+    line-height: 1.5;
+  }
+
+  /* Section header */
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 28px;
+    background: #5E6AD2;
+    border-radius: 2px;
+  }
+  .section-sub {
+    color: #8A8F98;
+    margin-bottom: 32px;
+    font-size: 16px;
+  }
+
+  /* Direction cards (3 columns) */
+  .directions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 1024px) { .directions { grid-template-columns: 1fr; } }
+
+  .direction {
+    background: #0A0A0F;
+    border: 1px solid #1F1F23;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .direction:hover {
+    transform: translateY(-4px);
+    border-color: #2A2A30;
+  }
+
+  .direction-preview {
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Direction A — Linear Cinema (Indigo) */
+  .preview-a {
+    background: linear-gradient(135deg, #0a0a0f 0%, #020203 100%);
+  }
+  .preview-a::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 70%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(94,106,210,0.25) 0%, transparent 60%);
+    filter: blur(40px);
+  }
+  .preview-a::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 50%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(94,106,210,0.15) 0%, transparent 60%);
+    filter: blur(50px);
+  }
+  .preview-content {
+    position: absolute;
+    inset: 24px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .preview-bubble {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #EDEDEF;
+    max-width: 80%;
+  }
+  .preview-bubble.user {
+    background: rgba(94,106,210,0.25);
+    border-color: rgba(94,106,210,0.4);
+    margin-right: auto;
+    margin-left: 0;
+  }
+
+  /* Direction B — Anthropic Terminal (Orange) */
+  .preview-b {
+    background: #0A0A0A;
+  }
+  .preview-b::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to bottom, transparent 0%, transparent 95%, rgba(217,119,87,0.03) 95%),
+      repeating-linear-gradient(transparent 0px, transparent 23px, rgba(255,255,255,0.02) 23px, rgba(255,255,255,0.02) 24px);
+  }
+  .preview-b .preview-bubble {
+    background: #141414;
+    border: 1px solid #2A2A2A;
+  }
+  .preview-b .preview-bubble.user {
+    background: rgba(217,119,87,0.12);
+    border-color: rgba(217,119,87,0.3);
+    color: #FAFAFA;
+  }
+  .preview-b .preview-bubble::before {
+    content: '> ';
+    color: #D97757;
+  }
+
+  /* Direction C — Slate Studio (Green/Slate IDE) */
+  .preview-c {
+    background: #0F172A;
+    background-image: linear-gradient(135deg, #0F172A 0%, #1B2336 100%);
+  }
+  .preview-c .preview-bubble {
+    background: #1B2336;
+    border: 1px solid #475569;
+    color: #F8FAFC;
+  }
+  .preview-c .preview-bubble.user {
+    background: rgba(34,197,94,0.12);
+    border-color: rgba(34,197,94,0.4);
+  }
+  .preview-c .preview-bubble::before {
+    content: '$ ';
+    color: #22C55E;
+    font-family: var(--mono);
+  }
+
+  /* Direction body */
+  .direction-body {
+    padding: 24px;
+  }
+  .direction-name {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .direction-codename {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #8A8F98;
+    margin-bottom: 16px;
+  }
+  .direction-desc {
+    font-size: 14px;
+    color: #B5B9C2;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  /* Palette swatches */
+  .swatches {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .swatch {
+    flex: 1;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .swatch-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: #8A8F98;
+    text-align: center;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* Attributes */
+  .attrs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .attr-key { color: #8A8F98; font-family: var(--mono); }
+  .attr-val { color: #EDEDEF; text-align: left; direction: ltr; }
+
+  /* Pros/Cons */
+  .pros-cons {
+    border-top: 1px solid #1F1F23;
+    padding-top: 16px;
+  }
+  .pc-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .pc-icon {
+    font-family: var(--mono);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .pc-row.pro .pc-icon { color: #4ADE80; }
+  .pc-row.con .pc-icon { color: #FBBF24; }
+  .pc-text { color: #B5B9C2; }
+
+  /* Recommendation badge */
+  .recommended {
+    background: #5E6AD2;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .direction-b .recommended { background: #D97757; }
+
+  /* Decision panel */
+  .decision {
+    background: linear-gradient(135deg, rgba(94,106,210,0.06) 0%, rgba(94,106,210,0.02) 100%);
+    border: 1px solid rgba(94,106,210,0.3);
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .decision-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #EDEDEF;
+  }
+  .decision-text {
+    color: #B5B9C2;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .decision-text strong { color: #EDEDEF; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="phase-header">
+    <div class="phase-tag">PHASE 01 / 08 — BRAND &amp; STYLE DIRECTION</div>
+    <h1>איזה מותג אנחנו בונים?</h1>
+    <p class="subtitle">לפני שיורדים לפיקסלים, צריך להסכים על תחושת המוצר. למטה 3 כיוונים מנומקים — אנא בחר אחד</p>
+  </div>
+
+  <!-- Brief recap -->
+  <div class="brief">
+    <div class="brief-title">→ Brief Recap</div>
+    <div class="brief-grid">
+      <div>
+        <div class="brief-item-label">Product Type</div>
+        <div class="brief-item-value">Developer Tool / AI Agent Generator (SaaS)</div>
+      </div>
+      <div>
+        <div class="brief-item-label">Target User</div>
+        <div class="brief-item-value">בעל מקצוע (לאו דווקא טכני) שרוצה סוכן AI אישי</div>
+      </div>
+      <div>
+        <div class="brief-item-label">Brand Personality</div>
+        <div class="brief-item-value">מקצועי · מדויק · מזמין · אמין משפטית</div>
+      </div>
+      <div>
+        <div class="brief-item-label">Constraints</div>
+        <div class="brief-item-value">RTL Hebrew · Dark mode default · WCAG AAA · דמיון ל-Claude Code</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Title -->
+  <h2 class="section-title">3 כיווני מותג</h2>
+  <p class="section-sub">לכל כיוון: preview של מסך הבוט · פלטת צבעים · pros/cons · המלצת ה-skill</p>
+
+  <!-- Directions -->
+  <div class="directions">
+
+    <!-- DIRECTION A — Linear Cinema -->
+    <div class="direction direction-a">
+      <div class="direction-preview preview-a">
+        <div class="preview-content">
+          <div class="preview-bubble">spell out what you do daily</div>
+          <div class="preview-bubble user">I run a 40-client CPA practice</div>
+        </div>
+      </div>
+      <div class="direction-body">
+        <div class="direction-name">A · Linear Cinema</div>
+        <div class="direction-codename">premium-dev-tool</div>
+        <div class="direction-desc">
+          השראה: Linear, Vercel, Arc. סינמטי, אמביינט, glassmorphism עדין.
+          תחושה של כלי פרימיום שעולה כסף — לא חמוד.
+        </div>
+
+        <div class="swatches">
+          <div><div class="swatch" style="background:#020203;"></div><div class="swatch-label">020203</div></div>
+          <div><div class="swatch" style="background:#0A0A0F;"></div><div class="swatch-label">0A0A0F</div></div>
+          <div><div class="swatch" style="background:#5E6AD2;"></div><div class="swatch-label">5E6AD2</div></div>
+          <div><div class="swatch" style="background:#EDEDEF;"></div><div class="swatch-label">EDEDEF</div></div>
+        </div>
+
+        <div class="attrs">
+          <div class="attr-key">Accent</div><div class="attr-val">Indigo #5E6AD2</div>
+          <div class="attr-key">Vibe</div><div class="attr-val">Cinematic · Glow</div>
+          <div class="attr-key">Mood</div><div class="attr-val">Quiet luxury</div>
+          <div class="attr-key">Radius</div><div class="attr-val">16px</div>
+        </div>
+
+        <div class="pros-cons">
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">מבדל מ-Claude Code, סטטוס פרימיום</span></div>
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">Linear/Vercel = שפה שמפתחים אוהבים</span></div>
+          <div class="pc-row con"><span class="pc-icon">!</span><span class="pc-text">Glassmorphism דורש GPU טוב</span></div>
+          <div class="pc-row con"><span class="pc-icon">!</span><span class="pc-text">פחות "ביתי" למשתמש חרדי/לא-טכני</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION B — Anthropic Terminal (RECOMMENDED) -->
+    <div class="direction direction-b">
+      <div class="direction-preview preview-b">
+        <div class="preview-content">
+          <div class="preview-bubble">ספר לי מה אתה עושה ביום-יום</div>
+          <div class="preview-bubble user">רואה חשבון, 40 לקוחות פעילים</div>
+        </div>
+      </div>
+      <div class="direction-body">
+        <div class="recommended">★ Recommended</div>
+        <div class="direction-name">B · Anthropic Terminal</div>
+        <div class="direction-codename">claude-code-native</div>
+        <div class="direction-desc">
+          השראה: Claude Code, Vercel CLI. שחור עמוק, מבטא כתום חם, monospaced לבוט.
+          תחושת טרמינל אותנטית — בדיוק כמו שביקשת.
+        </div>
+
+        <div class="swatches">
+          <div><div class="swatch" style="background:#0A0A0A;"></div><div class="swatch-label">0A0A0A</div></div>
+          <div><div class="swatch" style="background:#141414;"></div><div class="swatch-label">141414</div></div>
+          <div><div class="swatch" style="background:#D97757;"></div><div class="swatch-label">D97757</div></div>
+          <div><div class="swatch" style="background:#FAFAFA;"></div><div class="swatch-label">FAFAFA</div></div>
+        </div>
+
+        <div class="attrs">
+          <div class="attr-key">Accent</div><div class="attr-val">Anthropic Orange</div>
+          <div class="attr-key">Vibe</div><div class="attr-val">Terminal · Minimal</div>
+          <div class="attr-key">Mood</div><div class="attr-val">Professional craft</div>
+          <div class="attr-key">Radius</div><div class="attr-val">8-10px</div>
+        </div>
+
+        <div class="pros-cons">
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">100% התואם לבקשתך (דמיון ל-Claude Code)</span></div>
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">מבטא כתום מבדל מהמתחרים הכחולים</span></div>
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">קל לימוש, GPU-friendly, WCAG AAA</span></div>
+          <div class="pc-row con"><span class="pc-icon">!</span><span class="pc-text">"דומה ל-X" — פחות מקורי</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIRECTION C — Slate Studio -->
+    <div class="direction direction-c">
+      <div class="direction-preview preview-c">
+        <div class="preview-content">
+          <div class="preview-bubble">describe your typical workday</div>
+          <div class="preview-bubble user">I manage 40 client accounts</div>
+        </div>
+      </div>
+      <div class="direction-body">
+        <div class="direction-name">C · Slate Studio</div>
+        <div class="direction-codename">classic-ide</div>
+        <div class="direction-desc">
+          השראה: VS Code, GitHub. כחול-אפור עמוק, ירוק "ריצה",
+          קלאסי ויציב — אסטטיקה של IDE מקצועי.
+        </div>
+
+        <div class="swatches">
+          <div><div class="swatch" style="background:#0F172A;"></div><div class="swatch-label">0F172A</div></div>
+          <div><div class="swatch" style="background:#1B2336;"></div><div class="swatch-label">1B2336</div></div>
+          <div><div class="swatch" style="background:#22C55E;"></div><div class="swatch-label">22C55E</div></div>
+          <div><div class="swatch" style="background:#F8FAFC;"></div><div class="swatch-label">F8FAFC</div></div>
+        </div>
+
+        <div class="attrs">
+          <div class="attr-key">Accent</div><div class="attr-val">Run Green #22C55E</div>
+          <div class="attr-key">Vibe</div><div class="attr-val">IDE · Stable</div>
+          <div class="attr-key">Mood</div><div class="attr-val">Trusted classic</div>
+          <div class="attr-key">Radius</div><div class="attr-val">6-8px</div>
+        </div>
+
+        <div class="pros-cons">
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">אסטטיקה מוכרת ובטוחה</span></div>
+          <div class="pc-row pro"><span class="pc-icon">+</span><span class="pc-text">ירוק = הצלחה, חיובי לכפתורי build</span></div>
+          <div class="pc-row con"><span class="pc-icon">!</span><span class="pc-text">"עוד כלי dev כחול" — לא בולט</span></div>
+          <div class="pc-row con"><span class="pc-icon">!</span><span class="pc-text">פחות תואם לסגנון Claude Code</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Decision panel -->
+  <div class="decision">
+    <div class="decision-title">המלצת ה-skill (UI/UX Pro Max)</div>
+    <p class="decision-text">
+      לפי ניתוח של ה-Skill, מוצר מסוג <strong>Developer Tool / AI</strong> מתאים ביותר ל-<strong>Dark Mode + Minimalism + Terminal aesthetic</strong>.
+      בהינתן ההוראה שלך בפרויקט שהעיצוב יידמה ל-Claude Code, ההמלצה הברורה היא <strong>Direction B — Anthropic Terminal</strong>:
+      צבעי בסיס שחורים, מבטא כתום אנתרופיק, monospace לבוט. זה גם הכי נגיש (WCAG AAA) והכי קל לבנייה ב-Tailwind/shadcn.
+      <br><br>
+      Direction A מתאים אם נרצה בעתיד "Pro tier" עם תחושה פרימיום יותר. Direction C מתאים אם הקהל יהיה דווקא מפתחים מנוסים שאוהבים אסטטיקת IDE קלאסי.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>

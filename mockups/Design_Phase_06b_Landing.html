@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Landing Page</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --indigo: #5E6AD2;
+    --indigo-hover: #7B85DC;
+    --indigo-text: #818CF8;
+    --indigo-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warm: #F5E6D3;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Page-level ambient blobs */
+  .page-blob {
+    position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; z-index: -1; opacity: 0.5;
+  }
+  .pb-1 { top: -10%; right: -10%; width: 600px; height: 600px; background: rgba(94,106,210,0.22); }
+  .pb-2 { bottom: -20%; left: -10%; width: 500px; height: 500px; background: rgba(192,132,252,0.12); }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* ============================================
+     NAVIGATION
+     ============================================ */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+    background: rgba(2,2,3,0.7);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--fg);
+  }
+  .brand-mark {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--indigo), var(--magenta));
+    box-shadow: 0 0 16px rgba(94,106,210,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .brand-name { font-weight: 700; font-size: 16px; letter-spacing: -0.01em; }
+  .brand-version {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--fg-muted);
+    background: var(--surface); padding: 2px 6px; border-radius: 4px;
+  }
+  .nav-links { display: flex; gap: 32px; }
+  .nav-link {
+    color: var(--fg-dim); text-decoration: none;
+    font-size: 14px; font-weight: 500;
+    transition: color 200ms var(--ease);
+  }
+  .nav-link:hover { color: var(--fg); }
+  .nav-actions { display: flex; gap: 10px; align-items: center; }
+  @media (max-width: 768px) { .nav-links { display: none; } }
+
+  /* ============================================
+     BUTTONS
+     ============================================ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+  .btn-sm { padding: 8px 14px; font-size: 13px; }
+  .btn-md { padding: 11px 22px; font-size: 14px; }
+  .btn-lg { padding: 14px 28px; font-size: 16px; border-radius: 12px; }
+
+  .btn-primary {
+    background: var(--indigo); color: #fff;
+    box-shadow: 0 0 24px rgba(94,106,210,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .btn-primary:hover { background: var(--indigo-hover); transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface); color: var(--fg);
+    border-color: var(--border-strong);
+    backdrop-filter: blur(10px);
+  }
+  .btn-secondary:hover { background: var(--surface-strong); }
+  .btn-ghost { background: transparent; color: var(--fg-dim); }
+  .btn-ghost:hover { color: var(--fg); background: var(--surface); }
+
+  /* ============================================
+     HERO SECTION
+     ============================================ */
+  .hero {
+    padding: 80px 0 96px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--indigo-text);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.25);
+    border-radius: 20px; padding: 6px 14px;
+    margin-bottom: 28px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .hero-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--indigo); box-shadow: 0 0 10px var(--indigo); }
+
+  .hero-h1 {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 24px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-h1 .accent {
+    background: linear-gradient(135deg, var(--indigo-bright), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    color: var(--fg-dim);
+    font-size: clamp(16px, 1.5vw, 20px);
+    max-width: 640px;
+    margin: 0 auto 40px;
+    font-weight: 400;
+  }
+  .hero-cta-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 56px;
+  }
+  .hero-meta {
+    display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--fg-muted);
+  }
+  .hero-meta-item { display: flex; align-items: center; gap: 6px; }
+  .hero-meta-item::before { content: '✓'; color: var(--success); font-weight: 700; }
+
+  /* Orb showcase */
+  .hero-orb-stage {
+    position: relative;
+    margin: 72px auto 0;
+    max-width: 900px;
+    aspect-ratio: 16/9;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 120px rgba(94,106,210,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .hero-orb-stage::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.15) 50%, transparent 80%);
+    z-index: 10;
+  }
+
+  /* Ambient blobs in stage */
+  .stage-blob {
+    position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; mix-blend-mode: screen;
+  }
+  .sb-1 { top: 5%; right: 8%; width: 280px; height: 280px; background: rgba(94,106,210,0.5); animation: drift-1 18s ease-in-out infinite; }
+  .sb-2 { bottom: 5%; left: 12%; width: 240px; height: 240px; background: rgba(192,132,252,0.4); animation: drift-2 22s ease-in-out infinite; }
+  @keyframes drift-1 { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px, 20px) scale(1.08); } }
+  @keyframes drift-2 { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px, -25px) scale(1.05); } }
+
+  .stage-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.08; mix-blend-mode: overlay; pointer-events: none;
+  }
+  .stage-vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(2,2,3,0.5) 100%);
+    pointer-events: none;
+  }
+  .stage-horizon {
+    position: absolute; bottom: 18%; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(94,106,210,0.2) 20%, rgba(192,132,252,0.4) 50%, rgba(94,106,210,0.2) 80%, transparent 100%);
+  }
+
+  /* The orb (from v6 — same anatomy) */
+  .orb {
+    position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%);
+    width: 200px; height: 200px; z-index: 5;
+  }
+  .orb-haze {
+    position: absolute; inset: -120%;
+    background: radial-gradient(circle, rgba(192,132,252,0.18) 0%, rgba(94,106,210,0.10) 30%, transparent 65%);
+    border-radius: 50%; filter: blur(30px);
+    animation: haze-pulse 4.5s ease-in-out infinite;
+  }
+  @keyframes haze-pulse { 0%, 100% { transform: scale(0.85); opacity: 0.5; } 50% { transform: scale(1.25); opacity: 1.00; } }
+  .orb-rim {
+    position: absolute; inset: -8%; border-radius: 50%;
+    background: radial-gradient(circle, transparent 60%, rgba(192,132,252,0.25) 75%, rgba(94,106,210,0.15) 85%, transparent 100%);
+    filter: blur(2px); animation: rim-pulse 4.5s ease-in-out infinite;
+  }
+  @keyframes rim-pulse { 0%, 100% { opacity: 0.4; transform: scale(0.97); } 50% { opacity: 1.0; transform: scale(1.04); } }
+  .orb-sphere {
+    position: absolute; inset: 0; border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 30%, rgba(255,255,255,0.35) 0%, transparent 18%),
+      radial-gradient(circle at 38% 30%, rgba(245,230,211,0.45) 0%, rgba(192,132,252,0.20) 25%, transparent 50%),
+      radial-gradient(circle at 50% 50%, #4B56B8 0%, #2E3478 50%, #1A1F4F 85%, #0A0E2A 100%);
+    box-shadow:
+      inset -25px -35px 80px rgba(0,0,0,0.7),
+      inset 20px 20px 60px rgba(192,132,252,0.15),
+      0 0 60px rgba(94,106,210,0.4),
+      0 0 120px rgba(192,132,252,0.15);
+    animation: orb-breathe 4.5s ease-in-out infinite;
+  }
+  @keyframes orb-breathe { 0%, 100% { transform: scale(0.93); } 50% { transform: scale(1.07); } }
+  .orb-soul {
+    position: absolute; inset: 18%; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, rgba(192,132,252,0.8) 0%, rgba(94,106,210,0.4) 40%, transparent 70%);
+    filter: blur(8px); mix-blend-mode: screen;
+    animation: soul-wander 5s ease-in-out infinite;
+  }
+  @keyframes soul-wander {
+    0%, 100% { transform: translate(0%, 0%) scale(0.8); opacity: 0.6; }
+    25% { transform: translate(15%, -10%) scale(1.0); opacity: 0.95; }
+    50% { transform: translate(-8%, 12%) scale(1.1); opacity: 1.0; }
+    75% { transform: translate(-15%, -5%) scale(0.9); opacity: 0.8; }
+  }
+  .orb-flow {
+    position: absolute; inset: 2%; border-radius: 50%;
+    background:
+      radial-gradient(ellipse 60% 80% at 30% 70%, rgba(192,132,252,0.35) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 70% at 70% 30%, rgba(103,232,249,0.20) 0%, transparent 45%),
+      radial-gradient(ellipse 70% 50% at 50% 80%, rgba(94,106,210,0.30) 0%, transparent 50%);
+    mix-blend-mode: screen; filter: blur(4px);
+    animation: flow-shift 6s linear infinite; opacity: 1;
+  }
+  @keyframes flow-shift { 0% { transform: rotate(0deg) scale(1.0); } 50% { transform: rotate(180deg) scale(1.15); } 100% { transform: rotate(360deg) scale(1.0); } }
+  .orb-spec {
+    position: absolute; top: 22%; left: 32%; width: 18%; height: 14%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.4) 30%, transparent 60%);
+    border-radius: 50%; filter: blur(3px);
+    animation: spec-shimmer 4.5s ease-in-out infinite;
+  }
+  @keyframes spec-shimmer { 0%, 100% { opacity: 0.5; transform: translate(0,0) scale(0.85); } 50% { opacity: 1.0; transform: translate(8%, -4%) scale(1.1); } }
+
+  /* Hero stage caption */
+  .stage-caption {
+    position: absolute; bottom: 24px; left: 0; right: 0;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--fg-muted); font-size: 11px;
+    letter-spacing: 0.35em; text-transform: uppercase;
+    z-index: 8;
+  }
+  .stage-caption span { display: inline-flex; align-items: center; gap: 10px; }
+  .stage-caption span::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--magenta);
+    box-shadow: 0 0 8px var(--magenta); animation: cap-dot 2s ease-in-out infinite;
+  }
+  @keyframes cap-dot { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* ============================================
+     SECTION SHARED
+     ============================================ */
+  section { padding: 96px 0; position: relative; }
+  .section-eyebrow {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--indigo-text);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .section-sub {
+    color: var(--fg-dim);
+    font-size: 17px;
+    max-width: 580px;
+    margin-bottom: 56px;
+  }
+  .section-head-centered { text-align: center; }
+  .section-head-centered .section-sub { margin-left: auto; margin-right: auto; }
+
+  /* ============================================
+     HOW IT WORKS — 3 steps
+     ============================================ */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 768px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    position: relative;
+    transition: all 300ms var(--ease);
+  }
+  .step:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+  }
+  .step-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--indigo-text);
+    background: rgba(94,106,210,0.08);
+    border: 1px solid rgba(94,106,210,0.25);
+    border-radius: 8px;
+    padding: 4px 10px;
+    display: inline-block;
+    margin-bottom: 20px;
+    letter-spacing: 0.08em;
+  }
+  .step-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(94,106,210,0.2), rgba(192,132,252,0.15));
+    border: 1px solid rgba(94,106,210,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: var(--indigo-bright);
+  }
+  .step-title {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.015em;
+    margin-bottom: 8px;
+  }
+  .step-desc {
+    color: var(--fg-dim); font-size: 14px; line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .step-meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    direction: ltr; text-align: left;
+  }
+
+  /* ============================================
+     WHAT YOU GET — package showcase
+     ============================================ */
+  .package-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+  }
+  @media (max-width: 900px) { .package-section { grid-template-columns: 1fr; } }
+  .package-list {
+    display: flex; flex-direction: column; gap: 12px;
+    margin-bottom: 32px;
+  }
+  .package-item {
+    display: flex; gap: 14px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .package-item-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(94,106,210,0.12);
+    color: var(--indigo-bright);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .package-item-body { flex: 1; }
+  .package-item-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .package-item-desc { font-size: 12px; color: var(--fg-dim); line-height: 1.5; }
+
+  .package-terminal {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  }
+  .terminal-bar {
+    background: var(--bg-elev-2);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #FF5F57; } .dot.y { background: #FEBC2E; } .dot.g { background: #28C840; }
+  .terminal-title {
+    margin-right: 16px;
+    color: var(--fg-muted);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  }
+  .terminal-body {
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--fg);
+    direction: ltr; text-align: left;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .c-dim { color: var(--fg-muted); }
+  .c-indigo { color: var(--indigo-text); }
+  .c-magenta { color: var(--magenta); }
+  .c-success { color: var(--success); }
+  .c-warm { color: var(--warm); }
+
+  /* ============================================
+     PERSONAS
+     ============================================ */
+  .personas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 768px) { .personas { grid-template-columns: 1fr; } }
+  .persona {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 300ms var(--ease);
+  }
+  .persona:hover {
+    border-color: rgba(94,106,210,0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+  .persona-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--indigo-text);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .persona-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .persona-quote {
+    color: var(--fg-dim); font-size: 14px; line-height: 1.7;
+    font-style: italic;
+    margin-bottom: 16px;
+    border-right: 2px solid var(--indigo);
+    padding-right: 14px;
+  }
+  .persona-meta {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  .persona-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--fg-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 3px 8px; border-radius: 6px;
+  }
+
+  /* ============================================
+     CTA SECTION
+     ============================================ */
+  .cta {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(94,106,210,0.08) 0%, rgba(192,132,252,0.06) 100%);
+    border: 1px solid rgba(94,106,210,0.25);
+    border-radius: 28px;
+    padding: 72px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(192,132,252,0.1) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .cta-h2 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B5B9C2 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    position: relative;
+  }
+  .cta-sub {
+    color: var(--fg-dim);
+    font-size: 17px;
+    max-width: 520px;
+    margin: 0 auto 32px;
+    position: relative;
+  }
+  .cta-row {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    position: relative;
+  }
+
+  /* ============================================
+     FOOTER
+     ============================================ */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 56px 0 32px;
+    margin-top: 56px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  .footer-brand-block { max-width: 320px; }
+  .footer-tagline { color: var(--fg-dim); font-size: 13px; margin-top: 12px; line-height: 1.6; }
+  .footer-col-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+  .footer-link {
+    display: block;
+    color: var(--fg-dim);
+    text-decoration: none;
+    font-size: 14px;
+    padding: 4px 0;
+    transition: color 200ms var(--ease);
+  }
+  .footer-link:hover { color: var(--fg); }
+  .footer-bottom {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .footer-bottom .legal-strip { display: flex; gap: 20px; }
+  .footer-bottom a { color: inherit; text-decoration: none; }
+  .footer-bottom a:hover { color: var(--fg-dim); }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .orb-haze, .orb-rim, .orb-sphere, .orb-spec, .orb-soul, .orb-flow,
+    .stage-blob, .stage-caption span::before { animation-duration: 24s !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page-blob pb-1"></div>
+<div class="page-blob pb-2"></div>
+
+<!-- ============ NAVIGATION ============ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <div class="brand-mark">G</div>
+      <div class="brand-name">GenerAgent</div>
+      <div class="brand-version">v1.0</div>
+    </a>
+    <div class="nav-links">
+      <a href="#how" class="nav-link">איך זה עובד</a>
+      <a href="#package" class="nav-link">מה בחבילה</a>
+      <a href="#personas" class="nav-link">למי זה</a>
+      <a href="#" class="nav-link">תיעוד</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost btn-sm">התחבר</button>
+      <button class="btn btn-primary btn-sm">התחל בחינם ←</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow">v1.0 · early access</div>
+
+    <h1 class="hero-h1">
+      בנה סוכן AI<br>
+      <span class="accent">בשיחה אחת.</span>
+    </h1>
+    <p class="hero-sub">
+      ספר לנו על העבודה שלך — אנחנו נבנה לך את הסוכן.
+      בלי קוד, בלי YAML, בלי לבנות mental model של MCP. רק שיחה.
+    </p>
+    <div class="hero-cta-row">
+      <button class="btn btn-primary btn-lg">התחל שיחה ←</button>
+      <button class="btn btn-secondary btn-lg">צפה ב-demo</button>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-meta-item">חינם להתחיל</div>
+      <div class="hero-meta-item">5 דקות עד חבילה</div>
+      <div class="hero-meta-item">Claude Code + Codex</div>
+    </div>
+
+    <!-- ORB STAGE -->
+    <div class="hero-orb-stage">
+      <div class="stage-blob sb-1"></div>
+      <div class="stage-blob sb-2"></div>
+      <div class="stage-grain"></div>
+      <div class="stage-horizon"></div>
+      <div class="stage-vignette"></div>
+
+      <div class="orb">
+        <div class="orb-haze"></div>
+        <div class="orb-rim"></div>
+        <div class="orb-sphere"></div>
+        <div class="orb-soul"></div>
+        <div class="orb-flow"></div>
+        <div class="orb-spec"></div>
+      </div>
+
+      <div class="stage-caption"><span>thinking about you</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how">
+  <div class="container">
+    <div class="section-head-centered">
+      <div class="section-eyebrow">→ How it works</div>
+      <h2 class="section-title">3 שלבים · 5 דקות</h2>
+      <p class="section-sub">בלי טפסים מסורבלים. הבוט מנחה אותך כמו יועץ עסקי, ומכין את החבילה מאחורי הקלעים.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-icon">◆</div>
+        <div class="step-title">שיחה אדפטיבית</div>
+        <div class="step-desc">
+          7-15 שאלות שמסתעפות לפי התשובות שלך. הבוט מבין את התפקיד, הכלים, וה-pain points.
+        </div>
+        <div class="step-meta">avg 4.2 min · branching</div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-icon">◇</div>
+        <div class="step-title">ניתוח והמלצה</div>
+        <div class="step-desc">
+          Claude מצליב את התשובות שלך מול 12 ארכיטיפי סוכנים, ומציג 3 הכי מתאימים — עם score וexplanation.
+        </div>
+        <div class="step-meta">Claude Opus · 91% match</div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-icon">▸</div>
+        <div class="step-title">חבילה מוכנה</div>
+        <div class="step-desc">
+          ZIP עם skills, agents, MCP config, ומדריך התקנה בעברית. עובד מחוץ לקופסה עם Claude Code או Codex.
+        </div>
+        <div class="step-meta">~15 min install</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT YOU GET ============ -->
+<section id="package">
+  <div class="container">
+    <div class="package-section">
+      <div>
+        <div class="section-eyebrow">→ What you get</div>
+        <h2 class="section-title">חבילה אחת.<br>הכל בפנים.</h2>
+        <p class="section-sub">לא רק קבצים — מדריך התקנה צעד-אחר-צעד, OAuth wizards, ו-LEGAL חתום עם snapshot.</p>
+
+        <div class="package-list">
+          <div class="package-item">
+            <div class="package-item-icon">★</div>
+            <div class="package-item-body">
+              <div class="package-item-title">Skills מותאמים אישית</div>
+              <div class="package-item-desc">5-12 skills שנבחרו לפי הצרכים שזיהינו</div>
+            </div>
+          </div>
+          <div class="package-item">
+            <div class="package-item-icon">⚡</div>
+            <div class="package-item-body">
+              <div class="package-item-title">MCP Connectors</div>
+              <div class="package-item-desc">Gmail, Calendar, Slack — מוכנים עם OAuth</div>
+            </div>
+          </div>
+          <div class="package-item">
+            <div class="package-item-icon">📖</div>
+            <div class="package-item-body">
+              <div class="package-item-title">מדריך התקנה בעברית</div>
+              <div class="package-item-desc">מותאם לרמת הטכניות שלך — מ-CLI ועד click-by-click</div>
+            </div>
+          </div>
+          <div class="package-item">
+            <div class="package-item-icon">⚖</div>
+            <div class="package-item-body">
+              <div class="package-item-title">LEGAL.md חתום</div>
+              <div class="package-item-desc">snapshot של ה-TOS, IP, תאריך, ו-hash לאימות</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="package-terminal">
+        <div class="terminal-bar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="terminal-title">personal-email-assistant.zip</div>
+        </div>
+        <div class="terminal-body"><span class="c-indigo">my-agent-package/</span>
+│
+├── <span class="c-magenta">README.md</span>             <span class="c-dim"># הסבר בעברית</span>
+├── <span class="c-magenta">INSTALL.md</span>            <span class="c-dim"># צעד-אחר-צעד</span>
+├── <span class="c-warm">LEGAL.md</span>              <span class="c-dim"># הסכם חתום</span>
+│
+├── <span class="c-indigo">.claude/</span>
+│   ├── settings.json
+│   ├── <span class="c-indigo">agents/</span>
+│   │   └── email-assistant.md
+│   └── <span class="c-indigo">skills/</span>
+│       ├── email-triage/
+│       ├── calendar-summary/
+│       └── task-extractor/
+│
+├── <span class="c-indigo">mcp/</span>
+│   ├── mcp.json
+│   └── oauth-setup.md
+│
+└── <span class="c-indigo">scripts/</span>
+    ├── <span class="c-success">install.sh</span>          <span class="c-dim"># mac/linux</span>
+    └── <span class="c-success">install.ps1</span>         <span class="c-dim"># windows</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PERSONAS ============ -->
+<section id="personas">
+  <div class="container">
+    <div class="section-head-centered">
+      <div class="section-eyebrow">→ Built for</div>
+      <h2 class="section-title">לבעלי מקצוע אמיתיים</h2>
+      <p class="section-sub">לא רק למפתחים. GenerAgent מותאם למי שעובד עם כלים — לא בונה אותם.</p>
+    </div>
+
+    <div class="personas">
+      <div class="persona">
+        <div class="persona-tag">→ knowledge-worker</div>
+        <div class="persona-title">רואה החשבון</div>
+        <div class="persona-quote">"40 לקוחות, 200 מיילים ביום. אני שבועיים מאחור על תגובות."</div>
+        <div class="persona-meta">
+          <div class="persona-chip">email-triage</div>
+          <div class="persona-chip">calendar</div>
+          <div class="persona-chip">tasks</div>
+        </div>
+      </div>
+
+      <div class="persona">
+        <div class="persona-tag">→ manager</div>
+        <div class="persona-title">מנהל הצוות</div>
+        <div class="persona-quote">"6 פגישות זום ביום. אין לי זמן לסכם כלום."</div>
+        <div class="persona-meta">
+          <div class="persona-chip">meeting-notes</div>
+          <div class="persona-chip">action-items</div>
+          <div class="persona-chip">slack</div>
+        </div>
+      </div>
+
+      <div class="persona">
+        <div class="persona-tag">→ creator</div>
+        <div class="persona-title">היוצר/ת</div>
+        <div class="persona-quote">"רעיון לפוסט עד פרסום = יומיים. הראש שלי בכל מקום."</div>
+        <div class="persona-meta">
+          <div class="persona-chip">research</div>
+          <div class="persona-chip">drafts</div>
+          <div class="persona-chip">notion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section>
+  <div class="container">
+    <div class="cta">
+      <h2 class="cta-h2">סוכן אישי.<br>5 דקות מעכשיו.</h2>
+      <p class="cta-sub">בלי כרטיס אשראי. ספר לנו על העבודה שלך, ותוריד חבילה מותאמת שעובדת מחוץ לקופסה.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary btn-lg">התחל שיחה עם הבוט ←</button>
+        <button class="btn btn-ghost btn-lg">דבר עם איש מכירות</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand-block">
+        <a href="#" class="nav-brand">
+          <div class="brand-mark">G</div>
+          <div class="brand-name">GenerAgent</div>
+        </a>
+        <p class="footer-tagline">סוכן AI אישי, בשיחה אחת. המוצר מפותח ע"י OTE Group, ישראל.</p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">→ Product</div>
+        <a href="#how" class="footer-link">איך זה עובד</a>
+        <a href="#package" class="footer-link">מה בחבילה</a>
+        <a href="#" class="footer-link">תיעוד</a>
+        <a href="#" class="footer-link">תמחור</a>
+      </div>
+
+      <div>
+        <div class="footer-col-title">→ Company</div>
+        <a href="#" class="footer-link">אודות</a>
+        <a href="#" class="footer-link">בלוג</a>
+        <a href="#" class="footer-link">צור קשר</a>
+      </div>
+
+      <div>
+        <div class="footer-col-title">→ Legal</div>
+        <a href="#" class="footer-link">תנאי שימוש</a>
+        <a href="#" class="footer-link">מדיניות פרטיות</a>
+        <a href="#" class="footer-link">GDPR</a>
+        <a href="#" class="footer-link">AI Disclaimer</a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>© 2026 GenerAgent · OTE Group · made in Israel</div>
+      <div class="legal-strip">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Status</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

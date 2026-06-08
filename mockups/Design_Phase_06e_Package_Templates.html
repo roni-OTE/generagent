@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenerAgent · Package + Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-deep: #020203;
+    --bg-base: #050506;
+    --bg-elev: #0A0A0F;
+    --bg-elev-2: #11111A;
+    --bg-elev-3: #1A1A24;
+    --surface: rgba(255,255,255,0.04);
+    --surface-strong: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --fg: #EDEDEF;
+    --fg-dim: #8A8F98;
+    --fg-muted: #5E636E;
+    --indigo: #5E6AD2;
+    --indigo-hover: #7B85DC;
+    --indigo-text: #818CF8;
+    --indigo-bright: #A5B4FC;
+    --magenta: #C084FC;
+    --cyan: #67E8F9;
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --warm: #F5E6D3;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-deep);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: -1;
+  }
+  body::before { top: -15%; right: -10%; width: 540px; height: 540px; background: rgba(94,106,210,0.15); }
+  body::after  { bottom: -15%; left: -10%; width: 460px; height: 460px; background: rgba(192,132,252,0.08); }
+
+  /* ============================================
+     NAV
+     ============================================ */
+  .nav {
+    backdrop-filter: blur(20px);
+    background: rgba(2,2,3,0.6);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+  }
+  .nav-inner {
+    max-width: 1180px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .nav-left { display: flex; align-items: center; gap: 32px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--indigo), var(--magenta));
+    box-shadow: 0 0 14px rgba(94,106,210,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 13px;
+  }
+  .brand-name { font-weight: 700; font-size: 15px; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 6px 12px; border-radius: 8px; font-size: 13px;
+    color: var(--fg-dim); text-decoration: none;
+    transition: all 200ms var(--ease);
+  }
+  .nav-tab:hover { color: var(--fg); background: var(--surface); }
+  .nav-tab.active { color: var(--indigo-bright); background: rgba(94,106,210,0.1); }
+  .nav-side { display: flex; gap: 8px; align-items: center; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--indigo), var(--magenta));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 13px;
+    border: 1.5px solid rgba(255,255,255,0.12);
+    cursor: pointer;
+  }
+
+  /* ============================================
+     BUTTONS
+     ============================================ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'IBM Plex Sans Hebrew', sans-serif;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    text-decoration: none;
+    white-space: nowrap; line-height: 1.2;
+    position: relative; overflow: hidden;
+  }
+  .btn-sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
+  .btn-md { padding: 11px 20px; font-size: 14px; }
+  .btn-lg { padding: 14px 26px; font-size: 15px; border-radius: 12px; }
+  .btn-primary {
+    background: var(--indigo); color: #fff;
+    box-shadow: 0 0 24px rgba(94,106,210,0.25), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+  .btn-primary:hover { background: var(--indigo-hover); transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface); color: var(--fg);
+    border-color: var(--border-strong);
+  }
+  .btn-secondary:hover { background: var(--surface-strong); }
+  .btn-ghost { background: transparent; color: var(--fg-dim); }
+  .btn-ghost:hover { color: var(--fg); background: var(--surface); }
+  .arrow { display: inline-block; transition: transform 200ms var(--ease); }
+  .btn:hover .arrow { transform: translateX(-3px); }
+
+  /* ============================================
+     PAGE LAYOUT
+     ============================================ */
+  .container { max-width: 1180px; margin: 0 auto; padding: 40px 24px; }
+  .container.narrow { max-width: 720px; }
+
+  /* ============================================
+     PAGE HEAD
+     ============================================ */
+  .page-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 32px; gap: 16px; flex-wrap: wrap;
+  }
+  .page-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--indigo-text);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .page-title {
+    font-size: 32px; font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B0B5C0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* ============================================
+     PACKAGE RESULT — success state
+     ============================================ */
+  .result-hero {
+    text-align: center;
+    padding: 24px 20px 36px;
+    margin-bottom: 24px;
+    background:
+      radial-gradient(ellipse at center, rgba(94,106,210,0.08) 0%, transparent 60%),
+      var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-hero::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,0.18) 50%, transparent 80%);
+  }
+
+  /* Success orb — slightly different (warmer accent) */
+  .success-orb {
+    width: 100px; height: 100px;
+    margin: 0 auto 18px;
+    position: relative;
+  }
+  .so-haze { position: absolute; inset: -50%; background: radial-gradient(circle, rgba(74,222,128,0.22) 0%, rgba(192,132,252,0.10) 50%, transparent 75%); border-radius: 50%; filter: blur(24px); animation: haze-pulse 4.5s ease-in-out infinite; }
+  @keyframes haze-pulse { 0%, 100% { transform: scale(0.85); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+  .so-sphere {
+    position: absolute; inset: 0; border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 30%, rgba(255,255,255,0.4) 0%, transparent 18%),
+      radial-gradient(circle at 38% 30%, rgba(245,230,211,0.45) 0%, rgba(74,222,128,0.20) 25%, transparent 50%),
+      radial-gradient(circle at 50% 50%, #4B56B8 0%, #2E3478 50%, #1A1F4F 85%, #0A0E2A 100%);
+    box-shadow: inset -10px -15px 30px rgba(0,0,0,0.7), inset 8px 8px 24px rgba(74,222,128,0.15), 0 0 40px rgba(94,106,210,0.4);
+    animation: orb-breathe 4.5s ease-in-out infinite;
+  }
+  @keyframes orb-breathe { 0%, 100% { transform: scale(0.93); } 50% { transform: scale(1.07); } }
+  .so-check {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 32px; font-weight: 700;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.6));
+    animation: check-pop 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes check-pop {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .result-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--success);
+    background: rgba(74,222,128,0.1);
+    border: 1px solid rgba(74,222,128,0.3);
+    border-radius: 20px; padding: 5px 12px;
+    margin-bottom: 14px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .result-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .result-title {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.022em;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #B0B5C0 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .result-desc { color: var(--fg-dim); font-size: 14px; max-width: 480px; margin: 0 auto; }
+
+  /* ============================================
+     INSTALL METHODS — 3 tabs
+     ============================================ */
+  .install-section {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .install-header {
+    padding: 18px 22px 0;
+  }
+  .install-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--indigo-text);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .install-title {
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.015em;
+    margin-bottom: 14px;
+  }
+
+  .install-tabs {
+    display: flex; gap: 4px;
+    padding: 0 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .install-tab {
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 200ms var(--ease);
+    position: relative;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .install-tab::after {
+    content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+    height: 2px; background: var(--indigo);
+    transform: scaleX(0);
+    transition: transform 200ms var(--ease);
+  }
+  .install-tab:hover { color: var(--fg); }
+  .install-tab.active { color: var(--fg); }
+  .install-tab.active::after { transform: scaleX(1); }
+  .install-tab .label-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    background: rgba(94,106,210,0.15);
+    color: var(--indigo-text);
+    padding: 1px 6px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .install-tab.active .label-tag { background: rgba(94,106,210,0.25); }
+
+  .install-body { padding: 22px; }
+  .install-pane { display: none; }
+  .install-pane.active { display: block; }
+
+  .install-desc {
+    color: var(--fg-dim); font-size: 13px; line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .install-desc strong { color: var(--fg); }
+
+  /* COPY BOX */
+  .copy-box {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    transition: all 200ms var(--ease);
+    cursor: pointer;
+  }
+  .copy-box:hover { border-color: rgba(94,106,210,0.4); }
+  .copy-box-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--fg);
+    direction: ltr;
+    flex: 1;
+    overflow-x: auto;
+    white-space: nowrap;
+    text-align: left;
+  }
+  .copy-box-text::before { content: '$ '; color: var(--indigo-text); }
+  .copy-box.no-prefix .copy-box-text::before { content: ''; }
+  .copy-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    color: var(--fg-dim);
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 150ms var(--ease);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .copy-btn:hover { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+  .copy-btn.copied { background: var(--success); color: var(--bg-deep); border-color: var(--success); }
+
+  .install-meta {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 16px; flex-wrap: wrap;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .install-meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .install-meta span::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--success);
+  }
+
+  /* ============================================
+     PUBLISH TOGGLE
+     ============================================ */
+  .publish-section {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px 22px;
+    display: flex; gap: 16px; align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .publish-content { flex: 1; }
+  .publish-title {
+    font-size: 15px; font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .publish-title .badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    background: rgba(94,106,210,0.15);
+    color: var(--indigo-text);
+    padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    border: 1px solid rgba(94,106,210,0.3);
+  }
+  .publish-desc {
+    color: var(--fg-dim); font-size: 13px; line-height: 1.6;
+  }
+  .switch {
+    width: 40px; height: 22px;
+    background: var(--bg-elev-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    position: relative; cursor: pointer;
+    transition: all 200ms var(--ease);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 1px; right: 1px;
+    width: 18px; height: 18px;
+    background: var(--fg-dim);
+    border-radius: 50%;
+    transition: all 250ms var(--ease);
+  }
+  .switch.on { background: var(--indigo); border-color: var(--indigo); box-shadow: 0 0 14px rgba(94,106,210,0.4); }
+  .switch.on::after { right: calc(100% - 19px); background: #fff; }
+
+  .publish-form {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: none;
+  }
+  .publish-form.visible { display: block; }
+  .field { margin-bottom: 12px; }
+  .field-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .input {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--fg);
+    font-family: inherit; font-size: 13px;
+    width: 100%;
+    transition: all 200ms var(--ease);
+  }
+  .input:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(94,106,210,0.15); }
+  .chips-input {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 9px 12px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+  }
+  .chip {
+    background: rgba(94,106,210,0.15);
+    color: var(--indigo-text);
+    border: 1px solid rgba(94,106,210,0.3);
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .chip .x { color: var(--indigo-text); cursor: pointer; opacity: 0.6; }
+  .chip .x:hover { opacity: 1; }
+
+  /* ============================================
+     ACTIONS BAR
+     ============================================ */
+  .actions-bar {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .actions-left { display: flex; gap: 8px; }
+
+  /* ============================================
+     TEMPLATES GALLERY
+     ============================================ */
+  .templates-head {
+    margin-bottom: 24px;
+  }
+  .templates-sub {
+    color: var(--fg-dim); font-size: 14px;
+    margin-top: 8px;
+    max-width: 580px;
+  }
+
+  .templates-filter {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .filter-tabs {
+    display: inline-flex;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .filter-tab {
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    color: var(--fg-dim);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 200ms var(--ease);
+  }
+  .filter-tab:hover { color: var(--fg); }
+  .filter-tab.active { background: var(--surface-strong); color: var(--fg); }
+  .filter-tab .count {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--fg-muted);
+    background: var(--surface);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .template-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 250ms var(--ease);
+    position: relative;
+    overflow: hidden;
+  }
+  .template-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--indigo) 50%, transparent);
+    opacity: 0; transition: opacity 250ms var(--ease);
+  }
+  .template-card:hover {
+    border-color: rgba(94,106,210,0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  }
+  .template-card:hover::before { opacity: 1; }
+
+  .template-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .template-tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--indigo-text);
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .template-stars {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .template-stars::before { content: '★'; color: var(--warning); }
+
+  .template-title {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.015em;
+    margin-bottom: 4px;
+  }
+  .template-desc {
+    color: var(--fg-dim); font-size: 13px; line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  .template-meta {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .template-chip {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--fg-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 7px; border-radius: 5px;
+  }
+  .template-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .author {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .author-avatar {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--indigo), var(--magenta));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* "START FROM" CARD (special) */
+  .start-from-card {
+    background:
+      radial-gradient(ellipse at top left, rgba(94,106,210,0.08), transparent 60%),
+      var(--bg-elev);
+    border: 1px dashed rgba(94,106,210,0.4);
+    border-radius: 14px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 250ms var(--ease);
+    display: flex; flex-direction: column;
+    grid-column: 1 / -1;
+    margin-bottom: 14px;
+  }
+  .start-from-card:hover {
+    border-style: solid;
+    border-color: rgba(94,106,210,0.6);
+    background:
+      radial-gradient(ellipse at top left, rgba(94,106,210,0.12), transparent 60%),
+      var(--bg-elev);
+  }
+  .start-from-row {
+    display: flex; gap: 12px; align-items: center;
+  }
+  .start-from-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, rgba(94,106,210,0.25), rgba(192,132,252,0.15));
+    border: 1px solid rgba(94,106,210,0.4);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--indigo-bright);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .start-from-text { flex: 1; }
+  .start-from-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .start-from-desc { font-size: 12px; color: var(--fg-dim); }
+  .start-from-cta {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--indigo-bright);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .start-from-cta .arrow { transition: transform 200ms var(--ease); }
+  .start-from-card:hover .start-from-cta .arrow { transform: translateX(-4px); }
+
+  /* ============================================
+     VIEW SWITCHER
+     ============================================ */
+  .view-switch {
+    position: fixed;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 100;
+    display: flex; gap: 4px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 4px;
+    backdrop-filter: blur(20px);
+  }
+  .view-tab {
+    padding: 8px 16px;
+    border-radius: 7px;
+    background: transparent;
+    border: none;
+    color: var(--fg-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 200ms var(--ease);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .view-tab.active {
+    background: var(--surface-strong);
+    color: var(--fg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  @media (max-width: 768px) {
+    .install-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <a href="#" class="brand">
+        <div class="brand-mark">G</div>
+        <div class="brand-name">GenerAgent</div>
+      </a>
+      <div class="nav-tabs">
+        <a href="#" class="nav-tab">החבילות שלי</a>
+        <a href="#" class="nav-tab active">טמפלייטים</a>
+        <a href="#" class="nav-tab">חיבורים</a>
+      </div>
+    </div>
+    <div class="nav-side">
+      <div class="avatar">RA</div>
+    </div>
+  </div>
+</nav>
+
+<!-- VIEW SWITCHER -->
+<div class="view-switch">
+  <button class="view-tab active" data-view="result">01 · package result</button>
+  <button class="view-tab" data-view="templates">02 · templates gallery</button>
+</div>
+
+<!-- ============ VIEW 1: PACKAGE RESULT ============ -->
+<div class="view active" id="view-result">
+  <main class="container narrow">
+
+    <!-- Success hero -->
+    <div class="result-hero">
+      <div class="success-orb">
+        <div class="so-haze"></div>
+        <div class="so-sphere"></div>
+        <div class="so-check">✓</div>
+      </div>
+      <div class="result-eyebrow">package ready · v1.0.0</div>
+      <h1 class="result-title">Personal Email Assistant</h1>
+      <p class="result-desc">סוכן שמסנן מיילים, מסמן 5 הכי דחופים, מוציא משימות לרשימה.<br>8 skills · 2 MCPs · ~15 דק׳ התקנה.</p>
+    </div>
+
+    <!-- Install methods -->
+    <div class="install-section">
+      <div class="install-header">
+        <div class="install-eyebrow">→ install methods · choose one</div>
+        <h2 class="install-title">איך להתקין</h2>
+      </div>
+
+      <div class="install-tabs">
+        <button class="install-tab active" data-pane="cli">
+          One-line install
+          <span class="label-tag">RECOMMENDED</span>
+        </button>
+        <button class="install-tab" data-pane="mcp">MCP URL</button>
+        <button class="install-tab" data-pane="zip">ZIP Download</button>
+      </div>
+
+      <div class="install-body">
+
+        <!-- CLI -->
+        <div class="install-pane active" id="pane-cli">
+          <div class="install-desc">
+            <strong>הכי מהיר.</strong> פותחים את Claude Code או Codex CLI, מדביקים, מאשרים — והסוכן מותקן ומוכן.
+            עובד על Mac / Linux / Windows.
+          </div>
+          <div class="copy-box" data-text="npx generagent install pkg_a1b2c3">
+            <div class="copy-box-text">npx generagent install pkg_a1b2c3</div>
+            <button class="copy-btn">העתק</button>
+          </div>
+          <div class="install-meta">
+            <span>תומך ב-Claude Code v0.4+</span>
+            <span>Codex CLI v1.0+</span>
+            <span>npm 9+</span>
+          </div>
+        </div>
+
+        <!-- MCP -->
+        <div class="install-pane" id="pane-mcp">
+          <div class="install-desc">
+            <strong>למשתמשי MCP מתקדמים.</strong> מוסיפים את ה-URL ל-mcp.json של Claude Code / Codex,
+            והחבילה מסתנכרנת אוטומטית. עדכונים מגיעים live.
+          </div>
+          <div class="copy-box no-prefix" data-text="https://generagent.ai/mcp/pkg_a1b2c3">
+            <div class="copy-box-text">https://generagent.ai/mcp/pkg_a1b2c3</div>
+            <button class="copy-btn">העתק URL</button>
+          </div>
+          <div class="install-meta">
+            <span>MCP spec 1.0</span>
+            <span>HTTP streaming</span>
+            <span>auto-updates</span>
+          </div>
+        </div>
+
+        <!-- ZIP -->
+        <div class="install-pane" id="pane-zip">
+          <div class="install-desc">
+            <strong>לעבודה offline / air-gapped.</strong> מורידים ZIP מקומי. כולל את כל הקבצים + INSTALL.md
+            בעברית עם screenshots צעד-אחר-צעד.
+          </div>
+          <button class="btn btn-secondary btn-md" style="width: 100%;">
+            הורד personal-email-assistant.zip · 12.4 KB
+          </button>
+          <div class="install-meta">
+            <span>signed with hash</span>
+            <span>LEGAL.md included</span>
+            <span>offline install</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Publish toggle -->
+    <div class="publish-section">
+      <div class="publish-content">
+        <div class="publish-title">
+          פרסם כטמפלייט קהילתי
+          <span class="badge">EARN STARS</span>
+        </div>
+        <div class="publish-desc">
+          אחרים יוכלו להתחיל את הסוכן שלהם מהבסיס שלך. הם מתאימים, אתה מקבל ★ — אנונימי לחלוטין.
+        </div>
+
+        <div class="publish-form" id="publish-form">
+          <div class="field">
+            <label class="field-label">שם פומבי</label>
+            <input class="input" value="Email Assistant — for solo CPAs">
+          </div>
+          <div class="field">
+            <label class="field-label">תיאור קצר (לתצוגה ב-gallery)</label>
+            <input class="input" value="מבוסס על workflow של רואה חשבון עצמאי עם 40 לקוחות">
+          </div>
+          <div class="field">
+            <label class="field-label">tags · עוזרים לאחרים למצוא</label>
+            <div class="chips-input">
+              <div class="chip">accountant <span class="x">×</span></div>
+              <div class="chip">solo <span class="x">×</span></div>
+              <div class="chip">email-heavy <span class="x">×</span></div>
+              <div class="chip">+ הוסף</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="switch" id="publish-switch"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-bar">
+      <div class="actions-left">
+        <button class="btn btn-ghost btn-md">חזרה ל-dashboard</button>
+        <button class="btn btn-ghost btn-md">צור עוד</button>
+      </div>
+      <button class="btn btn-primary btn-lg">סיים <span class="arrow">←</span></button>
+    </div>
+
+  </main>
+</div>
+
+<!-- ============ VIEW 2: TEMPLATES GALLERY ============ -->
+<div class="view" id="view-templates">
+  <main class="container">
+
+    <div class="page-head">
+      <div>
+        <div class="page-eyebrow">→ community · 47 templates</div>
+        <h1 class="page-title">טמפלייטים מהקהילה</h1>
+        <p class="templates-sub">
+          סוכנים שנוצרו על-ידי משתמשים אחרים. התחל מאחד מהם — או מ-0 — והבוט יתאים לצרכים שלך.
+        </p>
+      </div>
+    </div>
+
+    <!-- "Start from" sticky bar -->
+    <div class="start-from-card">
+      <div class="start-from-row">
+        <div class="start-from-icon">✦</div>
+        <div class="start-from-text">
+          <div class="start-from-title">להתחיל מאפס במקום מטמפלייט?</div>
+          <div class="start-from-desc">הבוט ישאל אותך 7-15 שאלות ויאפיין הכל מהבסיס.</div>
+        </div>
+        <div class="start-from-cta">התחל ראיון חדש <span class="arrow">←</span></div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="templates-filter">
+      <div class="filter-tabs">
+        <button class="filter-tab active">הכל <span class="count">47</span></button>
+        <button class="filter-tab">פופולריים <span class="count">12</span></button>
+        <button class="filter-tab">חדשים <span class="count">8</span></button>
+        <button class="filter-tab">accountant <span class="count">5</span></button>
+        <button class="filter-tab">manager <span class="count">9</span></button>
+        <button class="filter-tab">creator <span class="count">6</span></button>
+        <button class="filter-tab">developer <span class="count">11</span></button>
+      </div>
+    </div>
+
+    <!-- Templates grid -->
+    <div class="templates-grid">
+
+      <div class="template-card">
+        <div class="template-head">
+          <div class="template-tag">accountant · solo</div>
+          <div class="template-stars">142</div>
+        </div>
+        <div class="template-title">Email Assistant — for solo CPAs</div>
+        <div class="template-desc">מבוסס workflow של רואה חשבון עצמאי. סינון + סיכום + משימות.</div>
+        <div class="template-meta">
+          <div class="template-chip">8 skills</div>
+          <div class="template-chip">gmail</div>
+          <div class="template-chip">calendar</div>
+        </div>
+        <div class="template-footer">
+          <div class="author"><div class="author-avatar">RA</div> roni_apter</div>
+          <div>314 installs</div>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-head">
+          <div class="template-tag">manager · meetings</div>
+          <div class="template-stars">89</div>
+        </div>
+        <div class="template-title">Meeting Co-pilot</div>
+        <div class="template-desc">סיכומי זום אוטומטיים, action items, follow-ups לכל המשתתפים.</div>
+        <div class="template-meta">
+          <div class="template-chip">5 skills</div>
+          <div class="template-chip">zoom</div>
+          <div class="template-chip">slack</div>
+        </div>
+        <div class="template-footer">
+          <div class="author"><div class="author-avatar">YK</div> yael_k</div>
+          <div>208 installs</div>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-head">
+          <div class="template-tag">creator · content</div>
+          <div class="template-stars">203</div>
+        </div>
+        <div class="template-title">Content Pipeline Manager</div>
+        <div class="template-desc">מרעיון לפרסום — research, draft, edit, schedule. עובד עם Notion + Buffer.</div>
+        <div class="template-meta">
+          <div class="template-chip">7 skills</div>
+          <div class="template-chip">notion</div>
+          <div class="template-chip">buffer</div>
+          <div class="template-chip">perplexity</div>
+        </div>
+        <div class="template-footer">
+          <div class="author"><div class="author-avatar">SL</div> shai_lev</div>
+          <div>567 installs</div>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-head">
+          <div class="template-tag">developer · oss</div>
+          <div class="template-stars">412</div>
+        </div>
+        <div class="template-title">PR Reviewer Pro</div>
+        <div class="template-desc">סוקר PRs ב-GitHub אוטומטית — security, style, tests. עוזר ל-maintainers.</div>
+        <div class="template-meta">
+          <div class="template-chip">6 skills</div>
+          <div class="template-chip">github</div>
+          <div class="template-chip">linear</div>
+        </div>
+        <div class="template-footer">
+          <div class="author"><div class="author-avatar">MK</div> moshe_k</div>
+          <div>1.2k installs</div>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-head">
+          <div class="template-tag">accountant · agency</div>
+          <div class="template-stars">67</div>
+        </div>
+        <div class="template-title">Multi-Client Bookkeeper</div>
+        <div class="template-desc">לבית רואי-חשבון. מסנן מיילים לפי לקוח, מציג סטטוס, מציין פערים.</div>
+        <div class="template-meta">
+          <div class="template-chip">9 skills</div>
+          <div class="template-chip">gmail</div>
+          <div class="template-chip">quickbooks</div>
+        </div>
+        <div class="template-footer">
+          <div class="author"><div class="author-avatar">DA</div> david_a</div>
+          <div>148 installs</div>
+        </div>
+      </div>
+
+      <div class="template-card">
+        <div class="template-head">
+          <div class="template-tag">manager · async</div>
+          <div class="template-stars">94</div>
+        </div>
+        <div class="template-title">Async Team Lead</div>
+        <div class="template-desc">לצוותים מבוזרים. מסכם standups, מציין blockers, מתעדף משימות.</div>
+        <div class="template-meta">
+          <div class="template-chip">7 skills</div>
+          <div class="template-chip">slack</div>
+          <div class="template-chip">linear</div>
+        </div>
+        <div class="template-footer">
+          <div class="author"><div class="author-avatar">NL</div> noa_l</div>
+          <div>231 installs</div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // View switcher
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    });
+  });
+
+  // Install tabs
+  document.querySelectorAll('.install-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.install-pane').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('pane-' + tab.dataset.pane).classList.add('active');
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll('.copy-box').forEach(box => {
+    box.addEventListener('click', () => {
+      const text = box.dataset.text;
+      const btn = box.querySelector('.copy-btn');
+      navigator.clipboard?.writeText(text);
+      btn.textContent = '✓ הועתק';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = box.querySelector('.copy-btn').dataset.original || 'העתק';
+        btn.classList.remove('copied');
+      }, 1800);
+    });
+  });
+
+  // Filter tabs (visual only)
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tab.parentElement.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Publish toggle
+  const pubSwitch = document.getElementById('publish-switch');
+  const pubForm = document.getElementById('publish-form');
+  pubSwitch.addEventListener('click', () => {
+    pubSwitch.classList.toggle('on');
+    pubForm.classList.toggle('visible', pubSwitch.classList.contains('on'));
+  });
+</script>
+
+</body>
+</html>
