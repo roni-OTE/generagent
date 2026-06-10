@@ -17,6 +17,7 @@ type Analysis = {
   guardrails_he: string[];
   target_platform: "claude-code" | "codex" | "both";
   install_difficulty: "easy" | "medium" | "advanced";
+  install_command_hint?: string;
   confidence: number;
 };
 
@@ -144,8 +145,22 @@ export default async function ConsultResultPage({
           </Section>
         )}
 
+        {/* Install command (CLI) */}
+        <Section title="התקנה — שורה אחת בטרמינל">
+          <p className="text-[12px] text-white/50 mb-3 leading-relaxed">
+            הסוכן ייכנס לפרויקט שלך עם פקודה אחת. אין מה להוריד, אין ZIP — פשוט להעתיק ולהדביק.
+          </p>
+          <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+{`# מתוך הפרויקט שלך:
+npx generagent install ${id}
+
+# או:
+curl -fsSL https://generagent.io/i/${id} | bash`}
+          </pre>
+        </Section>
+
         {/* System prompt */}
-        <Section title="System prompt (להעתקה)">
+        <Section title="System prompt (להעתקה ידנית)">
           <pre className="text-xs text-white/80 bg-black/30 border border-white/[0.06] rounded-lg p-4 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
             {a.system_prompt_he}
           </pre>
@@ -157,11 +172,8 @@ export default async function ConsultResultPage({
             href="/dashboard"
             className="px-5 py-2.5 rounded-xl text-sm text-white/80 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-colors"
           >
-            חזרה ל-Dashboard
+            חזרה לדאשבורד
           </Link>
-          <span className="px-5 py-2.5 rounded-xl text-sm text-white/40 bg-white/[0.02] border border-white/[0.06] cursor-not-allowed">
-            הורדת חבילה · בקרוב
-          </span>
         </div>
       </div>
     </div>
