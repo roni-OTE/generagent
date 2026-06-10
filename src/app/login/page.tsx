@@ -1,19 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Orb from "@/components/Orb";
 import Button from "@/components/Button";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState<"google" | "email" | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const e = params.get("error");
+    const d = params.get("detail");
+    if (e) setErr(d ? `${e} — ${d}` : e);
+  }, [params]);
 
   async function signInWithGoogle() {
     setBusy("google");
