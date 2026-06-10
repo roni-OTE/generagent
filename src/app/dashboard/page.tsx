@@ -84,14 +84,12 @@ export default async function DashboardPage() {
             <p className="text-[var(--fg-dim)] text-[14px] mb-7 leading-relaxed">
               שיחה של ~5 דקות עם ארי, ויש לך סוכן AI מותאם אישית — מוכן להתקנה ב-Claude Code או Codex CLI.
             </p>
-            <Link
-              href="#"
-              onClick={(e) => e.preventDefault()}
-              className="inline-block px-6 py-3 rounded-xl text-[14px] font-semibold text-white hover:opacity-90"
+            <div
+              className="inline-block px-6 py-3 rounded-xl text-[14px] font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)", boxShadow: "0 6px 24px rgba(94,106,210,0.3)" }}
             >
-              לחץ "+ שיחה חדשה" בצד ←
-            </Link>
+              לחץ &quot;+ שיחה חדשה&quot; בצד ←
+            </div>
           </div>
         ) : (
           <>
