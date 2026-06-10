@@ -22,14 +22,14 @@ export default async function DashboardPage() {
     return <div className="p-10">Profile not found. Please sign out and back in.</div>;
   }
 
-  const { data: legal } = await supabase
+  const { data: legalRows } = await supabase
     .from("legal_acceptances")
     .select("id")
     .eq("user_id", user.id)
     .eq("document", "terms")
     .eq("version", "v1.0")
-    .maybeSingle();
-  if (!legal) redirect("/legal/accept");
+    .limit(1);
+  if (!legalRows || legalRows.length === 0) redirect("/legal/accept");
 
   const ent = computeEntitlement(profile);
 

@@ -13,14 +13,14 @@ export default async function LegalAcceptPage() {
   if (!user) redirect("/login");
 
   // Already accepted this version?
-  const { data: existing } = await supabase
+  const { data: existingRows } = await supabase
     .from("legal_acceptances")
     .select("id")
     .eq("user_id", user.id)
     .eq("document", "terms")
     .eq("version", TOS_VERSION)
-    .maybeSingle();
-  if (existing) redirect("/dashboard");
+    .limit(1);
+  if (existingRows && existingRows.length > 0) redirect("/dashboard");
 
   return (
     <>
