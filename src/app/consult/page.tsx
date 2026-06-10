@@ -36,8 +36,11 @@ export default function ConsultPage() {
   const [done, setDone] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
     void startConsultation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
