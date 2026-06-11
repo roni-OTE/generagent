@@ -1,5 +1,6 @@
 import Orb from "@/components/Orb";
 import Button from "@/components/Button";
+import Logo from "@/components/Logo";
 import Link from "next/link";
 
 export default function Home() {
@@ -12,10 +13,7 @@ export default function Home() {
             href="/"
             className="flex items-center gap-2.5 text-[var(--fg)] no-underline"
           >
-            <span className="brand-mark">G</span>
-            <span className="font-bold text-[15px] tracking-[-0.005em]">
-              GenerAgent
-            </span>
+            <Logo size="md" />
           </Link>
           <div className="flex gap-2 items-center">
             <Link href="/login">

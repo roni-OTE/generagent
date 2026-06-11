@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { computeEntitlement } from "@/lib/entitlement";
 import WorkspaceShell from "@/components/WorkspaceShell";
 import Orb from "@/components/Orb";
+import NewChatButton from "@/components/NewChatButton";
 
 export const metadata = { title: "Dashboard · GenerAgent" };
 
@@ -82,14 +83,14 @@ export default async function DashboardPage() {
               עדיין אין לך סוכנים
             </h1>
             <p className="text-[var(--fg-dim)] text-[14px] mb-7 leading-relaxed">
-              שיחה של ~5 דקות עם ארי, ויש לך סוכן AI מותאם אישית — מוכן להתקנה ב-Claude Code או Codex CLI.
+              שיחה של ~5 דקות עם נועם, ויש לך סוכן AI מותאם אישית — מוכן להתקנה ב-Claude Code או Codex CLI.
             </p>
-            <div
-              className="inline-block px-6 py-3 rounded-xl text-[14px] font-semibold text-white"
+            <NewChatButton
+              className="inline-block px-6 py-3 rounded-xl text-[14px] font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-60"
               style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)", boxShadow: "0 6px 24px rgba(94,106,210,0.3)" }}
             >
-              לחץ &quot;+ שיחה חדשה&quot; בצד ←
-            </div>
+              התחל שיחה עם נועם ←
+            </NewChatButton>
           </div>
         ) : (
           <>

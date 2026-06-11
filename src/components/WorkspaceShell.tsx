@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Logo from "@/components/Logo";
 
 type Chat = {
   id: string;
@@ -101,16 +102,7 @@ export default function WorkspaceShell({
         {/* logo + new chat */}
         <div className="px-4 pt-4 pb-3 border-b border-[var(--border)]">
           <Link href="/dashboard" className="flex items-center gap-2 mb-4 no-underline">
-            <span
-              style={{
-                width: 24, height: 24, borderRadius: 6,
-                background: "linear-gradient(135deg, var(--indigo), var(--magenta))",
-                boxShadow: "0 0 12px rgba(94,106,210,0.4)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontWeight: 800, fontSize: 12,
-              }}
-            >G</span>
-            <span className="font-bold text-[14px] text-white">GenerAgent</span>
+            <Logo size="sm" />
           </Link>
           <button
             onClick={createNewChat}

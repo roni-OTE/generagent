@@ -145,18 +145,27 @@ export default async function ConsultResultPage({
           </Section>
         )}
 
-        {/* Install command (CLI) */}
-        <Section title="התקנה — שורה אחת בטרמינל">
+        {/* Install command (CLI) — both platforms */}
+        <Section title="התקנה — בחר את הכלי שלך">
           <p className="text-[12px] text-white/50 mb-3 leading-relaxed">
-            הסוכן ייכנס לפרויקט שלך עם פקודה אחת. אין מה להוריד, אין ZIP — פשוט להעתיק ולהדביק.
+            הסוכן ייכנס לפרויקט שלך עם פקודה אחת. אין מה להוריד, אין ZIP.
           </p>
-          <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
-{`# מתוך הפרויקט שלך:
-npx generagent install ${id}
-
-# או:
-curl -fsSL https://generagent.io/i/${id} | bash`}
-          </pre>
+          <div className="space-y-3">
+            <div>
+              <div className="text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-1.5">Claude Code</div>
+              <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+{`npx generagent install ${id}`}
+              </pre>
+              <div className="text-[10px] text-[var(--fg-muted)] font-mono mt-1" dir="ltr">או: curl -fsSL https://generagent.io/i/{id} | bash</div>
+            </div>
+            <div>
+              <div className="text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-1.5">Codex CLI</div>
+              <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+{`codex agents add @generagent/${id}`}
+              </pre>
+              <div className="text-[10px] text-[var(--fg-muted)] font-mono mt-1" dir="ltr">או: curl -fsSL https://generagent.io/c/{id} | codex install -</div>
+            </div>
+          </div>
         </Section>
 
         {/* System prompt */}
