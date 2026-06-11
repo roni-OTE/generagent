@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
-import { BOT_SYSTEM_PROMPT } from "@/lib/bot/prompts";
+import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 
 export const runtime = "nodejs";
 
@@ -13,6 +13,7 @@ type BotTurn = {
   question_id: string;
   micro_explanation: string;
   question: string;
+  captured_name?: string | null;
   detected_persona: string | null;
   confidence: number;
   should_continue: boolean;
@@ -36,7 +37,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
-  // Verify ownership
   const { data: consultation } = await supabase
     .from("consultations")
     .select("*")
@@ -49,14 +49,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "not_in_progress" }, { status: 409 });
   }
 
-  // Persist user message
+  // Load profile to know name
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .single();
+
   await supabase.from("messages").insert({
     consultation_id,
     role: "user",
     content: user_answer,
   });
 
-  // Fetch full transcript
   const { data: msgs } = await supabase
     .from("messages")
     .select("role, content, question_id, micro_explanation")
@@ -87,7 +92,7 @@ export async function POST(req: Request) {
   const resp = await anthropic.messages.create({
     model: BOT_MODEL,
     max_tokens: 800,
-    system: BOT_SYSTEM_PROMPT + suffixHint,
+    system: buildBotSystemPrompt({ userName: profile?.display_name ?? null }) + suffixHint,
     messages: history,
   });
 
@@ -103,9 +108,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "parse_failed", raw: textBlock.text }, { status: 500 });
   }
 
+  // Capture name from bot's response and update profile
+  if (turn.captured_name && typeof turn.captured_name === "string" && turn.captured_name.trim().length > 0) {
+    const cleanName = turn.captured_name.trim().slice(0, 60);
+    await supabase
+      .from("profiles")
+      .update({ display_name: cleanName, updated_at: new Date().toISOString() })
+      .eq("id", user.id);
+  }
+
   const shouldClose = forceClose || turn.phase === "done" || !turn.should_continue;
 
-  // Persist bot message
   await supabase.from("messages").insert({
     consultation_id,
     role: "bot",
@@ -114,7 +127,6 @@ export async function POST(req: Request) {
     micro_explanation: turn.micro_explanation,
   });
 
-  // Update consultation
   await supabase
     .from("consultations")
     .update({

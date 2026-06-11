@@ -153,8 +153,11 @@ export default function WorkspaceShell({
         </div>
 
         {/* footer */}
-        <div className="border-t border-[var(--border)] px-3 py-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="border-t border-[var(--border)] px-2 py-2">
+          <Link
+            href="/account"
+            className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-[var(--surface)] transition-colors no-underline"
+          >
             <div
               className="w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-white font-semibold text-[11px]"
               style={{ background: "linear-gradient(135deg, var(--indigo), var(--magenta))" }}
@@ -164,18 +167,18 @@ export default function WorkspaceShell({
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[12px] text-white truncate">{displayName || userEmail}</div>
-              {isAdmin && (
-                <Link href="/admin" className="text-[10px] text-[var(--magenta)] hover:underline">
-                  ★ admin
-                </Link>
-              )}
+              <div className="text-[10px] text-[var(--fg-muted)]">החשבון שלי →</div>
             </div>
-          </div>
-          <form action="/api/auth/signout" method="post">
-            <button type="submit" className="text-[11px] text-[var(--fg-muted)] hover:text-[var(--fg)]">
-              התנתק
-            </button>
-          </form>
+          </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 px-2 py-1.5 mt-1 rounded-lg text-[11px] text-[var(--magenta)] hover:bg-[rgba(192,132,252,0.08)] transition-colors no-underline"
+            >
+              <span>★</span>
+              <span>admin console</span>
+            </Link>
+          )}
         </div>
       </aside>
 

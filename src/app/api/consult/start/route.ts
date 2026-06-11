@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
-import { BOT_SYSTEM_PROMPT } from "@/lib/bot/prompts";
+import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 
 export const runtime = "nodejs";
 
@@ -10,6 +10,7 @@ type BotTurn = {
   question_id: string;
   micro_explanation: string;
   question: string;
+  captured_name?: string | null;
   detected_persona: string | null;
   confidence: number;
   should_continue: boolean;
@@ -18,7 +19,6 @@ type BotTurn = {
 
 function extractJson(text: string): BotTurn {
   const trimmed = text.trim();
-  // Strip code fences if present
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
   const candidate = fenceMatch ? fenceMatch[1] : trimmed;
   return JSON.parse(candidate) as BotTurn;
@@ -32,7 +32,13 @@ export async function POST(req: Request) {
   let body: { source_template_id?: string | null } = {};
   try { body = await req.json(); } catch {}
 
-  // Create consultation row
+  // Load profile to know the user's display name
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, email")
+    .eq("id", user.id)
+    .single();
+
   const { data: consultation, error: cErr } = await supabase
     .from("consultations")
     .insert({
@@ -48,12 +54,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: cErr?.message ?? "create_failed" }, { status: 500 });
   }
 
-  // Call Claude for first turn
   const anthropic = getAnthropic();
   const resp = await anthropic.messages.create({
     model: BOT_MODEL,
     max_tokens: 800,
-    system: BOT_SYSTEM_PROMPT,
+    system: buildBotSystemPrompt({ userName: profile?.display_name ?? null }),
     messages: [{ role: "user", content: "התחל את הייעוץ. השאלה הראשונה." }],
   });
 
@@ -69,7 +74,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "parse_failed", raw: textBlock.text }, { status: 500 });
   }
 
-  // Persist bot message
   await supabase.from("messages").insert({
     consultation_id: consultation.id,
     role: "bot",
@@ -78,7 +82,6 @@ export async function POST(req: Request) {
     micro_explanation: turn.micro_explanation,
   });
 
-  // Update consultation counters
   await supabase
     .from("consultations")
     .update({
@@ -90,8 +93,5 @@ export async function POST(req: Request) {
     })
     .eq("id", consultation.id);
 
-  return NextResponse.json({
-    consultation_id: consultation.id,
-    turn,
-  });
+  return NextResponse.json({ consultation_id: consultation.id, turn });
 }
