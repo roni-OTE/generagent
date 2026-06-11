@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "תמליל שיחה · Admin" };
+export const dynamic = "force-dynamic";
 
 interface PageProps { params: Promise<{ id: string }>; }
 
@@ -14,35 +15,44 @@ export default async function ConsultationTranscriptPage({ params }: PageProps) 
   const { data: me } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
   if (me?.plan !== "admin") redirect("/dashboard");
 
+  // Fetch consultation without join (RLS-safe)
   const { data: consultation } = await supabase
     .from("consultations")
-    .select("*, profiles!consultations_user_id_fkey(email, display_name)")
+    .select("*")
     .eq("id", id)
     .single();
   if (!consultation) notFound();
 
+  // Fetch profile separately
+  const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("email, display_name")
+    .eq("id", consultation.user_id)
+    .single();
+
+  // Messages
   const { data: messages } = await supabase
     .from("messages")
-    .select("*")
+    .select("id, role, content, micro_explanation, created_at")
     .eq("consultation_id", id)
     .order("created_at", { ascending: true });
 
   return (
     <>
       <nav className="backdrop-blur-[20px] bg-[rgba(2,2,3,0.6)] border-b border-[var(--border)] py-3.5">
-        <div className="max-w-[900px] mx-auto px-6 flex items-center gap-4">
+        <div className="max-w-[900px] mx-auto px-6 flex items-center gap-4 flex-wrap">
           <Link href="/admin" className="text-[var(--fg-dim)] hover:text-[var(--fg)] font-mono text-[12px]">← admin</Link>
           <span className="text-[var(--fg-muted)]">/</span>
           <Link href={`/admin/users/${consultation.user_id}`} className="text-[var(--fg-dim)] hover:text-[var(--fg)] font-mono text-[12px]">
-            {consultation.profiles?.email ?? "user"}
+            {targetProfile?.email ?? "user"}
           </Link>
           <span className="text-[var(--fg-muted)]">/</span>
-          <span className="font-mono text-[12px] text-[var(--fg)]">consultation {id.slice(0,8)}</span>
+          <span className="font-mono text-[12px] text-[var(--fg)]">consultation {id.slice(0, 8)}</span>
         </div>
       </nav>
 
       <main className="max-w-[900px] mx-auto px-6 py-10 flex-1">
-        <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[16px] p-5 mb-6 flex justify-between gap-4 flex-wrap font-mono text-[11px]">
+        <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[16px] p-5 mb-6 grid grid-cols-2 sm:grid-cols-5 gap-4 font-mono text-[11px]">
           <div><span className="text-[var(--fg-muted)] uppercase tracking-[0.1em] block mb-1">status</span>{consultation.status}</div>
           <div><span className="text-[var(--fg-muted)] uppercase tracking-[0.1em] block mb-1">phase</span>{consultation.phase}</div>
           <div><span className="text-[var(--fg-muted)] uppercase tracking-[0.1em] block mb-1">questions</span>{consultation.question_count}</div>
@@ -63,7 +73,7 @@ export default async function ConsultationTranscriptPage({ params }: PageProps) 
                   : "bg-[var(--surface)] border border-[rgba(192,132,252,0.25)] rounded-[14px] px-4 py-3 max-w-full font-mono text-[12px] text-[var(--magenta)]"
               }
             >
-              <div className="text-[14px] leading-[1.6]">{m.content}</div>
+              <div className="text-[14px] leading-[1.6] whitespace-pre-wrap">{m.content}</div>
               {m.micro_explanation && (
                 <div className="text-[11px] text-[var(--fg-muted)] font-mono mt-2 opacity-70" dir="ltr">→ {m.micro_explanation}</div>
               )}
@@ -73,14 +83,14 @@ export default async function ConsultationTranscriptPage({ params }: PageProps) 
             </div>
           ))}
           {(!messages || messages.length === 0) && (
-            <div className="text-center py-12 text-[var(--fg-dim)]">אין הודעות בשיחה זו.</div>
+            <div className="text-center py-12 text-[var(--fg-dim)]">אין הודעות בשיחה זו (יתכן ש-RLS חוסם, או שזו שיחה ריקה).</div>
           )}
         </div>
 
-        {consultation.analysis_json && (
+        {consultation.analysis_json !== null && consultation.analysis_json !== undefined && (
           <>
             <h2 className="text-[18px] font-bold mb-4">ניתוח מערכתי</h2>
-            <pre className="bg-[var(--bg-deep)] border border-[var(--border)] rounded-[12px] p-4 font-mono text-[12px] text-[var(--fg)] overflow-auto" dir="ltr">
+            <pre className="bg-[var(--bg-deep)] border border-[var(--border)] rounded-[12px] p-4 font-mono text-[12px] text-[var(--fg)] overflow-auto whitespace-pre-wrap" dir="ltr">
 {JSON.stringify(consultation.analysis_json, null, 2)}
             </pre>
           </>
