@@ -12,6 +12,7 @@ type Analysis = {
   persona_match: string;
   core_capabilities: string[];
   required_connectors: string[];
+  intro_message_he?: string;
   system_prompt_he: string;
   first_tasks_he: string[];
   guardrails_he: string[];
@@ -20,11 +21,51 @@ type Analysis = {
   confidence: number;
 };
 
-function extractJson(text: string): Analysis {
+function extractJson<T>(text: string): T {
   const trimmed = text.trim();
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenceMatch ? fenceMatch[1] : trimmed;
-  return JSON.parse(candidate) as Analysis;
+  if (fenceMatch) {
+    try { return JSON.parse(fenceMatch[1]) as T; } catch {}
+  }
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
+  if (first !== -1 && last > first) {
+    try { return JSON.parse(trimmed.slice(first, last + 1)) as T; } catch {}
+  }
+  return JSON.parse(trimmed) as T;
+}
+
+async function callAnalyst(args: {
+  system: string;
+  userMessage: string;
+}): Promise<Analysis> {
+  const anthropic = getAnthropic();
+  let lastRaw = "";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const resp = await anthropic.messages.create({
+      model: BOT_MODEL,
+      max_tokens: 3000,
+      temperature: 0.3,
+      system:
+        args.system +
+        (attempt > 0
+          ? "\n\n⚠️ ניסיון קודם לא היה JSON תקין. החזר **רק** JSON, מתחיל ב-{ ומסתיים ב-}, ללא טקסט נוסף, ללא code-fence."
+          : ""),
+      messages: [
+        { role: "user" as const, content: args.userMessage },
+        { role: "assistant" as const, content: "{" },
+      ],
+    });
+    const textBlock = resp.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") continue;
+    lastRaw = "{" + textBlock.text;
+    try {
+      return extractJson<Analysis>(lastRaw);
+    } catch {
+      // try again
+    }
+  }
+  throw new Error("analyst_parse_failed: " + lastRaw.slice(0, 200));
 }
 
 export async function POST(req: Request) {
@@ -54,27 +95,20 @@ export async function POST(req: Request) {
     .map((m) => `[${m.role}]: ${m.content}`)
     .join("\n\n");
 
-  const anthropic = getAnthropic();
-  const resp = await anthropic.messages.create({
-    model: BOT_MODEL,
-    max_tokens: 2000,
-    system: ANALYSIS_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: `transcript:\n\n${transcript}\n\nתפיק את האפיון.` }],
-  });
-
-  const textBlock = resp.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json({ error: "no_text_response" }, { status: 500 });
-  }
-
   let analysis: Analysis;
   try {
-    analysis = extractJson(textBlock.text);
-  } catch {
-    return NextResponse.json({ error: "parse_failed", raw: textBlock.text }, { status: 500 });
+    analysis = await callAnalyst({
+      system: ANALYSIS_SYSTEM_PROMPT,
+      userMessage: `transcript:\n\n${transcript}\n\nתפיק את האפיון.`,
+    });
+  } catch (e: unknown) {
+    console.error("[finalize] parse failed after retries", e);
+    return NextResponse.json(
+      { error: "parse_failed", detail: e instanceof Error ? e.message.slice(0, 200) : "unknown" },
+      { status: 500 }
+    );
   }
 
-  // Update consultation
   await supabase
     .from("consultations")
     .update({
@@ -87,7 +121,6 @@ export async function POST(req: Request) {
     })
     .eq("id", consultation_id);
 
-  // Create the package row so install/p/[id]/dashboard all work
   const targetPlatforms =
     analysis.target_platform === "both"
       ? ["claude-code", "codex"]
@@ -109,7 +142,6 @@ export async function POST(req: Request) {
     .select("id")
     .single();
 
-  // Increment user's custom_agents_count
   if (pkg) {
     await supabase.rpc("increment_custom_agents", { p_user_id: user.id }).then(
       () => undefined,
