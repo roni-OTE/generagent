@@ -106,8 +106,14 @@ export async function GET(
 }
 
 function makeHandle(name: string): string {
-  // Try to extract Latin chars; if all Hebrew, return ""
-  const latin = name
+  // Extract the personal-name part: first word, before " — " / " - " / first space
+  const firstWord = name
+    .split(/[—\-\s,·•|/]+/u)
+    .map((s) => s.trim())
+    .find((s) => s.length > 0) ?? name;
+
+  // If it already has Latin chars, use them
+  const latin = firstWord
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[̀-ͯ]/g, "")
@@ -115,13 +121,17 @@ function makeHandle(name: string): string {
   if (latin && latin.length > 0) {
     return latin.join("-").slice(0, 30);
   }
-  // No Latin chars — try to transliterate a few common Hebrew first names
+
+  // Otherwise — match the FIRST WORD against known Hebrew first names (exact, not substring)
   const map: Record<string, string> = {
     "תמר": "tamar",
     "יואב": "yoav",
+    "יוסי": "yossi",
     "אריאל": "ariel",
     "נועם": "noam",
+    "נועה": "noa",
     "דנה": "dana",
+    "דניאל": "daniel",
     "רוני": "roni",
     "איתי": "itay",
     "מאיה": "maya",
@@ -129,9 +139,56 @@ function makeHandle(name: string): string {
     "אורי": "ori",
     "ניר": "nir",
     "עומר": "omer",
+    "עמית": "amit",
+    "אלון": "alon",
+    "אביב": "aviv",
+    "אבי": "avi",
+    "שירה": "shira",
+    "תום": "tom",
+    "יעל": "yael",
+    "הילה": "hila",
+    "ליאור": "lior",
+    "ליאת": "liat",
+    "גלית": "galit",
+    "גל": "gal",
+    "אסף": "asaf",
+    "אדי": "edi",
+    "רונית": "ronit",
+    "מיכל": "michal",
+    "מיכאל": "michael",
+    "ברק": "barak",
+    "אופיר": "ofir",
+    "אילן": "ilan",
+    "אילנה": "ilana",
+    "טל": "tal",
+    "מור": "mor",
+    "עידן": "idan",
+    "סער": "saar",
+    "סיון": "sivan",
+    "אייל": "eyal",
+    "יהודה": "yehuda",
+    "יהונתן": "yehonatan",
+    "שרון": "sharon",
+    "אהוד": "ehud",
+    "רחל": "rachel",
+    "שרה": "sara",
+    "לאה": "leah",
+    "אסתר": "esther",
+    "חיים": "haim",
+    "ירון": "yaron",
   };
-  for (const [heb, en] of Object.entries(map)) {
-    if (name.includes(heb)) return en;
-  }
-  return "";
+  if (map[firstWord]) return map[firstWord];
+
+  // Fallback: char-by-char transliteration of the first word
+  const charMap: Record<string, string> = {
+    "א": "a", "ב": "b", "ג": "g", "ד": "d", "ה": "h", "ו": "v", "ז": "z",
+    "ח": "h", "ט": "t", "י": "y", "כ": "k", "ך": "k", "ל": "l", "מ": "m",
+    "ם": "m", "נ": "n", "ן": "n", "ס": "s", "ע": "a", "פ": "p", "ף": "p",
+    "צ": "tz", "ץ": "tz", "ק": "k", "ר": "r", "ש": "sh", "ת": "t",
+  };
+  const translit = Array.from(firstWord)
+    .map((c) => charMap[c] ?? "")
+    .join("")
+    .slice(0, 20);
+  return translit || "agent";
 }
