@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { makeHandle, firstWord } from "@/lib/handle";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export async function GET(
   const platform = (url.searchParams.get("platform") ?? "claude-code") as
     | "claude-code"
     | "codex";
+  const format = (url.searchParams.get("format") ?? "md") as "md" | "script";
 
   const supabase = createServiceClient();
 
@@ -81,7 +83,7 @@ export async function GET(
   }
 
   const m: Manifest = pkg.manifest_json ?? {};
-  const body = renderMarkdown({
+  const mdBody = renderMarkdown({
     platform,
     name: pkg.name,
     description: pkg.description,
@@ -90,14 +92,101 @@ export async function GET(
     manifest: m,
   });
 
-  return new NextResponse(body, {
+  // Shell-script format: one-liner installer that writes the file AND prints a beautiful greeting
+  if (format === "script") {
+    const script = renderInstallScript({
+      platform,
+      agentName: m.agent_name ?? pkg.name,
+      mdBody,
+      firstTasks: m.first_tasks_he ?? [],
+    });
+    return new NextResponse(script, {
+      status: 200,
+      headers: {
+        "content-type": "text/x-shellscript; charset=utf-8",
+        "cache-control": "no-cache, no-store, must-revalidate",
+      },
+    });
+  }
+
+  return new NextResponse(mdBody, {
     status: 200,
     headers: {
       "content-type": "text/markdown; charset=utf-8",
-      "cache-control": "public, max-age=300",
+      "cache-control": "no-cache, no-store, must-revalidate",
       "content-disposition": `inline; filename="generagent-${id.slice(0, 8)}.md"`,
     },
   });
+}
+
+function renderInstallScript(args: {
+  platform: "claude-code" | "codex";
+  agentName: string;
+  mdBody: string;
+  firstTasks: string[];
+}): string {
+  const { platform, agentName, mdBody, firstTasks } = args;
+  const handle = makeHandle(agentName);
+  const short = firstWord(agentName);
+  const dir = platform === "claude-code" ? ".claude/agents" : ".codex/prompts";
+  const filename = `${handle}.md`;
+  const activation =
+    platform === "claude-code"
+      ? `use the ${handle} subagent`
+      : `use the ${handle} prompt`;
+  const platformLabel = platform === "claude-code" ? "Claude Code" : "Codex CLI";
+
+  // Use a heredoc with a unique sentinel to safely embed any MD content
+  const sentinel = "GENERAGENT_EOF_" + Math.random().toString(36).slice(2, 10);
+
+  const greetingLines = [
+    "═══════════════════════════════════════════════════════════════",
+    "",
+    `  🎉  ${agentName}`,
+    "",
+    `  הסוכנת מוכנה לעבודה — מותקנת ב-${dir}/${filename}`,
+    "",
+    "───────────────────────────────────────────────────────────────",
+    "",
+    `  👋  היי, אני ${short}!`,
+    `  אני כאן לעזור לך — ברגע שתפעיל אותי, נתחיל לעבוד יחד.`,
+  ];
+  if (firstTasks.length > 0) {
+    greetingLines.push("");
+    greetingLines.push("  💡  דברים שאפשר לבקש ממני מיד:");
+    greetingLines.push("");
+    firstTasks.slice(0, 3).forEach((t, i) => {
+      greetingLines.push(`     ${i + 1}.  ${t}`);
+    });
+  }
+  greetingLines.push("");
+  greetingLines.push("───────────────────────────────────────────────────────────────");
+  greetingLines.push("");
+  greetingLines.push(`  🚀  להפעיל אותי ב-${platformLabel}, תכתוב:`);
+  greetingLines.push("");
+  greetingLines.push(`         ${activation}`);
+  greetingLines.push("");
+  greetingLines.push(`  או בעברית: "${short}, תעזרי לי עם ..."`);
+  greetingLines.push("");
+  greetingLines.push("═══════════════════════════════════════════════════════════════");
+
+  // Bash-safe single-quote escape for the heredoc body & greeting block:
+  // Using <<'SENTINEL' prevents shell expansion entirely, so MD content is safe as-is
+  // (as long as it doesn't contain the sentinel itself, which is randomized).
+  return [
+    `#!/usr/bin/env bash`,
+    `set -e`,
+    `mkdir -p ${dir}`,
+    `cat > ${dir}/${filename} <<'${sentinel}'`,
+    mdBody,
+    sentinel,
+    `cat <<'GREET_END'`,
+    "",
+    ...greetingLines,
+    "",
+    `GREET_END`,
+    "",
+  ].join("\n");
 }
 
 function renderMarkdown(args: {

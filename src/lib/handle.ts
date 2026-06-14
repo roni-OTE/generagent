@@ -55,6 +55,15 @@ function shq(s: string): string {
  *  3. prints a beautiful Hebrew greeting + activation instructions
  * The printf is intentionally short so Codex/Claude Code display it verbatim.
  */
+// Note: shq() kept for backward compat but no longer used by buildInstallCommand
+export { shq };
+
+/**
+ * Clean install command using the short alias /i/<id> or /c/<id>.
+ * The endpoint returns a shell script that writes the file AND prints
+ * the rich Hebrew greeting — so the displayed command is short and
+ * mysterious, and the magic happens when it runs.
+ */
 export function buildInstallCommand(opts: {
   id: string;
   platform: "claude-code" | "codex";
@@ -62,56 +71,7 @@ export function buildInstallCommand(opts: {
   shortName?: string;
   firstTasks?: string[];
 }): string {
-  const { id, platform, agentName, firstTasks = [] } = opts;
-  const short = opts.shortName ?? firstWord(agentName);
-  const handle = makeHandle(agentName);
-  const dir = platform === "claude-code" ? ".claude/agents" : ".codex/prompts";
-  const filename = `${handle}.md`;
-  const url = `https://generagent.io/api/install/${id}?platform=${platform}`;
-  const activation =
-    platform === "claude-code"
-      ? `use the ${handle} subagent`
-      : `use the ${handle} prompt`;
-
-  const tasks = firstTasks
-    .slice(0, 3)
-    .map((t, i) => `  ${i + 1}.  ${t}`);
-
-  const greeting = [
-    "",
-    "═══════════════════════════════════════════════════════════════",
-    "",
-    `🎉  ${agentName}`,
-    "",
-    `הסוכנת מוכנה לעבודה — מותקנת ב-${dir}/${filename}`,
-    "",
-    "───────────────────────────────────────────────────────────────",
-    "",
-    `👋  היי, אני ${short}!`,
-    `אני כאן לעזור לך — ברגע שתפעיל אותי, נתחיל לעבוד יחד.`,
-  ];
-  if (tasks.length > 0) {
-    greeting.push("");
-    greeting.push("💡  דברים שאפשר לבקש ממני מיד:");
-    greeting.push("");
-    tasks.forEach((t) => greeting.push(t));
-  }
-  greeting.push("");
-  greeting.push("───────────────────────────────────────────────────────────────");
-  greeting.push("");
-  greeting.push(`🚀  להפעיל אותי ב-${platform === "claude-code" ? "Claude Code" : "Codex CLI"}, תכתוב:`);
-  greeting.push("");
-  greeting.push(`    ${activation}`);
-  greeting.push("");
-  greeting.push(`או בעברית: "${short}, תעזרי לי עם ..."`);
-  greeting.push("");
-  greeting.push("═══════════════════════════════════════════════════════════════");
-
-  const printfArg = greeting.join("\n");
-
-  return [
-    `mkdir -p ${dir}`,
-    `&& curl -fsSL ${shq(url)} -o ${shq(dir + "/" + filename)}`,
-    `&& printf '%s\\n' ${shq(printfArg)}`,
-  ].join(" ");
+  const { id, platform } = opts;
+  const alias = platform === "claude-code" ? "i" : "c";
+  return `curl -fsSL https://generagent.io/${alias}/${id} | bash`;
 }
