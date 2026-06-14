@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Orb from "@/components/Orb";
+import CopyableCode from "@/components/CopyableCode";
 
 export const dynamic = "force-dynamic";
 
@@ -150,21 +151,17 @@ export default async function ConsultResultPage({
           <p className="text-[12px] text-white/50 mb-3 leading-relaxed">
             הסוכן ייכנס לפרויקט שלך עם פקודה אחת. אין מה להוריד, אין ZIP.
           </p>
-          <div className="space-y-3">
-            <div>
-              <div className="text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-1.5">Claude Code</div>
-              <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
-{`npx generagent install ${id}`}
-              </pre>
-              <div className="text-[10px] text-[var(--fg-muted)] font-mono mt-1" dir="ltr">או: curl -fsSL https://generagent.io/i/{id} | bash</div>
-            </div>
-            <div>
-              <div className="text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-1.5">Codex CLI</div>
-              <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
-{`codex agents add @generagent/${id}`}
-              </pre>
-              <div className="text-[10px] text-[var(--fg-muted)] font-mono mt-1" dir="ltr">או: curl -fsSL https://generagent.io/c/{id} | codex install -</div>
-            </div>
+          <div className="space-y-4">
+            <CopyableCode
+              label="Claude Code"
+              code={`npx generagent install ${id}`}
+              alt={`curl -fsSL https://generagent.io/i/${id} | bash`}
+            />
+            <CopyableCode
+              label="Codex CLI"
+              code={`codex agents add @generagent/${id}`}
+              alt={`curl -fsSL https://generagent.io/c/${id} | codex install -`}
+            />
           </div>
         </Section>
 

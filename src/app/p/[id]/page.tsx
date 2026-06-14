@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/components/WorkspaceShell";
+import CopyableCode from "@/components/CopyableCode";
 
 export const dynamic = "force-dynamic";
 
@@ -128,15 +129,15 @@ export default async function PackagePage({
 
         {/* Install — both platforms */}
         <Section title="התקנה — בחר את הכלי שלך">
-          <div className="space-y-3">
-            <CliBlock
+          <div className="space-y-4">
+            <CopyableCode
               label="Claude Code"
-              cmd={`npx generagent install ${pkg.id}`}
+              code={`npx generagent install ${pkg.id}`}
               alt={`curl -fsSL https://generagent.io/i/${pkg.id} | bash`}
             />
-            <CliBlock
+            <CopyableCode
               label="Codex CLI"
-              cmd={`codex agents add @generagent/${pkg.id}`}
+              code={`codex agents add @generagent/${pkg.id}`}
               alt={`curl -fsSL https://generagent.io/c/${pkg.id} | codex install -`}
             />
           </div>
@@ -192,16 +193,3 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function CliBlock({ label, cmd, alt }: { label: string; cmd: string; alt: string }) {
-  return (
-    <div>
-      <div className="text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-1.5">
-        {label}
-      </div>
-      <pre className="text-[13px] text-white/90 bg-black/40 border border-indigo-500/20 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed mb-1.5">
-{cmd}
-      </pre>
-      <div className="text-[10px] text-[var(--fg-muted)] font-mono" dir="ltr">או: {alt}</div>
-    </div>
-  );
-}
