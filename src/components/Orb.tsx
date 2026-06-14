@@ -46,15 +46,15 @@ export default function Orb({ size = "hero", className = "", cursorFollow = true
     function loop() {
       cX += (tX - cX) * 0.08;
       cY += (tY - cY) * 0.08;
-      const tiltX = cY * -6;
-      const tiltY = cX * 6;
-      const moveX = cX * 14;
-      const moveY = cY * 10;
+      const tiltX = cY * -14;
+      const tiltY = cX * 14;
+      const moveX = cX * 48;
+      const moveY = cY * 36;
       if (orb) {
         orb.style.transform = `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate3d(${moveX}px, ${moveY}px, 0)`;
       }
-      if (soul) soul.style.transform = `translate3d(${cX * 14}%, ${cY * 10}%, 0)`;
-      if (spec) spec.style.transform = `translate3d(${cX * 8}%, ${cY * 6}%, 0)`;
+      if (soul) soul.style.transform = `translate3d(${cX * 36}%, ${cY * 28}%, 0)`;
+      if (spec) spec.style.transform = `translate3d(${cX * 22}%, ${cY * 16}%, 0)`;
       if (Math.abs(tX - cX) > 0.002 || Math.abs(tY - cY) > 0.002) {
         raf = requestAnimationFrame(loop);
       } else {
