@@ -10,6 +10,7 @@ type Analysis = {
   intro_message_he?: string;
   core_capabilities?: string[];
   first_tasks_he?: string[];
+  archetype?: string;
 };
 
 /**
@@ -30,22 +31,25 @@ export async function GET(
 
   // Try packages first
   let name = "הסוכן שלך";
+  let description: string | null = null;
   let intro: string | null = null;
   let firstTasks: string[] = [];
+  let capabilities: string[] = [];
 
   const { data: pkg } = await supabase
     .from("packages")
-    .select("id, name, manifest_json")
+    .select("id, name, description, manifest_json")
     .eq("id", id)
     .single();
 
   if (pkg) {
     const m = (pkg.manifest_json as Analysis) ?? {};
     name = m.agent_name ?? pkg.name ?? name;
+    description = m.agent_description ?? pkg.description ?? null;
     intro = m.intro_message_he ?? null;
     firstTasks = m.first_tasks_he ?? [];
+    capabilities = m.core_capabilities ?? [];
   } else {
-    // Fallback to consultation
     const { data: consultation } = await supabase
       .from("consultations")
       .select("id, analysis_json")
@@ -54,55 +58,102 @@ export async function GET(
     if (consultation?.analysis_json) {
       const a = consultation.analysis_json as Analysis;
       name = a.agent_name ?? name;
+      description = a.agent_description ?? null;
       intro = a.intro_message_he ?? null;
       firstTasks = a.first_tasks_he ?? [];
+      capabilities = a.core_capabilities ?? [];
     }
   }
 
   // Derive short handle: prefer ASCII chars from the name, else fall back to id slice
   const handle = makeHandle(name) || `generagent-${id.slice(0, 8)}`;
+  const shortName = firstWord(name);
 
   const lines: string[] = [];
   lines.push("");
-  lines.push("─".repeat(60));
+  lines.push("═".repeat(64));
   lines.push("");
-  lines.push(`👋  ${name}  הותקן בהצלחה`);
+  lines.push(`  🎉  ${name}`);
+  lines.push("");
+  lines.push("  הסוכן שלך מוכן ויושב בפרויקט. עכשיו רק להפעיל אותו ↓");
+  lines.push("");
+  lines.push("─".repeat(64));
   lines.push("");
 
+  // Personal greeting block — use intro_message_he if present, else build a warm fallback
   if (intro) {
-    lines.push(intro);
+    intro.split("\n").forEach((l) => lines.push(`  ${l}`));
     lines.push("");
   } else {
-    lines.push(`היי, אני הסוכן שהוקם לפי הראיון שלך ב-GenerAgent.`);
-    lines.push(`מהרגע שתפעיל אותי — אני זמין לעזור לך עם המשימות שאיפיינו ביחד.`);
+    lines.push(`  👋  היי, אני ${shortName}.`);
+    lines.push("");
+    if (description) {
+      // Wrap description to ~60 chars
+      wrapHebrew(description, 60).forEach((l) => lines.push(`  ${l}`));
+      lines.push("");
+    }
+    if (capabilities.length > 0) {
+      lines.push("  מה אני יודע לעשות עבורך:");
+      capabilities.slice(0, 4).forEach((c) => lines.push(`    • ${c}`));
+      lines.push("");
+    }
+    lines.push("  אני כאן בשבילך — ברגע שתפעיל אותי, נתחיל לעבוד יחד.");
     lines.push("");
   }
 
   if (firstTasks.length > 0) {
-    lines.push("דברים שאפשר לבקש ממני מיד:");
-    firstTasks.slice(0, 3).forEach((t) => lines.push(`  • ${t}`));
+    lines.push("─".repeat(64));
+    lines.push("");
+    lines.push("  💡  דברים שאפשר לבקש ממני עכשיו כדי לראות מה אני שווה:");
+    lines.push("");
+    firstTasks.slice(0, 3).forEach((t, i) => {
+      lines.push(`     ${i + 1}.  ${t}`);
+    });
     lines.push("");
   }
 
-  lines.push("להפעלה:");
+  lines.push("─".repeat(64));
+  lines.push("");
+  lines.push("  🚀  להפעיל אותי:");
+  lines.push("");
   if (platform === "claude-code") {
-    lines.push(`  בשיחה ב-Claude Code, תכתוב:  @${handle}`);
-    lines.push(`  או:                           use the ${handle} subagent`);
+    lines.push(`      פתח Claude Code בתיקייה הזו ותכתוב:    @${handle}`);
+    lines.push(`      או:                                       use the ${handle} subagent`);
   } else {
-    lines.push(`  בשיחה ב-Codex CLI, תפנה אלי בשם:  @${handle}`);
-    lines.push(`  או:                                use the ${handle} agent`);
+    lines.push(`      פתח Codex CLI בתיקייה הזו ותפנה אלי:    @${handle}`);
+    lines.push(`      או:                                       use the ${handle} agent`);
   }
   lines.push("");
-  lines.push("─".repeat(60));
+  lines.push("═".repeat(64));
   lines.push("");
 
   return new NextResponse(lines.join("\n"), {
     status: 200,
     headers: {
       "content-type": "text/plain; charset=utf-8",
-      "cache-control": "public, max-age=300",
+      "cache-control": "no-cache, no-store, must-revalidate",
     },
   });
+}
+
+function firstWord(name: string): string {
+  return name.split(/[—\-\s,·•|/]+/u).map((s) => s.trim()).find((s) => s.length > 0) ?? name;
+}
+
+function wrapHebrew(text: string, width: number): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    if ((cur + " " + w).trim().length > width) {
+      if (cur) lines.push(cur);
+      cur = w;
+    } else {
+      cur = (cur ? cur + " " : "") + w;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
 }
 
 function makeHandle(name: string): string {
