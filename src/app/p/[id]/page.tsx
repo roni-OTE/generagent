@@ -135,11 +135,11 @@ export default async function PackagePage({
           <div className="space-y-3">
             <CopyableCode
               label="CLAUDE CODE"
-              code={`mkdir -p .claude/agents && curl -fsSL https://generagent.io/api/install/${pkg.id}?platform=claude-code -o .claude/agents/generagent-${pkg.id.slice(0, 8)}.md`}
+              code={`mkdir -p .claude/agents && curl -fsSL "https://generagent.io/api/install/${pkg.id}?platform=claude-code" -o ".claude/agents/generagent-${pkg.id.slice(0, 8)}.md" && curl -fsSL "https://generagent.io/api/intro/${pkg.id}?platform=claude-code"`}
             />
             <CopyableCode
               label="CODEX CLI"
-              code={`mkdir -p .codex/agents && curl -fsSL https://generagent.io/api/install/${pkg.id}?platform=codex -o .codex/agents/generagent-${pkg.id.slice(0, 8)}.md`}
+              code={`mkdir -p .codex/agents && curl -fsSL "https://generagent.io/api/install/${pkg.id}?platform=codex" -o ".codex/agents/generagent-${pkg.id.slice(0, 8)}.md" && curl -fsSL "https://generagent.io/api/intro/${pkg.id}?platform=codex"`}
             />
           </div>
         </Section>
