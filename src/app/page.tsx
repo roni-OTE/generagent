@@ -1,6 +1,7 @@
 import Orb from "@/components/Orb";
 import Button from "@/components/Button";
 import Logo from "@/components/Logo";
+import UserMenu from "@/components/UserMenu";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,6 +11,18 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const isAuthed = !!user;
+
+  let displayName: string | null = null;
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, plan")
+      .eq("id", user.id)
+      .single();
+    displayName = profile?.display_name ?? null;
+    isAdmin = profile?.plan === "admin";
+  }
 
   return (
     <>
@@ -22,13 +35,16 @@ export default async function Home() {
           >
             <Logo size="md" />
           </Link>
-          <div className="flex gap-2 items-center">
-            {isAuthed ? (
-              <Link href="/dashboard">
-                <Button variant="primary" size="sm">
-                  לדאשבורד <span className="inline-block">←</span>
-                </Button>
-              </Link>
+          <div className="flex gap-2.5 items-center">
+            {isAuthed && user ? (
+              <>
+                <Link href="/dashboard">
+                  <Button variant="primary" size="sm">
+                    לדאשבורד <span className="inline-block">←</span>
+                  </Button>
+                </Link>
+                <UserMenu email={user.email ?? ""} displayName={displayName} isAdmin={isAdmin} />
+              </>
             ) : (
               <>
                 <Link href="/login">
