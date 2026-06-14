@@ -36,10 +36,23 @@ export default function WorkspaceShell({
   const pathname = usePathname();
   const [chats, setChats] = useState<Chat[]>([]);
   const [creating, setCreating] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     void loadChats();
+    // Close mobile drawer on route change
+    setMobileOpen(false);
   }, [pathname]);
+
+  // Lock body scroll when drawer open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   async function loadChats() {
     const supabase = createClient();
@@ -118,9 +131,60 @@ export default function WorkspaceShell({
   }
 
   return (
-    <div className="min-h-screen flex" dir="rtl">
-      {/* SIDEBAR — right side in RTL */}
-      <aside className="w-[260px] shrink-0 border-l border-[var(--border)] bg-[rgba(2,2,3,0.4)] flex flex-col">
+    <div className="min-h-screen flex relative" dir="rtl">
+      {/* Mobile top bar (only visible <md) */}
+      <div className="md:hidden fixed top-0 inset-x-0 z-30 h-12 bg-[rgba(2,2,3,0.85)] backdrop-blur-[12px] border-b border-[var(--border)] flex items-center justify-between px-3">
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="פתח תפריט"
+          className="w-9 h-9 rounded-md flex items-center justify-center text-white/80 hover:bg-white/[0.06]"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <Link href="/dashboard" className="no-underline">
+          <Logo size="sm" />
+        </Link>
+        <button
+          onClick={createNewChat}
+          disabled={creating}
+          aria-label="שיחה חדשה"
+          className="w-9 h-9 rounded-md flex items-center justify-center text-white"
+          style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Backdrop for mobile drawer */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px]"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
+      )}
+
+      {/* SIDEBAR — right side in RTL.
+          On desktop: always visible, static.
+          On mobile: hidden by default, slides in as overlay when mobileOpen. */}
+      <aside
+        className={`
+          ${mobileOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"}
+          fixed md:static inset-y-0 right-0 z-50 md:z-auto
+          w-[280px] md:w-[260px] shrink-0
+          border-l border-[var(--border)] bg-[rgba(2,2,3,0.95)] md:bg-[rgba(2,2,3,0.4)]
+          backdrop-blur-[16px] md:backdrop-blur-0
+          flex flex-col
+          transition-transform duration-300 ease-out
+        `}
+      >
         {/* logo + new chat */}
         <div className="px-4 pt-4 pb-3 border-b border-[var(--border)]">
           <Link href="/dashboard" className="flex items-center gap-2 mb-4 no-underline">
@@ -222,7 +286,7 @@ export default function WorkspaceShell({
       </aside>
 
       {/* CENTER */}
-      <main className="flex-1 min-w-0 flex flex-col">{children}</main>
+      <main className="flex-1 min-w-0 flex flex-col pt-12 md:pt-0">{children}</main>
     </div>
   );
 }

@@ -66,7 +66,7 @@ export default async function PackagePage({
       displayName={profile.display_name}
       isAdmin={profile.plan === "admin"}
     >
-      <div className="max-w-[820px] mx-auto w-full px-8 py-12 flex-1">
+      <div className="max-w-[820px] mx-auto w-full px-4 sm:px-6 md:px-8 py-6 md:py-12 flex-1">
         <Link href="/dashboard" className="text-[12px] text-[var(--fg-dim)] hover:text-[var(--fg)] inline-flex items-center gap-1 mb-6">
           <span>→</span> חזרה לסוכנים
         </Link>

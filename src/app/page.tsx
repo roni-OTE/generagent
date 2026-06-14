@@ -64,7 +64,7 @@ export default async function Home() {
       </nav>
 
       {/* HERO */}
-      <main className="max-w-[1180px] mx-auto px-6 flex-1 grid grid-cols-1 md:grid-cols-2 items-center gap-12 py-10 md:py-0 text-center md:text-right">
+      <main className="max-w-[1180px] mx-auto px-5 sm:px-6 flex-1 grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-12 py-8 md:py-0 text-center md:text-right">
         <div className="max-w-[480px] mx-auto md:mx-0">
           <div className="inline-flex items-center gap-2 font-mono text-[11px] text-[var(--indigo-text)] bg-[rgba(94,106,210,0.08)] border border-[rgba(94,106,210,0.25)] rounded-[20px] px-3 py-1.5 mb-6 uppercase tracking-[0.1em]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--indigo)] shadow-[0_0_10px_var(--indigo)]" />

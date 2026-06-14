@@ -47,7 +47,7 @@ export default async function AccountPage() {
       displayName={profile.display_name}
       isAdmin={isAdmin}
     >
-      <div className="max-w-[820px] mx-auto w-full px-8 py-12 flex-1">
+      <div className="max-w-[820px] mx-auto w-full px-4 sm:px-6 md:px-8 py-6 md:py-12 flex-1">
         <div className="mb-7">
           <div className="font-mono text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.12em] mb-2">
             → account

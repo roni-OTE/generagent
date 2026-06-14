@@ -127,9 +127,9 @@ export default function ChatView({
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-[calc(100vh-48px)] md:h-screen">
       {/* Header */}
-      <header className="border-b border-white/[0.06] px-6 py-3 flex items-center justify-between">
+      <header className="border-b border-white/[0.06] px-4 md:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/dashboard")}
@@ -149,7 +149,7 @@ export default function ChatView({
       </header>
 
       {/* Transcript */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-8">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 py-6 md:py-8">
         <div className="max-w-2xl mx-auto space-y-6">
           {messages.length === 0 && busy && (
             <div className="text-center text-xs text-white/40 py-12">פותח שיחה...</div>
@@ -209,7 +209,7 @@ export default function ChatView({
       </div>
 
       {/* Input */}
-      <div className="border-t border-white/[0.06] px-6 py-4">
+      <div className="border-t border-white/[0.06] px-4 md:px-6 py-3 md:py-4 pb-safe">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-end gap-3">
             <textarea

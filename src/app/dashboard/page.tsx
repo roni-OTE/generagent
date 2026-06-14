@@ -50,7 +50,7 @@ export default async function DashboardPage() {
       displayName={profile.display_name}
       isAdmin={isAdmin}
     >
-      <div className="max-w-[1100px] mx-auto w-full px-8 py-12 flex-1">
+      <div className="max-w-[1100px] mx-auto w-full px-4 sm:px-6 md:px-8 py-6 md:py-12 flex-1">
         {/* Trial banner */}
         {ent.plan === "trial" && (
           <div className="mb-8 bg-[var(--bg-elev)] border border-[var(--border)] rounded-[14px] p-4 flex justify-between items-center gap-4 flex-wrap">
