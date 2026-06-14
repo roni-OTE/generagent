@@ -43,20 +43,26 @@ async function callBot(args: {
 }): Promise<BotTurn> {
   const anthropic = getAnthropic();
   let lastRaw = "";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const resp = await anthropic.messages.create({
       model: BOT_MODEL,
-      max_tokens: 800,
+      max_tokens: 900,
+      temperature: 0.3,
       system:
         args.systemPrompt +
-        (attempt === 1
-          ? "\n\n⚠️ הניסיון הקודם לא היה JSON תקין. החזר **אך ורק** JSON תקין, ללא טקסט לפני או אחרי, ללא קוד-fence. רק { ... }."
+        (attempt > 0
+          ? "\n\n⚠️ ניסיון קודם לא היה JSON תקין. החזר **רק** JSON, מתחיל ב-{ ומסתיים ב-}, ללא טקסט נוסף, ללא code-fence."
           : ""),
-      messages: args.history,
+      messages: [
+        ...args.history,
+        // Prefill the assistant turn with "{" to force JSON-mode behavior
+        { role: "assistant" as const, content: "{" },
+      ],
     });
     const textBlock = resp.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") continue;
-    lastRaw = textBlock.text;
+    // Prepend the "{" we prefilled
+    lastRaw = "{" + textBlock.text;
     try {
       return extractJson(lastRaw);
     } catch {
