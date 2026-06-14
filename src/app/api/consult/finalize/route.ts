@@ -4,6 +4,7 @@ import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { ANALYSIS_SYSTEM_PROMPT } from "@/lib/bot/prompts";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 type Analysis = {
   agent_name: string;

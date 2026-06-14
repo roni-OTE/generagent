@@ -98,11 +98,18 @@ export default function ChatView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ consultation_id: consultationId }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "finalize_failed");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const detail = data?.detail ? ` (${data.detail})` : "";
+        throw new Error(`${data?.error || "finalize_failed"}${detail}`);
+      }
       router.push(`/consult/${consultationId}/result`);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "שגיאה בסיום");
+      setError(
+        (e instanceof Error ? e.message : "שגיאה בסיום") +
+          " — נסה לרענן או ללחוץ 'נסה שוב' למטה."
+      );
+      setDone(false); // re-enable the input
     }
   }
 

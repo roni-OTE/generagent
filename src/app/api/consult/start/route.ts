@@ -4,6 +4,7 @@ import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 type BotTurn = {
   phase: "discovery" | "deep_dive" | "refinement" | "done";

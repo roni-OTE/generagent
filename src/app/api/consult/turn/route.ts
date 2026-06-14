@@ -4,6 +4,7 @@ import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const MAX_QUESTIONS = 15;
 const MIN_QUESTIONS = 7;
