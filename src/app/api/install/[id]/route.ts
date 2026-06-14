@@ -34,27 +34,52 @@ export async function GET(
     | "codex";
 
   const supabase = createServiceClient();
-  const { data: pkg, error } = await supabase
+
+  type PkgRow = {
+    id: string;
+    name: string;
+    description: string | null;
+    archetype: string | null;
+    manifest_json: Manifest | null;
+    version: string;
+  };
+
+  // Try packages first
+  const pkgRes = await supabase
     .from("packages")
     .select("id, name, description, archetype, manifest_json, version")
     .eq("id", id)
     .single();
+  let pkg: PkgRow | null = (pkgRes.data as PkgRow | null) ?? null;
 
-  if (error || !pkg) {
+  // Fallback: treat id as consultation_id with completed analysis
+  if (!pkg) {
+    const { data: consultation } = await supabase
+      .from("consultations")
+      .select("id, analysis_json, status")
+      .eq("id", id)
+      .single();
+    if (consultation && consultation.analysis_json) {
+      const an = consultation.analysis_json as Manifest & { agent_name?: string };
+      pkg = {
+        id: consultation.id,
+        name: an.agent_name ?? "GenerAgent agent",
+        description: an.agent_description ?? null,
+        archetype: an.archetype ?? null,
+        manifest_json: an,
+        version: "1.0.0",
+      };
+    }
+  }
+
+  if (!pkg) {
     return new NextResponse(`# Agent not found\n\nid: ${id}\n`, {
       status: 404,
       headers: { "content-type": "text/markdown; charset=utf-8" },
     });
   }
 
-  // Increment download counter (best-effort)
-  await supabase
-    .from("packages")
-    .update({ download_count: (pkg as { download_count?: number }).download_count ? undefined : 1 })
-    .eq("id", id)
-    .then(() => undefined, () => undefined);
-
-  const m: Manifest = (pkg.manifest_json as Manifest) ?? {};
+  const m: Manifest = pkg.manifest_json ?? {};
   const body = renderMarkdown({
     platform,
     name: pkg.name,

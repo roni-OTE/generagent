@@ -87,5 +87,35 @@ export async function POST(req: Request) {
     })
     .eq("id", consultation_id);
 
-  return NextResponse.json({ analysis });
+  // Create the package row so install/p/[id]/dashboard all work
+  const targetPlatforms =
+    analysis.target_platform === "both"
+      ? ["claude-code", "codex"]
+      : [analysis.target_platform];
+
+  const { data: pkg } = await supabase
+    .from("packages")
+    .insert({
+      user_id: user.id,
+      consultation_id,
+      name: analysis.agent_name,
+      description: analysis.agent_description,
+      archetype: analysis.archetype,
+      target_platform: targetPlatforms,
+      manifest_json: analysis,
+      required_connectors: analysis.required_connectors ?? [],
+      is_template_clone: false,
+    })
+    .select("id")
+    .single();
+
+  // Increment user's custom_agents_count
+  if (pkg) {
+    await supabase.rpc("increment_custom_agents", { p_user_id: user.id }).then(
+      () => undefined,
+      () => undefined
+    );
+  }
+
+  return NextResponse.json({ analysis, package_id: pkg?.id ?? null });
 }
