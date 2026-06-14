@@ -38,12 +38,14 @@ function extractJson<T>(text: string): T {
 async function askAgent(agent: TeamAgent, context: string): Promise<AgentReport | null> {
   const anthropic = getAnthropic();
   const baseSystem = agent.system_prompt + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
+  // Haiku is ~5x faster than Sonnet; sufficient for short structured standup output.
+  const FAST_MODEL = "claude-haiku-4-5-20251001";
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const resp = await anthropic.messages.create({
-        model: BOT_MODEL,
-        max_tokens: 500,
+        model: FAST_MODEL,
+        max_tokens: 400,
         temperature: 0.4,
         system:
           baseSystem +
@@ -142,11 +144,11 @@ ${nonTamar
     tamar.system_prompt +
     `\n\nכתמר, סכמי את כל הדיווחים לפגישה אחת ידידותית למייסד רוני. החזירי JSON תקני בלבד.\n\nשדות חובה: highlights (מערך מחרוזות), decisions_needed (מערך מחרוזות), metrics_snapshot (מחרוזת), summary_md (מחרוזת ארוכה).\n\nפורמט summary_md (חובה):\n\n# Standup ${new Date().toLocaleDateString("he-IL")}\n\n## 🎯 Highlights\n1. ...\n2. ...\n3. ...\n\n## ⚠️ צריך החלטה ממך\n- [ ] ...\n- [ ] ...\n\n## 📊 מטריקות\n...\n\n## 🚀 ב-48h הבאות\n...\n\n## 🤝 השתתפו\n...`;
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const resp = await anthropic.messages.create({
         model: BOT_MODEL,
-        max_tokens: 3000,
+        max_tokens: 2000,
         temperature: 0.4,
         system:
           tamarSystemBase +
