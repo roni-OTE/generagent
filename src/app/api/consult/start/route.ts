@@ -39,6 +39,34 @@ export async function POST(req: Request) {
     .eq("id", user.id)
     .single();
 
+  // Build prior-context from completed consultations + existing agents
+  const { data: prevConsults } = await supabase
+    .from("consultations")
+    .select("id, detected_persona, analysis_json, completed_at")
+    .eq("user_id", user.id)
+    .eq("status", "completed")
+    .order("completed_at", { ascending: false })
+    .limit(5);
+
+  const { data: existingPackages } = await supabase
+    .from("packages")
+    .select("name, archetype")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  const latestAnalysis = (prevConsults?.[0]?.analysis_json ?? null) as
+    | { persona_match?: string; agent_description?: string }
+    | null;
+  const prior = (prevConsults && prevConsults.length > 0) || (existingPackages && existingPackages.length > 0)
+    ? {
+        detected_persona: prevConsults?.[0]?.detected_persona ?? latestAnalysis?.persona_match ?? null,
+        occupation_summary: latestAnalysis?.agent_description ?? null,
+        existing_agents: existingPackages ?? [],
+        previous_consultations_count: prevConsults?.length ?? 0,
+      }
+    : null;
+
   const { data: consultation, error: cErr } = await supabase
     .from("consultations")
     .insert({
@@ -58,7 +86,7 @@ export async function POST(req: Request) {
   const resp = await anthropic.messages.create({
     model: BOT_MODEL,
     max_tokens: 800,
-    system: buildBotSystemPrompt({ userName: profile?.display_name ?? null }),
+    system: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }),
     messages: [{ role: "user", content: "התחל את הייעוץ. השאלה הראשונה." }],
   });
 

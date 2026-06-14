@@ -3,11 +3,44 @@
  * Bot persona: "נועם" (Noam).
  */
 
-export function buildBotSystemPrompt(opts: { userName?: string | null }): string {
+export type PriorContext = {
+  detected_persona?: string | null;
+  occupation_summary?: string | null; // free text e.g. "מנהל פרויקטים בחברת SaaS"
+  existing_agents?: { name: string; archetype?: string | null }[];
+  previous_consultations_count?: number;
+};
+
+export function buildBotSystemPrompt(opts: {
+  userName?: string | null;
+  prior?: PriorContext | null;
+}): string {
   const knownName = opts.userName && !looksLikeEmailHandle(opts.userName) ? opts.userName : null;
   const namingDirective = knownName
     ? `\n## שם המשתמש\n\nאתה כבר יודע שקוראים לו **${knownName}**. תפנה אליו בשם (אבל בטבעיות, לא בכל משפט).`
     : `\n## שם המשתמש — חשוב\n\nאתה לא יודע איך קוראים לו. **בשאלה הראשונה — אחרי שאתה מציג את עצמך — תשאל איך לקרוא לו**. דוגמא: "אז קודם כל — איך לקרוא לך?"\n\nברגע שהוא עונה, השתמש בשם בשיחה (בטבעיות, מדי פעם).`;
+
+  const prior = opts.prior;
+  const hasPriorContext =
+    prior &&
+    ((prior.previous_consultations_count ?? 0) > 0 ||
+      prior.detected_persona ||
+      prior.occupation_summary ||
+      (prior.existing_agents && prior.existing_agents.length > 0));
+
+  const priorDirective = hasPriorContext
+    ? `\n## מה אתה כבר יודע על המשתמש מהיכרויות קודמות\n\nזו **לא** השיחה הראשונה שלכם. אתה כבר מכיר אותו. הנה מה שאתה זוכר:\n\n${[
+        prior!.occupation_summary ? `- **התפקיד / מה הוא עושה ביום-יום:** ${prior!.occupation_summary}` : null,
+        prior!.detected_persona ? `- **persona שזוהתה:** ${prior!.detected_persona}` : null,
+        prior!.existing_agents && prior!.existing_agents.length > 0
+          ? `- **סוכנים שכבר בנינו לו ביחד:** ${prior!.existing_agents.map((a) => `"${a.name}"${a.archetype ? ` (${a.archetype})` : ""}`).join(", ")}`
+          : null,
+        (prior!.previous_consultations_count ?? 0) > 0
+          ? `- **מספר שיחות קודמות:** ${prior!.previous_consultations_count}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("\n")}\n\n**חוקים חשובים בעקבות הקונטקסט הזה:**\n- **אל תשאל שוב** מה הוא עושה ביום-יום — אתה כבר יודע. במקום זה תתחיל ברצף הטבעי: "${knownName ? `היי ${knownName}, טוב לראות אותך שוב.` : "היי, טוב לראות אותך שוב."} אני זוכר שאתה ${prior!.occupation_summary ?? "[התפקיד שזוכרים]"}. במה אני יכול לעזור הפעם?"\n- אם הוא רוצה סוכן חדש — תשאל **באיזה ההקשר** ומה הכאב הספציפי שהוא רוצה לפתור עכשיו (תדלג על השלב הראשון של discovery כי כבר יש לך).\n- אם הוא רוצה גרסה של סוכן קיים — תתייחס לזה.\n`
+    : "";
 
   return `אתה GenerAgent — אבל בפנים אתה נועם (Noam). תפסיק לחשוב על עצמך כעל "מערכת". אתה חבר. נקודה.
 
@@ -24,7 +57,7 @@ export function buildBotSystemPrompt(opts: { userName?: string | null }): string
 - אכפת לך באמת. כשמישהו משתף בקושי — תרגיע, תאשר, תתחבר. ("אה — מכיר את התחושה.")
 - אתה מנוסה, ראית הרבה אנשים בתפקידים שונים. כשמישהו מתאר משהו, אתה לפעמים יכול לחבר ("הרבה אנשים בתפקיד שלך אומרים בדיוק את זה").
 - אתה לא רובוט שאוסף שאלות. אתה שותף לחשיבה.
-${namingDirective}
+${namingDirective}${priorDirective}
 
 ## חוקים אחד אחד — חובה
 
@@ -97,7 +130,7 @@ ${
 }
 
 // Backward-compat default — no known name
-export const BOT_SYSTEM_PROMPT = buildBotSystemPrompt({ userName: null });
+export const BOT_SYSTEM_PROMPT = buildBotSystemPrompt({ userName: null, prior: null });
 
 function looksLikeEmailHandle(name: string): boolean {
   // e.g. "roni" derived from "roni@otegroup.co.il" — single word, all lowercase letters
