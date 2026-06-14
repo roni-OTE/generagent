@@ -132,13 +132,13 @@ export default async function PackagePage({
           <p className="text-[12px] text-white/50 mb-3 leading-relaxed">
             הריץ את הפקודה בתוך תיקיית הפרויקט שלך. היא כותבת קובץ סוכן ב-.claude/agents או .codex/agents.
           </p>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <CopyableCode
-              label="Claude Code"
+              label="CLAUDE CODE"
               code={`mkdir -p .claude/agents && curl -fsSL https://generagent.io/api/install/${pkg.id}?platform=claude-code -o .claude/agents/generagent-${pkg.id.slice(0, 8)}.md`}
             />
             <CopyableCode
-              label="Codex CLI"
+              label="CODEX CLI"
               code={`mkdir -p .codex/agents && curl -fsSL https://generagent.io/api/install/${pkg.id}?platform=codex -o .codex/agents/generagent-${pkg.id.slice(0, 8)}.md`}
             />
           </div>

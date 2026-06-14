@@ -151,13 +151,13 @@ export default async function ConsultResultPage({
           <p className="text-[12px] text-white/50 mb-3 leading-relaxed">
             הפקודה כותבת קובץ סוכן בפרויקט שלך (.claude/agents או .codex/agents). הריץ בתוך תיקיית הפרויקט.
           </p>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <CopyableCode
-              label="Claude Code"
+              label="CLAUDE CODE"
               code={`mkdir -p .claude/agents && curl -fsSL https://generagent.io/api/install/${id}?platform=claude-code -o .claude/agents/generagent-${id.slice(0, 8)}.md`}
             />
             <CopyableCode
-              label="Codex CLI"
+              label="CODEX CLI"
               code={`mkdir -p .codex/agents && curl -fsSL https://generagent.io/api/install/${id}?platform=codex -o .codex/agents/generagent-${id.slice(0, 8)}.md`}
             />
           </div>
