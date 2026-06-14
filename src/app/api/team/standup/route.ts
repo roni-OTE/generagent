@@ -37,23 +37,42 @@ function extractJson<T>(text: string): T {
 
 async function askAgent(agent: TeamAgent, context: string): Promise<AgentReport | null> {
   const anthropic = getAnthropic();
-  try {
-    const resp = await anthropic.messages.create({
-      model: BOT_MODEL,
-      max_tokens: 400,
-      temperature: 0.4,
-      system: agent.system_prompt + "\n\nהחזר *רק* JSON תקני, מתחיל ב-{ ומסתיים ב-}.",
-      messages: [
-        { role: "user", content: `הקשר השבוע:\n${context}\n\nתן את הסטנדאפ שלך.` },
-        { role: "assistant", content: "{" },
-      ],
-    });
-    const textBlock = resp.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") return null;
-    return extractJson<AgentReport>("{" + textBlock.text);
-  } catch {
-    return null;
+  const baseSystem = agent.system_prompt + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const resp = await anthropic.messages.create({
+        model: BOT_MODEL,
+        max_tokens: 500,
+        temperature: 0.4,
+        system:
+          baseSystem +
+          (attempt === 1 ? "\n\n⚠️ ניסיון קודם לא היה JSON תקני. החזר JSON בלבד." : ""),
+        messages: [
+          { role: "user" as const, content: `הקשר השבוע:\n${context}\n\nתן את הסטנדאפ שלך.` },
+          { role: "assistant" as const, content: "{" },
+        ],
+      });
+      const textBlock = resp.content.find((b) => b.type === "text");
+      if (!textBlock || textBlock.type !== "text") continue;
+      const raw = "{" + textBlock.text;
+      try {
+        return extractJson<AgentReport>(raw);
+      } catch {
+        // try again
+      }
+    } catch {
+      // network/API failure — try again
+    }
   }
+
+  // Fallback: at least return a placeholder so Tamar knows this agent was silent
+  return {
+    did: "(לא הצליח להחזיר דיווח בפורמט תקין)",
+    next: "(לא ידוע)",
+    blockers: "parse_failed — לבדוק את ה-prompt",
+    wow: "—",
+  };
 }
 
 async function buildMetricsContext(): Promise<string> {
