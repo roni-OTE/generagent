@@ -77,10 +77,8 @@ export default async function Home() {
             </span>
           </h1>
           <p className="text-[var(--fg-dim)] text-[clamp(15px,1.3vw,17px)] leading-[1.6] mb-8">
-            ליצור סוכן זה קל. להבין{" "}
-            <strong className="text-[var(--fg)]">איזה</strong> סוכן יעזור לך — זו השאלה.
-            נראיין אותך כיועץ, נאפיין את הצרכים, ונמסור פקודת התקנה מוכנה ל-Claude
-            Code או Codex CLI.
+            5 דקות שיחה עם <strong className="text-[var(--fg)]">נועם</strong>, ואתה מקבל סוכן AI
+            מותאם אישית — מוכן להתקנה בפקודה אחת לטרמינל ב-Claude Code או Codex CLI.
           </p>
           <div className="flex gap-2.5 flex-wrap items-center justify-center md:justify-start mb-6">
             {isAuthed ? (
