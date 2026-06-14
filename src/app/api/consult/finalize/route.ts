@@ -45,7 +45,7 @@ async function callAnalyst(args: {
   for (let attempt = 0; attempt < 3; attempt++) {
     const resp = await anthropic.messages.create({
       model: BOT_MODEL,
-      max_tokens: 3000,
+      max_tokens: 8000,
       temperature: 0.3,
       system:
         args.system +

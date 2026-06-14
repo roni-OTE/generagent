@@ -35,6 +35,10 @@ export default async function ConsultChatPage({
     redirect(`/consult/${id}/result`);
   }
 
+  // If stuck in "analyzing" state — try the finalize once on page-load via client-side trigger.
+  // We mark it so ChatView knows to auto-retry.
+  const stuckAnalyzing = consultation.status === "analyzing";
+
   const { data: messages } = await supabase
     .from("messages")
     .select("id, role, content, micro_explanation, created_at")
@@ -59,6 +63,7 @@ export default async function ConsultChatPage({
         initialQuestionCount={consultation.question_count}
         initialConfidence={Number(consultation.confidence ?? 0)}
         initialDone={consultation.status !== "in_progress"}
+        autoFinalize={stuckAnalyzing}
       />
     </WorkspaceShell>
   );

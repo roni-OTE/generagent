@@ -29,6 +29,7 @@ type Props = {
   initialQuestionCount: number;
   initialConfidence: number;
   initialDone: boolean;
+  autoFinalize?: boolean;
 };
 
 export default function ChatView({
@@ -38,6 +39,7 @@ export default function ChatView({
   initialQuestionCount,
   initialConfidence,
   initialDone,
+  autoFinalize,
 }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -57,6 +59,10 @@ export default function ChatView({
 
   useEffect(() => {
     inputRef.current?.focus();
+    if (autoFinalize) {
+      void finalize();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function sendAnswer() {
@@ -187,6 +193,16 @@ export default function ChatView({
           {done && !error && (
             <div className="text-xs text-white/50 text-center py-4">
               מסיים את האפיון… מעביר אותך לתוצאה.
+            </div>
+          )}
+          {error && done && (
+            <div className="text-center py-4">
+              <button
+                onClick={() => { setError(null); void finalize(); }}
+                className="px-4 py-2 rounded-lg text-xs bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 hover:bg-indigo-500/25"
+              >
+                נסה שוב לסיים אפיון
+              </button>
             </div>
           )}
         </div>
