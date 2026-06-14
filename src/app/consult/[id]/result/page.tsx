@@ -149,18 +149,16 @@ export default async function ConsultResultPage({
         {/* Install command (CLI) — both platforms */}
         <Section title="התקנה — בחר את הכלי שלך">
           <p className="text-[12px] text-white/50 mb-3 leading-relaxed">
-            הסוכן ייכנס לפרויקט שלך עם פקודה אחת. אין מה להוריד, אין ZIP.
+            הפקודה כותבת קובץ סוכן בפרויקט שלך (.claude/agents או .codex/agents). הריץ בתוך תיקיית הפרויקט.
           </p>
           <div className="space-y-4">
             <CopyableCode
               label="Claude Code"
-              code={`npx generagent install ${id}`}
-              alt={`curl -fsSL https://generagent.io/i/${id} | bash`}
+              code={`mkdir -p .claude/agents && curl -fsSL https://generagent.io/api/install/${id}?platform=claude-code -o .claude/agents/generagent-${id.slice(0, 8)}.md`}
             />
             <CopyableCode
               label="Codex CLI"
-              code={`codex agents add @generagent/${id}`}
-              alt={`curl -fsSL https://generagent.io/c/${id} | codex install -`}
+              code={`mkdir -p .codex/agents && curl -fsSL https://generagent.io/api/install/${id}?platform=codex -o .codex/agents/generagent-${id.slice(0, 8)}.md`}
             />
           </div>
         </Section>
