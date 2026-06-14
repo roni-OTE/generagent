@@ -6,6 +6,7 @@ import WorkspaceShell from "@/components/WorkspaceShell";
 import Orb from "@/components/Orb";
 import NewChatButton from "@/components/NewChatButton";
 import DeleteAgentButton from "@/components/DeleteAgentButton";
+import StandupBanner from "@/components/StandupBanner";
 
 export const metadata = { title: "Dashboard · GenerAgent" };
 
@@ -51,6 +52,9 @@ export default async function DashboardPage() {
       isAdmin={isAdmin}
     >
       <div className="max-w-[1100px] mx-auto w-full px-4 sm:px-6 md:px-8 py-6 md:py-12 flex-1">
+        {/* Standup banner (admin only, only when fresh) */}
+        <StandupBanner />
+
         {/* Trial banner */}
         {ent.plan === "trial" && (
           <div className="mb-8 bg-[var(--bg-elev)] border border-[var(--border)] rounded-[14px] p-4 flex justify-between items-center gap-4 flex-wrap">
