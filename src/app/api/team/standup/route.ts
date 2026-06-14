@@ -138,26 +138,63 @@ ${nonTamar
 
   const anthropic = getAnthropic();
   let tamarOut: TamarSummary | null = null;
-  try {
-    const resp = await anthropic.messages.create({
-      model: BOT_MODEL,
-      max_tokens: 2500,
-      temperature: 0.4,
-      system: tamar.system_prompt + `\n\nכשתי, סכמי את כל הדיווחים לפגישה אחת ידידותית למייסד רוני. החזירי JSON תקני בלבד.\n\nפורמט summary_md (חובה):\n\n# Standup <YYYY-MM-DD HH:mm>\n\n## 🎯 Highlights\n1. ...\n2. ...\n3. ...\n\n## ⚠️ צריך החלטה ממך\n- [ ] ...\n- [ ] ...\n\n## 📊 מטריקות\n...\n\n## 🚀 ב-48h הבאות\n...\n\n## 🤝 השתתפו\n...`,
-      messages: [
-        { role: "user", content: tamarContext },
-        { role: "assistant", content: "{" },
-      ],
-    });
-    const textBlock = resp.content.find((b) => b.type === "text");
-    if (textBlock && textBlock.type === "text") {
-      tamarOut = extractJson<TamarSummary>("{" + textBlock.text);
+  const tamarSystemBase =
+    tamar.system_prompt +
+    `\n\nכתמר, סכמי את כל הדיווחים לפגישה אחת ידידותית למייסד רוני. החזירי JSON תקני בלבד.\n\nשדות חובה: highlights (מערך מחרוזות), decisions_needed (מערך מחרוזות), metrics_snapshot (מחרוזת), summary_md (מחרוזת ארוכה).\n\nפורמט summary_md (חובה):\n\n# Standup ${new Date().toLocaleDateString("he-IL")}\n\n## 🎯 Highlights\n1. ...\n2. ...\n3. ...\n\n## ⚠️ צריך החלטה ממך\n- [ ] ...\n- [ ] ...\n\n## 📊 מטריקות\n...\n\n## 🚀 ב-48h הבאות\n...\n\n## 🤝 השתתפו\n...`;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const resp = await anthropic.messages.create({
+        model: BOT_MODEL,
+        max_tokens: 3000,
+        temperature: 0.4,
+        system:
+          tamarSystemBase +
+          (attempt > 0 ? "\n\n⚠️ ניסיון קודם לא היה JSON תקני. החזירי JSON בלבד, ללא טקסט נוסף." : ""),
+        messages: [
+          { role: "user" as const, content: tamarContext },
+          { role: "assistant" as const, content: "{" },
+        ],
+      });
+      const textBlock = resp.content.find((b) => b.type === "text");
+      if (textBlock && textBlock.type === "text") {
+        try {
+          tamarOut = extractJson<TamarSummary>("{" + textBlock.text);
+          break;
+        } catch {
+          // try again
+        }
+      }
+    } catch {
+      // try again
     }
-  } catch {
-    tamarOut = null;
   }
 
-  const summaryMd = tamarOut?.summary_md ?? "(תמר לא הצליחה לסכם — בדוק logs)";
+  // Fallback summary if Tamar failed entirely: synthesize a basic one from raw reports
+  const summaryMd =
+    tamarOut?.summary_md ??
+    [
+      `# Standup ${new Date().toLocaleDateString("he-IL")}`,
+      "",
+      "תמר לא הצליחה לסכם — מצורפים הדיווחים הגולמיים של הצוות:",
+      "",
+      ...nonTamar.map((a) => {
+        const r = reports[a.handle];
+        if (!r) return `## ${a.name}\n_(לא דיווח)_`;
+        return [
+          `## ${a.name}`,
+          `**עשיתי:** ${r.did}`,
+          `**הלאה:** ${r.next}`,
+          `**בלוקרים:** ${r.blockers}`,
+          `**טיוואק:** ${r.wow}`,
+        ].join("\n");
+      }),
+      "",
+      "---",
+      "",
+      "## מטריקות",
+      context,
+    ].join("\n");
 
   // Persist
   const supabase = createServiceClient();
