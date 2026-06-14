@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Orb from "@/components/Orb";
 import CopyableCode from "@/components/CopyableCode";
+import { buildInstallCommand } from "@/lib/handle";
 
 export const dynamic = "force-dynamic";
 
@@ -154,11 +155,21 @@ export default async function ConsultResultPage({
           <div className="space-y-3">
             <CopyableCode
               label="CLAUDE CODE"
-              code={`mkdir -p .claude/agents && curl -fsSL "https://generagent.io/api/install/${id}?platform=claude-code" -o ".claude/agents/generagent-${id.slice(0, 8)}.md" && curl -fsSL "https://generagent.io/api/intro/${id}?platform=claude-code"`}
+              code={buildInstallCommand({
+                id,
+                platform: "claude-code",
+                agentName: a.agent_name,
+                firstTasks: a.first_tasks_he,
+              })}
             />
             <CopyableCode
               label="CODEX CLI"
-              code={`mkdir -p .codex/prompts && curl -fsSL "https://generagent.io/api/install/${id}?platform=codex" -o ".codex/prompts/generagent-${id.slice(0, 8)}.md" && curl -fsSL "https://generagent.io/api/intro/${id}?platform=codex"`}
+              code={buildInstallCommand({
+                id,
+                platform: "codex",
+                agentName: a.agent_name,
+                firstTasks: a.first_tasks_he,
+              })}
             />
           </div>
         </Section>
