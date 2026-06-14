@@ -40,7 +40,7 @@ async function askAgent(agent: TeamAgent, context: string): Promise<AgentReport 
   try {
     const resp = await anthropic.messages.create({
       model: BOT_MODEL,
-      max_tokens: 600,
+      max_tokens: 400,
       temperature: 0.4,
       system: agent.system_prompt + "\n\nהחזר *רק* JSON תקני, מתחיל ב-{ ומסתיים ב-}.",
       messages: [
@@ -86,12 +86,17 @@ export async function POST(req: Request) {
 
   const context = await buildMetricsContext();
 
-  // Collect reports from non-Tamar agents (Tamar synthesizes after)
+  // Collect reports from non-Tamar agents in PARALLEL (Tamar synthesizes after)
   const nonTamar = TEAM_AGENTS.filter((a) => a.handle !== "tamar");
+  const reportResults = await Promise.all(
+    nonTamar.map(async (agent) => ({
+      handle: agent.handle,
+      report: await askAgent(agent, context),
+    }))
+  );
   const reports: Record<string, AgentReport> = {};
-  for (const agent of nonTamar) {
-    const report = await askAgent(agent, context);
-    if (report) reports[agent.handle] = report;
+  for (const r of reportResults) {
+    if (r.report) reports[r.handle] = r.report;
   }
 
   // Tamar synthesizes
