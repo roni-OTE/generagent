@@ -56,12 +56,12 @@ export async function POST(req: Request) {
     .limit(8);
 
   const latestAnalysis = (prevConsults?.[0]?.analysis_json ?? null) as
-    | { persona_match?: string; agent_description?: string }
+    | { persona_match?: string }
     | null;
   const prior = (prevConsults && prevConsults.length > 0) || (existingPackages && existingPackages.length > 0)
     ? {
         detected_persona: prevConsults?.[0]?.detected_persona ?? latestAnalysis?.persona_match ?? null,
-        occupation_summary: latestAnalysis?.agent_description ?? null,
+        occupation_summary: null, // never re-use agent_description as user's role — that's the agent's role
         existing_agents: existingPackages ?? [],
         previous_consultations_count: prevConsults?.length ?? 0,
       }

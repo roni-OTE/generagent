@@ -27,19 +27,20 @@ export function buildBotSystemPrompt(opts: {
       prior.occupation_summary ||
       (prior.existing_agents && prior.existing_agents.length > 0));
 
+  const personaLabel = prior?.detected_persona ? hebrewPersona(prior.detected_persona) : null;
+
   const priorDirective = hasPriorContext
-    ? `\n## מה אתה כבר יודע על המשתמש מהיכרויות קודמות\n\nזו **לא** השיחה הראשונה שלכם. אתה כבר מכיר אותו. הנה מה שאתה זוכר:\n\n${[
-        prior!.occupation_summary ? `- **התפקיד / מה הוא עושה ביום-יום:** ${prior!.occupation_summary}` : null,
-        prior!.detected_persona ? `- **persona שזוהתה:** ${prior!.detected_persona}` : null,
+    ? `\n## מה אתה כבר יודע על המשתמש מהיכרויות קודמות\n\nזו **לא** השיחה הראשונה שלכם. הנה מה שאתה זוכר:\n\n${[
+        personaLabel ? `- **persona שזיהית בשיחות קודמות:** ${personaLabel} (זה התפקיד של *המשתמש*, לא של הסוכן שהוא בנה)` : null,
         prior!.existing_agents && prior!.existing_agents.length > 0
-          ? `- **סוכנים שכבר בנינו לו ביחד:** ${prior!.existing_agents.map((a) => `"${a.name}"${a.archetype ? ` (${a.archetype})` : ""}`).join(", ")}`
+          ? `- **סוכנים שכבר בנינו לו ביחד:** ${prior!.existing_agents.map((a) => `"${a.name}"${a.archetype ? ` (${a.archetype})` : ""}`).join(", ")}\n  ⚠️ **שים לב:** סוכנים אלו הם **כלים שהוא בנה לעצמו**, לא תפקידו. אל תבלבל ביניהם. אם הוא יצר סוכן שעוזר ל"מנהלי פרויקטים", זה לא אומר שהוא מנהל פרויקטים — יתכן שהוא מנכ"ל שצריך כלי כזה לצוות.`
           : null,
         (prior!.previous_consultations_count ?? 0) > 0
-          ? `- **מספר שיחות קודמות:** ${prior!.previous_consultations_count}`
+          ? `- **מספר שיחות קודמות שהושלמו:** ${prior!.previous_consultations_count}`
           : null,
       ]
         .filter(Boolean)
-        .join("\n")}\n\n**חוקים חשובים בעקבות הקונטקסט הזה:**\n- **אל תשאל שוב** מה הוא עושה ביום-יום — אתה כבר יודע. במקום זה תתחיל ברצף הטבעי: "${knownName ? `היי ${knownName}, טוב לראות אותך שוב.` : "היי, טוב לראות אותך שוב."} אני זוכר שאתה ${prior!.occupation_summary ?? "[התפקיד שזוכרים]"}. במה אני יכול לעזור הפעם?"\n- אם הוא רוצה סוכן חדש — תשאל **באיזה ההקשר** ומה הכאב הספציפי שהוא רוצה לפתור עכשיו (תדלג על השלב הראשון של discovery כי כבר יש לך).\n- אם הוא רוצה גרסה של סוכן קיים — תתייחס לזה.\n`
+        .join("\n")}\n\n**חוקים חשובים בעקבות הקונטקסט הזה:**\n- **פתח בברכת חזרה.** דוגמא: "${knownName ? `היי ${knownName}, טוב לראות אותך שוב.` : "היי, טוב לראות אותך שוב."}${personaLabel ? ` אני זוכר אותך כ${personaLabel}.` : ""} ${prior!.existing_agents && prior!.existing_agents.length > 0 ? `אחרי שבנינו את ${prior!.existing_agents[0].name} — ` : ""}במה אני יכול לעזור הפעם?"\n- **אסור** להניח שהתפקיד שלו הוא מה שהסוכן שלו עושה. עוזר וירטואלי = סוכן שעוזר *לו*, לא ש*הוא* עוזר למישהו.\n- אם אתה לא בטוח מה הוא רוצה עכשיו — תשאל בקצרה.\n- תדלג על שאלת "מה אתה עושה ביום-יום" אם persona ידועה. אבל אם הוא אומר משהו שסותר את ה-persona — תאמין לו, לא לזיכרון.\n`
     : "";
 
   return `אתה GenerAgent — אבל בפנים אתה נועם (Noam). תפסיק לחשוב על עצמך כעל "מערכת". אתה חבר. נקודה.
@@ -135,6 +136,20 @@ export const BOT_SYSTEM_PROMPT = buildBotSystemPrompt({ userName: null, prior: n
 function looksLikeEmailHandle(name: string): boolean {
   // e.g. "roni" derived from "roni@otegroup.co.il" — single word, all lowercase letters
   return /^[a-z0-9._-]+$/.test(name) && name.length <= 20;
+}
+
+function hebrewPersona(p: string): string {
+  const map: Record<string, string> = {
+    founder: "מייסד/מנכ\"ל",
+    ops_manager: "מנהל תפעול",
+    developer: "מפתח",
+    pm: "מנהל מוצר",
+    creator: "יוצר תוכן",
+    educator: "איש חינוך",
+    researcher: "חוקר",
+    consultant: "יועץ",
+  };
+  return map[p] ?? p;
 }
 
 export const ANALYSIS_SYSTEM_PROMPT = `אתה אנליסט שמקבל transcript של ייעוץ GenerAgent ומפיק אפיון מלא של הסוכן המומלץ.
