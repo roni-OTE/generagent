@@ -117,11 +117,17 @@ export async function GET(
   lines.push("  🚀  להפעיל אותי:");
   lines.push("");
   if (platform === "claude-code") {
-    lines.push(`      פתח Claude Code בתיקייה הזו ותכתוב:    @${handle}`);
-    lines.push(`      או:                                       use the ${handle} subagent`);
+    lines.push(`      פתח Claude Code בתיקייה הזו ותכתוב באנגלית:`);
+    lines.push("");
+    lines.push(`        use the ${handle} subagent`);
+    lines.push("");
+    lines.push(`      (Claude Code יזהה אותי אוטומטית ויפעיל אותי לפי הבקשה)`);
   } else {
-    lines.push(`      פתח Codex CLI בתיקייה הזו ותפנה אלי:    @${handle}`);
-    lines.push(`      או:                                       use the ${handle} agent`);
+    lines.push(`      פתח Codex CLI בתיקייה הזו ותכתוב באנגלית:`);
+    lines.push("");
+    lines.push(`        use the ${handle} prompt`);
+    lines.push("");
+    lines.push(`      או פשוט תפנה אלי בשם בעברית: "${shortName}, תעזור לי עם ..."`);
   }
   lines.push("");
   lines.push("═".repeat(64));

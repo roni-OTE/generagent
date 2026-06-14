@@ -158,7 +158,7 @@ export default async function ConsultResultPage({
             />
             <CopyableCode
               label="CODEX CLI"
-              code={`mkdir -p .codex/agents && curl -fsSL "https://generagent.io/api/install/${id}?platform=codex" -o ".codex/agents/generagent-${id.slice(0, 8)}.md" && curl -fsSL "https://generagent.io/api/intro/${id}?platform=codex"`}
+              code={`mkdir -p .codex/prompts && curl -fsSL "https://generagent.io/api/install/${id}?platform=codex" -o ".codex/prompts/generagent-${id.slice(0, 8)}.md" && curl -fsSL "https://generagent.io/api/intro/${id}?platform=codex"`}
             />
           </div>
         </Section>
