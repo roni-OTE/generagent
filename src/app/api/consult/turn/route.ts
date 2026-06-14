@@ -22,9 +22,48 @@ type BotTurn = {
 
 function extractJson(text: string): BotTurn {
   const trimmed = text.trim();
+  // 1. fenced ```json ... ```
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenceMatch ? fenceMatch[1] : trimmed;
-  return JSON.parse(candidate) as BotTurn;
+  if (fenceMatch) {
+    try { return JSON.parse(fenceMatch[1]) as BotTurn; } catch {}
+  }
+  // 2. first { ... last }
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
+  if (first !== -1 && last > first) {
+    try { return JSON.parse(trimmed.slice(first, last + 1)) as BotTurn; } catch {}
+  }
+  // 3. raw parse
+  return JSON.parse(trimmed) as BotTurn;
+}
+
+async function callBot(args: {
+  systemPrompt: string;
+  history: { role: "user" | "assistant"; content: string }[];
+}): Promise<BotTurn> {
+  const anthropic = getAnthropic();
+  let lastRaw = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const resp = await anthropic.messages.create({
+      model: BOT_MODEL,
+      max_tokens: 800,
+      system:
+        args.systemPrompt +
+        (attempt === 1
+          ? "\n\n⚠️ הניסיון הקודם לא היה JSON תקין. החזר **אך ורק** JSON תקין, ללא טקסט לפני או אחרי, ללא קוד-fence. רק { ... }."
+          : ""),
+      messages: args.history,
+    });
+    const textBlock = resp.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") continue;
+    lastRaw = textBlock.text;
+    try {
+      return extractJson(lastRaw);
+    } catch {
+      // try again
+    }
+  }
+  throw new Error("parse_failed: " + lastRaw.slice(0, 200));
 }
 
 export async function POST(req: Request) {
@@ -108,31 +147,33 @@ export async function POST(req: Request) {
 
   const nextCount = (consultation.question_count ?? 0) + 1;
   const forceClose = nextCount >= MAX_QUESTIONS;
+  const minReached = nextCount >= MIN_QUESTIONS;
 
   const suffixHint = forceClose
     ? "\n\nשים לב — הגעת ל-15 שאלות. סיים עכשיו, החזר phase='done' ו-should_continue=false."
-    : nextCount >= MIN_QUESTIONS
+    : minReached
       ? "\n\nאם confidence ≥ 0.85 אתה יכול לסיים. אחרת המשך."
-      : "";
-
-  const anthropic = getAnthropic();
-  const resp = await anthropic.messages.create({
-    model: BOT_MODEL,
-    max_tokens: 800,
-    system: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }) + suffixHint,
-    messages: history,
-  });
-
-  const textBlock = resp.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json({ error: "no_text_response" }, { status: 500 });
-  }
+      : `\n\nשים לב — שאלה ${nextCount} מתוך מינימום ${MIN_QUESTIONS}. **אסור** עדיין לסיים. חייב להחזיר should_continue=true ו-phase != 'done'. תמשיך לשאול ולהעמיק.`;
 
   let turn: BotTurn;
   try {
-    turn = extractJson(textBlock.text);
-  } catch {
-    return NextResponse.json({ error: "parse_failed", raw: textBlock.text }, { status: 500 });
+    turn = await callBot({
+      systemPrompt: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }) + suffixHint,
+      history,
+    });
+  } catch (e: unknown) {
+    // Soft recovery: return a friendly turn instead of 500 so chat keeps going
+    const fallbackTurn: BotTurn = {
+      phase: (consultation.phase as BotTurn["phase"]) ?? "discovery",
+      question_id: "q-retry",
+      micro_explanation: "רגע — לא הבנתי את עצמי. תן לי לנסות שוב.",
+      question: "סליחה, פספסתי משהו. תוכל לחזור על מה שאמרת עכשיו? אני רוצה להבין בדיוק.",
+      detected_persona: consultation.detected_persona ?? null,
+      confidence: Number(consultation.confidence ?? 0),
+      should_continue: true,
+      internal_notes: "parse_failed soft-recover: " + (e instanceof Error ? e.message.slice(0, 120) : "unknown"),
+    };
+    turn = fallbackTurn;
   }
 
   // Capture name from bot's response and update profile
@@ -144,7 +185,15 @@ export async function POST(req: Request) {
       .eq("id", user.id);
   }
 
-  const shouldClose = forceClose || turn.phase === "done" || !turn.should_continue;
+  // Hard guard: never close before MIN_QUESTIONS. Bot's "done" before minimum is ignored.
+  const botWantsClose = turn.phase === "done" || !turn.should_continue;
+  const shouldClose = forceClose || (minReached && botWantsClose);
+
+  // If the bot wanted to close prematurely, override the turn fields so the UI keeps the chat open.
+  if (botWantsClose && !shouldClose) {
+    turn.phase = consultation.phase === "discovery" ? "discovery" : (turn.phase === "done" ? "deep_dive" : turn.phase);
+    turn.should_continue = true;
+  }
 
   await supabase.from("messages").insert({
     consultation_id,
