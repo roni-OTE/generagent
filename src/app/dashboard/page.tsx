@@ -5,6 +5,7 @@ import { computeEntitlement } from "@/lib/entitlement";
 import WorkspaceShell from "@/components/WorkspaceShell";
 import Orb from "@/components/Orb";
 import NewChatButton from "@/components/NewChatButton";
+import DeleteAgentButton from "@/components/DeleteAgentButton";
 
 export const metadata = { title: "Dashboard · GenerAgent" };
 
@@ -104,19 +105,22 @@ export default async function DashboardPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {packages.map((pkg) => (
-                <Link key={pkg.id} href={`/p/${pkg.id}`} className="group">
-                  <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[16px] p-5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-[rgba(94,106,210,0.3)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] h-full">
-                    <div className="font-mono text-[10px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-2">
-                      {pkg.archetype ?? "agent"} · v{pkg.version}
+                <div key={pkg.id} className="group relative">
+                  <DeleteAgentButton packageId={pkg.id} agentName={pkg.name} />
+                  <Link href={`/p/${pkg.id}`} className="block">
+                    <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[16px] p-5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-[rgba(94,106,210,0.3)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] h-full">
+                      <div className="font-mono text-[10px] text-[var(--indigo-text)] uppercase tracking-[0.1em] mb-2">
+                        {pkg.archetype ?? "agent"} · v{pkg.version}
+                      </div>
+                      <h3 className="text-[16px] font-bold mb-2">{pkg.name}</h3>
+                      <p className="text-[13px] text-[var(--fg-dim)] mb-4 line-clamp-2">{pkg.description}</p>
+                      <div className="font-mono text-[11px] text-[var(--fg-muted)] flex justify-between border-t border-[var(--border)] pt-3">
+                        <span>{new Date(pkg.created_at).toLocaleDateString("he-IL")}</span>
+                        {pkg.is_template_clone && <span className="text-[var(--success)]">★ template</span>}
+                      </div>
                     </div>
-                    <h3 className="text-[16px] font-bold mb-2">{pkg.name}</h3>
-                    <p className="text-[13px] text-[var(--fg-dim)] mb-4 line-clamp-2">{pkg.description}</p>
-                    <div className="font-mono text-[11px] text-[var(--fg-muted)] flex justify-between border-t border-[var(--border)] pt-3">
-                      <span>{new Date(pkg.created_at).toLocaleDateString("he-IL")}</span>
-                      {pkg.is_template_clone && <span className="text-[var(--success)]">★ template</span>}
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </div>
           </>

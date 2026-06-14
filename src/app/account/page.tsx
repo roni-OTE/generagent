@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeEntitlement } from "@/lib/entitlement";
 import WorkspaceShell from "@/components/WorkspaceShell";
+import EditableDisplayName from "@/components/EditableDisplayName";
 
 export const metadata = { title: "החשבון שלי · GenerAgent" };
 export const dynamic = "force-dynamic";
@@ -66,7 +67,7 @@ export default async function AccountPage() {
               {(profile.display_name?.[0] || user.email?.[0] || "?").toUpperCase()}
             </div>
             <div>
-              <div className="text-[18px] font-semibold text-white">{profile.display_name || "—"}</div>
+              <EditableDisplayName initial={profile.display_name || ""} />
               <div className="text-[13px] text-[var(--fg-dim)]" dir="ltr">{user.email}</div>
             </div>
           </div>

@@ -13,6 +13,7 @@ type Chat = {
   question_count: number;
   detected_persona: string | null;
   created_at: string;
+  title: string | null;
   preview: string | null;
 };
 
@@ -47,7 +48,7 @@ export default function WorkspaceShell({
 
     const { data: rows } = await supabase
       .from("consultations")
-      .select("id, status, phase, question_count, detected_persona, created_at")
+      .select("id, status, phase, question_count, detected_persona, created_at, title")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -76,6 +77,27 @@ export default function WorkspaceShell({
         preview: previewMap.get(r.id) || null,
       }))
     );
+  }
+
+  async function deleteChat(chatId: string) {
+    if (!confirm("למחוק את השיחה הזו? (אי אפשר לשחזר)")) return;
+    setChats((prev) => prev.filter((c) => c.id !== chatId));
+    await fetch(`/api/consultations/${chatId}`, { method: "DELETE" });
+    if (activeChatId === chatId) {
+      router.push("/dashboard");
+    }
+  }
+
+  async function renameChat(chatId: string, current: string | null) {
+    const next = prompt("שם חדש לשיחה:", current ?? "");
+    if (next === null) return; // cancelled
+    const cleaned = next.trim().slice(0, 120);
+    setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, title: cleaned || null } : c)));
+    await fetch(`/api/consultations/${chatId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: cleaned }),
+    });
   }
 
   async function createNewChat() {
@@ -122,24 +144,49 @@ export default function WorkspaceShell({
             </div>
           ) : (
             chats.map((chat) => (
-              <Link
-                key={chat.id}
-                href={`/consult/${chat.id}`}
-                className={`block px-3 py-2 rounded-lg text-[13px] transition-colors no-underline ${
-                  activeChatId === chat.id
-                    ? "bg-[rgba(94,106,210,0.12)] text-white"
-                    : "text-[var(--fg-dim)] hover:bg-[var(--surface)] hover:text-[var(--fg)]"
-                }`}
-              >
-                <div className="truncate">
-                  {chat.preview ? truncate(chat.preview, 36) : "שיחה חדשה"}
+              <div key={chat.id} className="group relative">
+                <Link
+                  href={`/consult/${chat.id}`}
+                  className={`block px-3 py-2 pr-14 rounded-lg text-[13px] transition-colors no-underline ${
+                    activeChatId === chat.id
+                      ? "bg-[rgba(94,106,210,0.12)] text-white"
+                      : "text-[var(--fg-dim)] hover:bg-[var(--surface)] hover:text-[var(--fg)]"
+                  }`}
+                >
+                  <div className="truncate">
+                    {chat.title ?? (chat.preview ? truncate(chat.preview, 36) : "שיחה חדשה")}
+                  </div>
+                  <div className="text-[10px] text-[var(--fg-muted)] mt-0.5 flex items-center gap-2">
+                    <span>{chat.question_count} שאלות</span>
+                    {chat.status === "completed" && <span className="text-[var(--success)]">✓ הושלמה</span>}
+                    {chat.status === "in_progress" && <span>פעילה</span>}
+                    {chat.status === "analyzing" && <span className="text-amber-300/80">מאפיין…</span>}
+                  </div>
+                </Link>
+                {/* Hover actions */}
+                <div className="absolute top-1.5 left-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => { e.preventDefault(); void renameChat(chat.id, chat.title); }}
+                    className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.06]"
+                    title="שינוי שם"
+                    aria-label="שינוי שם"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                    </svg>
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); void deleteChat(chat.id); }}
+                    className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-red-300 hover:bg-red-500/10"
+                    title="מחיקה"
+                    aria-label="מחיקה"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+                    </svg>
+                  </button>
                 </div>
-                <div className="text-[10px] text-[var(--fg-muted)] mt-0.5 flex items-center gap-2">
-                  <span>{chat.question_count} שאלות</span>
-                  {chat.status === "completed" && <span className="text-[var(--success)]">✓ הושלמה</span>}
-                  {chat.status === "in_progress" && <span>פעילה</span>}
-                </div>
-              </Link>
+              </div>
             ))
           )}
         </div>
