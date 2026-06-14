@@ -2,8 +2,15 @@ import Orb from "@/components/Orb";
 import Button from "@/components/Button";
 import Logo from "@/components/Logo";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthed = !!user;
+
   return (
     <>
       {/* NAV */}
@@ -16,16 +23,26 @@ export default function Home() {
             <Logo size="md" />
           </Link>
           <div className="flex gap-2 items-center">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">
-                התחבר
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="primary" size="sm">
-                התחל <span className="inline-block">←</span>
-              </Button>
-            </Link>
+            {isAuthed ? (
+              <Link href="/dashboard">
+                <Button variant="primary" size="sm">
+                  לדאשבורד <span className="inline-block">←</span>
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm">
+                    התחבר
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button variant="primary" size="sm">
+                    התחל <span className="inline-block">←</span>
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -46,19 +63,27 @@ export default function Home() {
           <p className="text-[var(--fg-dim)] text-[clamp(15px,1.3vw,17px)] leading-[1.6] mb-8">
             ליצור סוכן זה קל. להבין{" "}
             <strong className="text-[var(--fg)]">איזה</strong> סוכן יעזור לך — זו השאלה.
-            נראיין אותך כיועץ, נאפיין את הצרכים, ונמסור חבילת התקנה מוכנה ל-Claude
+            נראיין אותך כיועץ, נאפיין את הצרכים, ונמסור פקודת התקנה מוכנה ל-Claude
             Code או Codex CLI.
           </p>
           <div className="flex gap-2.5 flex-wrap items-center justify-center md:justify-start mb-6">
-            <Link href="/consult">
-              <Button variant="primary" size="lg">
-                התחל ייעוץ <span className="inline-block">←</span>
-              </Button>
-            </Link>
+            {isAuthed ? (
+              <Link href="/dashboard">
+                <Button variant="primary" size="lg">
+                  המשך לדאשבורד <span className="inline-block">←</span>
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/login">
+                <Button variant="primary" size="lg">
+                  התחל ייעוץ <span className="inline-block">←</span>
+                </Button>
+              </Link>
+            )}
           </div>
           <div className="flex gap-5 flex-wrap justify-center md:justify-start font-mono text-[11px] text-[var(--fg-muted)]">
             <span className="meta-dot">ראיון בעברית · 5 דק׳</span>
-            <span className="meta-dot">חבילת ZIP להורדה</span>
+            <span className="meta-dot">פקודת התקנה</span>
             <span className="meta-dot">חינם להתחיל</span>
           </div>
         </div>
@@ -96,13 +121,6 @@ export default function Home() {
       </footer>
 
       <style>{`
-        .brand-mark {
-          width: 26px; height: 26px; border-radius: 7px;
-          background: linear-gradient(135deg, var(--indigo), var(--magenta));
-          box-shadow: 0 0 14px rgba(94,106,210,0.4);
-          display: flex; align-items: center; justify-content: center;
-          color: #fff; font-weight: 800; font-size: 13px;
-        }
         .meta-dot {
           display: inline-flex; align-items: center; gap: 6px;
         }
