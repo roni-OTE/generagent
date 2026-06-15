@@ -51,15 +51,25 @@ export default async function StandupDetailPage({
             </div>
             <div className="space-y-1">
               {(standup.decisions_needed as string[]).map((d, i) => {
-                const responses = (standup.user_responses as Record<string, { response: string; at: string }> | null) ?? {};
-                const existing = responses[String(i)] ?? null;
+                const responses = (standup.user_responses as Record<string, unknown> | null) ?? {};
+                const raw = responses[String(i)];
+                // Support both new format {thread:[...]} and legacy {response, at}
+                let thread: Array<{ role: "user" | "tamar"; text: string; at: string }> = [];
+                if (raw && typeof raw === "object") {
+                  if ("thread" in raw && Array.isArray((raw as { thread: unknown }).thread)) {
+                    thread = (raw as { thread: typeof thread }).thread;
+                  } else if ("response" in raw && typeof (raw as { response: unknown }).response === "string") {
+                    const legacy = raw as { response: string; at: string };
+                    thread = [{ role: "user", text: legacy.response, at: legacy.at }];
+                  }
+                }
                 return (
                   <DecisionReply
                     key={i}
                     standupId={standup.id}
                     decisionIndex={i}
                     decisionText={d}
-                    initialResponse={existing}
+                    initialThread={thread}
                   />
                 );
               })}

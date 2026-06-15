@@ -2,25 +2,44 @@
 
 import { useState } from "react";
 
+type ThreadMessage = {
+  role: "user" | "tamar";
+  text: string;
+  at: string;
+};
+
 type Props = {
   standupId: string;
   decisionIndex: number;
   decisionText: string;
-  initialResponse?: { response: string; at: string } | null;
+  initialThread?: ThreadMessage[] | null;
 };
 
-export default function DecisionReply({ standupId, decisionIndex, decisionText, initialResponse }: Props) {
-  const [response, setResponse] = useState(initialResponse?.response ?? "");
-  const [saved, setSaved] = useState<{ at: string } | null>(initialResponse ? { at: initialResponse.at } : null);
+export default function DecisionReply({
+  standupId,
+  decisionIndex,
+  decisionText,
+  initialThread,
+}: Props) {
+  const [thread, setThread] = useState<ThreadMessage[]>(initialThread ?? []);
+  const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(!initialResponse);
 
-  async function save() {
-    const text = response.trim();
-    if (!text) return;
+  async function send() {
+    const text = draft.trim();
+    if (!text || busy) return;
     setBusy(true);
     setErr(null);
+    // Optimistic: show user's message immediately
+    const optimistic: ThreadMessage = {
+      role: "user",
+      text,
+      at: new Date().toISOString(),
+    };
+    setThread((prev) => [...prev, optimistic]);
+    setDraft("");
+
     try {
       const res = await fetch(`/api/team/standups/${standupId}/respond`, {
         method: "POST",
@@ -28,61 +47,99 @@ export default function DecisionReply({ standupId, decisionIndex, decisionText, 
         body: JSON.stringify({ decision_index: decisionIndex, response: text }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "save_failed");
-      setSaved({ at: new Date().toISOString() });
-      setExpanded(false);
+      if (!res.ok) throw new Error(data.error || "send_failed");
+      // Server returns the full thread (incl. Tamar's reply)
+      if (Array.isArray(data.thread)) {
+        setThread(data.thread);
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : "שגיאה");
+      // Roll back optimistic
+      setThread((prev) => prev.slice(0, -1));
+      setDraft(text);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="border-t border-white/[0.06] pt-3 mt-3 first:border-t-0 first:pt-0 first:mt-0">
-      <div className="flex gap-2 text-[14px] text-white/90 mb-2">
-        <span className="text-amber-300/60 mt-0.5">▸</span>
+    <div className="border-t border-white/[0.06] pt-4 mt-4 first:border-t-0 first:pt-0 first:mt-0">
+      {/* Decision line */}
+      <div className="flex gap-2 text-[14px] text-white/90 mb-3">
+        <span className="text-amber-300/60 mt-0.5 shrink-0">▸</span>
         <span className="flex-1">{decisionText}</span>
       </div>
 
-      {!expanded && saved && (
-        <div className="mr-6 bg-emerald-500/[0.06] border border-emerald-500/20 rounded-lg p-3 text-[13px]">
-          <div className="text-emerald-300/80 text-[11px] font-mono mb-1">✓ ענית · {new Date(saved.at).toLocaleString("he-IL")}</div>
-          <div className="text-white/80 whitespace-pre-wrap">{response}</div>
-          <button onClick={() => setExpanded(true)} className="text-[11px] text-[var(--fg-muted)] hover:text-white mt-2">
-            ערוך תשובה
-          </button>
+      {/* Thread */}
+      {thread.length > 0 && (
+        <div className="mr-6 mb-3 space-y-2">
+          {thread.map((m, i) => (
+            <Bubble key={i} message={m} />
+          ))}
+          {busy && (
+            <div className="text-[11px] text-white/40 px-3 py-2">תמר כותבת…</div>
+          )}
         </div>
       )}
 
-      {expanded && (
-        <div className="mr-6">
-          <textarea
-            value={response}
-            onChange={(e) => setResponse(e.target.value)}
-            placeholder="תשובה לתמר..."
-            rows={3}
-            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-indigo-400/40"
-            maxLength={2000}
-          />
-          <div className="flex items-center gap-2 mt-2">
-            <button
-              onClick={save}
-              disabled={busy || !response.trim()}
-              className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-40"
-              style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)" }}
-            >
-              {busy ? "..." : (saved ? "עדכן תשובה" : "שלח לתמר")}
-            </button>
-            {saved && (
-              <button onClick={() => setExpanded(false)} className="text-[11px] text-[var(--fg-muted)]">
-                ביטול
-              </button>
-            )}
-            {err && <span className="text-[11px] text-red-300/80">{err}</span>}
-          </div>
+      {/* Compose */}
+      <div className="mr-6">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              void send();
+            }
+          }}
+          placeholder={thread.length === 0 ? "תשובה לתמר... (Cmd+Enter לשליחה)" : "המשך השיחה..."}
+          rows={2}
+          disabled={busy}
+          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/30 focus:outline-none focus:border-indigo-400/40 disabled:opacity-50"
+          maxLength={2000}
+        />
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={() => void send()}
+            disabled={busy || !draft.trim()}
+            className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white disabled:opacity-40"
+            style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)" }}
+          >
+            {busy ? "שולח…" : (thread.length === 0 ? "שלח לתמר" : "שלח")}
+          </button>
+          {err && <span className="text-[11px] text-red-300/80">{err}</span>}
         </div>
-      )}
+      </div>
+    </div>
+  );
+}
+
+function Bubble({ message }: { message: ThreadMessage }) {
+  const isUser = message.role === "user";
+  return (
+    <div className={isUser ? "flex justify-start" : "flex justify-end"}>
+      <div
+        className={
+          isUser
+            ? "max-w-[85%] bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2 text-[13px] text-white/90"
+            : "max-w-[85%] rounded-xl px-3 py-2 text-[13px]"
+        }
+        style={
+          !isUser
+            ? {
+                background: "linear-gradient(135deg, rgba(94,106,210,0.10), rgba(184,103,255,0.06))",
+                border: "1px solid rgba(94,106,210,0.18)",
+                color: "rgba(255,255,255,0.92)",
+              }
+            : undefined
+        }
+      >
+        <div className="text-[10px] font-mono mb-1 opacity-60">
+          {isUser ? "אתה" : "תמר"} · {new Date(message.at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+        </div>
+        <div className="leading-relaxed whitespace-pre-wrap">{message.text}</div>
+      </div>
     </div>
   );
 }
