@@ -52,14 +52,20 @@ export async function POST(
   const body = (await req.json().catch(() => ({}))) as {
     decision_index?: number;
     response?: string;
+    catch_up?: boolean;
   };
 
-  if (typeof body.decision_index !== "number" || typeof body.response !== "string") {
+  if (typeof body.decision_index !== "number") {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
 
-  const userText = body.response.trim().slice(0, 2000);
-  if (!userText) return NextResponse.json({ error: "empty_response" }, { status: 400 });
+  const userText =
+    typeof body.response === "string" ? body.response.trim().slice(0, 2000) : "";
+
+  // Either a new user message OR a catch-up request (Tamar reads existing user msgs)
+  if (!body.catch_up && !userText) {
+    return NextResponse.json({ error: "empty_response" }, { status: 400 });
+  }
 
   // Use service client (RLS only allows admin SELECT, we need UPDATE)
   const service = createServiceClient();
@@ -79,11 +85,24 @@ export async function POST(
 
   const key = String(body.decision_index);
   const existing = responses[key] ?? { thread: [] };
-  existing.thread.push({
-    role: "user",
-    text: userText,
-    at: new Date().toISOString(),
-  });
+
+  if (userText) {
+    existing.thread.push({
+      role: "user",
+      text: userText,
+      at: new Date().toISOString(),
+    });
+  } else if (body.catch_up) {
+    // catch-up only: make sure the LAST message is from user; otherwise nothing to do
+    const last = existing.thread[existing.thread.length - 1];
+    if (!last || last.role !== "user") {
+      return NextResponse.json({
+        ok: false,
+        error: "nothing_to_catch_up",
+        thread: existing.thread,
+      });
+    }
+  }
 
   // Ask Tamar for a follow-up
   const tamar = TEAM_AGENTS.find((a) => a.handle === "tamar")!;

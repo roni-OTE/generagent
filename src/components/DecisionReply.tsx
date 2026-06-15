@@ -31,7 +31,6 @@ export default function DecisionReply({
     if (!text || busy) return;
     setBusy(true);
     setErr(null);
-    // Optimistic: show user's message immediately
     const optimistic: ThreadMessage = {
       role: "user",
       text,
@@ -48,19 +47,40 @@ export default function DecisionReply({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "send_failed");
-      // Server returns the full thread (incl. Tamar's reply)
-      if (Array.isArray(data.thread)) {
-        setThread(data.thread);
-      }
+      if (Array.isArray(data.thread)) setThread(data.thread);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "שגיאה");
-      // Roll back optimistic
       setThread((prev) => prev.slice(0, -1));
       setDraft(text);
     } finally {
       setBusy(false);
     }
   }
+
+  async function catchUp() {
+    if (busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/team/standups/${standupId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision_index: decisionIndex, catch_up: true }),
+      });
+      const data = await res.json();
+      if (!res.ok && data.error !== "nothing_to_catch_up") {
+        throw new Error(data.error || "catchup_failed");
+      }
+      if (Array.isArray(data.thread)) setThread(data.thread);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "שגיאה");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const lastMsg = thread[thread.length - 1];
+  const needsCatchUp = lastMsg && lastMsg.role === "user";
 
   return (
     <div className="border-t border-white/[0.06] pt-4 mt-4 first:border-t-0 first:pt-0 first:mt-0">
@@ -78,6 +98,16 @@ export default function DecisionReply({
           ))}
           {busy && (
             <div className="text-[11px] text-white/40 px-3 py-2">תמר כותבת…</div>
+          )}
+          {!busy && needsCatchUp && (
+            <div className="px-3 py-2">
+              <button
+                onClick={() => void catchUp()}
+                className="text-[12px] text-indigo-300 hover:text-indigo-200 underline"
+              >
+                📩 תני לתמר לקרוא ולהגיב על מה שכתבת
+              </button>
+            </div>
           )}
         </div>
       )}
