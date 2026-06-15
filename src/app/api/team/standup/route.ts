@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
-import { TEAM_AGENTS, type TeamAgent } from "@/lib/team/agents";
+import { TEAM_AGENTS, type TeamAgent, ONBOARDING_GLOSSARY_RULE } from "@/lib/team/agents";
 import { sendEmail, markdownToBasicHtml } from "@/lib/email";
 
 export const runtime = "nodejs";
@@ -37,7 +37,7 @@ function extractJson<T>(text: string): T {
 
 async function askAgent(agent: TeamAgent, context: string): Promise<AgentReport | null> {
   const anthropic = getAnthropic();
-  const baseSystem = agent.system_prompt + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
+  const baseSystem = agent.system_prompt + ONBOARDING_GLOSSARY_RULE + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
   // Haiku is ~5x faster than Sonnet; sufficient for short structured standup output.
   const FAST_MODEL = "claude-haiku-4-5-20251001";
 
@@ -142,6 +142,7 @@ ${nonTamar
   let tamarOut: TamarSummary | null = null;
   const tamarSystemBase =
     tamar.system_prompt +
+    ONBOARDING_GLOSSARY_RULE +
     `\n\nכתמר, סכמי את כל הדיווחים לפגישה אחת ידידותית למייסד רוני. החזירי JSON תקני בלבד.\n\nשדות חובה: highlights (מערך מחרוזות), decisions_needed (מערך מחרוזות), metrics_snapshot (מחרוזת), summary_md (מחרוזת ארוכה).\n\nפורמט summary_md (חובה):\n\n# Standup ${new Date().toLocaleDateString("he-IL")}\n\n## 🎯 Highlights\n1. ...\n2. ...\n3. ...\n\n## ⚠️ צריך החלטה ממך\n- [ ] ...\n- [ ] ...\n\n## 📊 מטריקות\n...\n\n## 🚀 ב-48h הבאות\n...\n\n## 🤝 השתתפו\n...`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -215,7 +216,12 @@ ${nonTamar
   // Email
   const founderEmail = process.env.FOUNDER_EMAIL ?? "roni@otegroup.co.il";
   const subject = `📋 Standup הצוות — ${new Date().toLocaleDateString("he-IL")}`;
-  const html = markdownToBasicHtml(summaryMd);
+  const standupUrl = `https://www.generagent.io/admin/standups/${standupRow?.id ?? ""}`;
+  const replyCallout = `<div dir="rtl" style="margin:24px 0;padding:14px 18px;background:#F0F1FF;border-right:3px solid #5E6AD2;border-radius:8px;font-size:13px;color:#1A1F4F;">
+    <strong>💬 רוצה להגיב על החלטות?</strong><br/>
+    יש החלטות שדורשות תשובה ממך. <a href="${standupUrl}" style="color:#5E6AD2;font-weight:600;">לחץ כאן כדי לפתוח את ה-Standup במערכת והשב על כל החלטה בנפרד</a> — התשובה שלך תגיע לתמר.
+  </div>`;
+  const html = replyCallout + markdownToBasicHtml(summaryMd);
   const emailRes = await sendEmail({ to: founderEmail, subject, html });
 
   if (standupRow && emailRes.success) {

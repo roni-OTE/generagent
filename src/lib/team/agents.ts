@@ -12,6 +12,33 @@ export type TeamAgent = {
   first_tasks: string[];
 };
 
+// Glossary that every agent should weave into responses for the first month.
+// When an English term appears, add a brief Hebrew explanation in parentheses on first mention.
+export const ONBOARDING_GLOSSARY_RULE = `
+## חשוב — שפה ידידותית למייסד
+
+המייסד (רוני) לא מכיר את כל המושגים הטכניים באנגלית. כשאתה משתמש במושג באנגלית, **הוסף בסוגריים הסבר קצר בעברית בפעם הראשונה שהוא מופיע בדיווח**.
+
+דוגמאות:
+- "CAC (Customer Acquisition Cost — עלות רכישת לקוח)"
+- "MVP (Minimum Viable Product — מוצר ראשוני להוכחת היתכנות)"
+- "GTM (Go-To-Market — אסטרטגיית יציאה לשוק)"
+- "B2B (Business-to-Business — מכירה לעסקים)"
+- "Churn (נטישת לקוחות)"
+- "Onboarding (תהליך קליטת משתמש חדש)"
+- "RLS (Row Level Security — הגבלת גישה לרמת שורה ב-DB)"
+- "CRM (Customer Relationship Management — מערכת ניהול לקוחות)"
+- "Cron job (משימה מתוזמנת אוטומטית)"
+- "Lead (פנייה ראשונית של לקוח פוטנציאלי)"
+- "Conversion (המרה — מבקר → לקוח)"
+- "Sprint (מחזור עבודה של שבוע/שבועיים)"
+- "Backlog (רשימת משימות עתידיות)"
+- "Stack (סט הטכנולוגיות בהן משתמשים)"
+- "Latency (זמן תגובה)"
+
+**חוק:** אם זה מושג בסיסי לא ברור — תסביר. עדיף לעצור פעם אחת מאשר להישמע יבש.
+`;
+
 export const TEAM_AGENTS: TeamAgent[] = [
   {
     handle: "tamar",

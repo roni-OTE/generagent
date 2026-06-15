@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import DecisionReply from "@/components/DecisionReply";
 
 export const metadata = { title: "Standup · Admin" };
 export const dynamic = "force-dynamic";
@@ -45,17 +46,24 @@ export default async function StandupDetailPage({
 
         {Array.isArray(standup.decisions_needed) && standup.decisions_needed.length > 0 && (
           <div className="mt-8 bg-amber-500/[0.06] border border-amber-500/30 rounded-[14px] p-5">
-            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-amber-300 mb-3">
-              ⚠ ממתין להחלטה ממך
+            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-amber-300 mb-4">
+              ⚠ ממתין להחלטה ממך — ענה ותמר תקבל
             </div>
-            <ul className="space-y-2">
-              {(standup.decisions_needed as string[]).map((d, i) => (
-                <li key={i} className="flex gap-2 text-[14px] text-white/90">
-                  <span className="text-amber-300/60 mt-0.5">▸</span>
-                  <span>{d}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-1">
+              {(standup.decisions_needed as string[]).map((d, i) => {
+                const responses = (standup.user_responses as Record<string, { response: string; at: string }> | null) ?? {};
+                const existing = responses[String(i)] ?? null;
+                return (
+                  <DecisionReply
+                    key={i}
+                    standupId={standup.id}
+                    decisionIndex={i}
+                    decisionText={d}
+                    initialResponse={existing}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
 
