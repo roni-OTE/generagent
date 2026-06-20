@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { ANALYSIS_SYSTEM_PROMPT } from "@/lib/bot/prompts";
+import { recordUsage } from "@/lib/quota";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -39,9 +40,11 @@ function extractJson<T>(text: string): T {
 async function callAnalyst(args: {
   system: string;
   userMessage: string;
-}): Promise<Analysis> {
+}): Promise<{ analysis: Analysis; inputTokens: number; outputTokens: number }> {
   const anthropic = getAnthropic();
   let lastRaw = "";
+  let totalIn = 0;
+  let totalOut = 0;
   for (let attempt = 0; attempt < 3; attempt++) {
     const resp = await anthropic.messages.create({
       model: BOT_MODEL,
@@ -57,11 +60,13 @@ async function callAnalyst(args: {
         { role: "assistant" as const, content: "{" },
       ],
     });
+    totalIn += resp.usage?.input_tokens ?? 0;
+    totalOut += resp.usage?.output_tokens ?? 0;
     const textBlock = resp.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") continue;
     lastRaw = "{" + textBlock.text;
     try {
-      return extractJson<Analysis>(lastRaw);
+      return { analysis: extractJson<Analysis>(lastRaw), inputTokens: totalIn, outputTokens: totalOut };
     } catch {
       // try again
     }
@@ -98,10 +103,12 @@ export async function POST(req: Request) {
 
   let analysis: Analysis;
   try {
-    analysis = await callAnalyst({
+    const result = await callAnalyst({
       system: ANALYSIS_SYSTEM_PROMPT,
       userMessage: `transcript:\n\n${transcript}\n\nתפיק את האפיון.`,
     });
+    analysis = result.analysis;
+    await recordUsage(supabase, user.id, result.inputTokens, result.outputTokens);
   } catch (e: unknown) {
     console.error("[finalize] parse failed after retries", e);
     return NextResponse.json(

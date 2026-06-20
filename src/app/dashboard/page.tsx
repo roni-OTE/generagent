@@ -7,6 +7,8 @@ import Orb from "@/components/Orb";
 import NewChatButton from "@/components/NewChatButton";
 import DeleteAgentButton from "@/components/DeleteAgentButton";
 import StandupBanner from "@/components/StandupBanner";
+import { getQuotaStatus } from "@/lib/quota";
+import QuotaBar from "@/components/QuotaBar";
 
 export const metadata = { title: "Dashboard · GenerAgent" };
 
@@ -35,6 +37,7 @@ export default async function DashboardPage() {
   if (!legalRows || legalRows.length === 0) redirect("/legal/accept");
 
   const ent = computeEntitlement(profile);
+  const quota = await getQuotaStatus(supabase, user.id);
 
   const { data: packages } = await supabase
     .from("packages")
@@ -54,6 +57,25 @@ export default async function DashboardPage() {
       <div className="max-w-[1100px] mx-auto w-full px-4 sm:px-6 md:px-8 py-6 md:py-12 flex-1">
         {/* Standup banner (admin only, only when fresh) */}
         <StandupBanner />
+
+        {/* Quota warning when above 80% (non-admin) */}
+        {quota && quota.plan !== "admin" && quota.percent >= 80 && (
+          <div className={`mb-6 rounded-[14px] p-4 border ${quota.blocked ? "bg-red-500/[0.08] border-red-500/30" : "bg-amber-500/[0.06] border-amber-500/30"}`}>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-[13px]">
+                <strong className={quota.blocked ? "text-red-300" : "text-amber-300"}>
+                  {quota.blocked ? "⛔ נגמרו לך הטוקנים" : `⚠ נצרכו ${quota.percent}% מהטוקנים החודשיים`}
+                </strong>
+                <span className="text-[var(--fg-dim)] mr-2">
+                  · יתאפס בעוד {quota.reset_in_days} ימים
+                </span>
+              </div>
+              <Link href="/upgrade" className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white" style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)" }}>
+                שדרג ל-Pro
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Trial banner */}
         {ent.plan === "trial" && (

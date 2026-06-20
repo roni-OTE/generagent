@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
+import { getQuotaStatus, recordUsage, PER_CHAT_CAP } from "@/lib/quota";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -41,9 +42,11 @@ function extractJson(text: string): BotTurn {
 async function callBot(args: {
   systemPrompt: string;
   history: { role: "user" | "assistant"; content: string }[];
-}): Promise<BotTurn> {
+}): Promise<{ turn: BotTurn; inputTokens: number; outputTokens: number }> {
   const anthropic = getAnthropic();
   let lastRaw = "";
+  let totalIn = 0;
+  let totalOut = 0;
   for (let attempt = 0; attempt < 3; attempt++) {
     const resp = await anthropic.messages.create({
       model: BOT_MODEL,
@@ -56,16 +59,16 @@ async function callBot(args: {
           : ""),
       messages: [
         ...args.history,
-        // Prefill the assistant turn with "{" to force JSON-mode behavior
         { role: "assistant" as const, content: "{" },
       ],
     });
+    totalIn += resp.usage?.input_tokens ?? 0;
+    totalOut += resp.usage?.output_tokens ?? 0;
     const textBlock = resp.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") continue;
-    // Prepend the "{" we prefilled
     lastRaw = "{" + textBlock.text;
     try {
-      return extractJson(lastRaw);
+      return { turn: extractJson(lastRaw), inputTokens: totalIn, outputTokens: totalOut };
     } catch {
       // try again
     }
@@ -93,6 +96,33 @@ export async function POST(req: Request) {
   if (!consultation) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (consultation.status !== "in_progress") {
     return NextResponse.json({ error: "not_in_progress" }, { status: 409 });
+  }
+
+  // Quota gate (period + per-chat cap)
+  const quota = await getQuotaStatus(supabase, user.id);
+  if (quota?.blocked) {
+    return NextResponse.json(
+      {
+        error: "quota_exceeded",
+        message: `נגמר לך הקצב החודשי (${quota.limit.toLocaleString()} טוקנים). יתאפס בעוד ${quota.reset_in_days} ימים.`,
+      },
+      { status: 429 }
+    );
+  }
+  // Per-consultation cap: estimate tokens used so far in this chat from message count
+  const { count: msgCount } = await supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("consultation_id", consultation_id);
+  const estimatedChatTokens = (msgCount ?? 0) * 1500; // rough average
+  if (estimatedChatTokens > PER_CHAT_CAP) {
+    return NextResponse.json(
+      {
+        error: "chat_cap_reached",
+        message: "השיחה הזו ארוכה במיוחד. תרצה לסיים את הייעוץ ולקבל סוכן עכשיו? תכתוב 'סיים' ונועם יסכם.",
+      },
+      { status: 429 }
+    );
   }
 
   // Load profile to know name
@@ -163,11 +193,16 @@ export async function POST(req: Request) {
       : `\n\nשים לב — שאלה ${nextCount} מתוך מינימום ${MIN_QUESTIONS}. **אסור** עדיין לסיים. חייב להחזיר should_continue=true ו-phase != 'done'. תמשיך לשאול ולהעמיק.`;
 
   let turn: BotTurn;
+  let usedIn = 0;
+  let usedOut = 0;
   try {
-    turn = await callBot({
+    const result = await callBot({
       systemPrompt: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }) + suffixHint,
       history,
     });
+    turn = result.turn;
+    usedIn = result.inputTokens;
+    usedOut = result.outputTokens;
   } catch (e: unknown) {
     // Soft recovery: return a friendly turn instead of 500 so chat keeps going
     const fallbackTurn: BotTurn = {
@@ -182,6 +217,9 @@ export async function POST(req: Request) {
     };
     turn = fallbackTurn;
   }
+
+  // Record usage (best-effort)
+  await recordUsage(supabase, user.id, usedIn, usedOut);
 
   // Capture name from bot's response and update profile
   if (turn.captured_name && typeof turn.captured_name === "string" && turn.captured_name.trim().length > 0) {

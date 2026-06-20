@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { computeEntitlement } from "@/lib/entitlement";
 import WorkspaceShell from "@/components/WorkspaceShell";
 import EditableDisplayName from "@/components/EditableDisplayName";
+import QuotaBar from "@/components/QuotaBar";
+import { getQuotaStatus } from "@/lib/quota";
 
 export const metadata = { title: "החשבון שלי · GenerAgent" };
 export const dynamic = "force-dynamic";
@@ -40,6 +42,8 @@ export default async function AccountPage() {
     .from("consultations")
     .select("id", { count: "exact" })
     .eq("user_id", user.id);
+
+  const quota = await getQuotaStatus(supabase, user.id);
 
   return (
     <WorkspaceShell
@@ -81,6 +85,18 @@ export default async function AccountPage() {
             <Field label="הצטרפת ב-" value={new Date(profile.created_at).toLocaleDateString("he-IL")} />
           </div>
         </div>
+
+        {/* Token quota card */}
+        {quota && (
+          <div className="mb-5">
+            <QuotaBar
+              used={quota.used}
+              limit={Number.isFinite(quota.limit) ? quota.limit : 0}
+              resetInDays={quota.reset_in_days}
+              plan={quota.plan}
+            />
+          </div>
+        )}
 
         {/* Plan card */}
         <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[16px] p-6 mb-5">

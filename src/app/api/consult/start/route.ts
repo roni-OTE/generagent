@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
+import { getQuotaStatus, recordUsage } from "@/lib/quota";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -29,6 +30,19 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+
+  // Quota gate
+  const quota = await getQuotaStatus(supabase, user.id);
+  if (quota?.blocked) {
+    return NextResponse.json(
+      {
+        error: "quota_exceeded",
+        message: `הגעת למקסימום הטוקנים החודשי שלך (${quota.limit.toLocaleString()}). יתאפס בעוד ${quota.reset_in_days} ימים, או שדרג ל-Pro.`,
+        reset_in_days: quota.reset_in_days,
+      },
+      { status: 429 }
+    );
+  }
 
   let body: { source_template_id?: string | null } = {};
   try { body = await req.json(); } catch {}
@@ -90,6 +104,9 @@ export async function POST(req: Request) {
     system: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }),
     messages: [{ role: "user", content: "התחל את הייעוץ. השאלה הראשונה." }],
   });
+
+  // Record token usage (best-effort)
+  await recordUsage(supabase, user.id, resp.usage?.input_tokens ?? 0, resp.usage?.output_tokens ?? 0);
 
   const textBlock = resp.content.find((b) => b.type === "text");
   if (!textBlock || textBlock.type !== "text") {
