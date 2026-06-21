@@ -7,6 +7,7 @@ import {
   executeTool,
   toAnthropicTools,
   ANTI_HALLUCINATION_RULE,
+  TEAM_DISAMBIGUATION_RULE,
 } from "@/lib/team/tools";
 
 export const runtime = "nodejs";
@@ -64,6 +65,7 @@ export async function POST(
   const system =
     agent.system_prompt +
     ONBOARDING_GLOSSARY_RULE +
+    TEAM_DISAMBIGUATION_RULE +
     ANTI_HALLUCINATION_RULE +
     `\n\nאת/ה משוחח/ת ישירות עם ${founderName}, מייסד GenerAgent, בצ׳אט חי. ענה בעברית, בטון של ${agent.name}. הודעות קצרות-בינוניות.\n\nיש לך כלים שיכולים לבדוק נתונים אמיתיים מהמערכת — **השתמש בהם** במקום לנחש. תמיד בתחילת שיחה חדשה (או כשנשאלת על העבר) — קרא את הזיכרון שלך עם read_my_memory. בסוף שיחה משמעותית, שמור בזיכרון את מה שלמדת עם save_to_memory.`;
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { TEAM_AGENTS, type TeamAgent, ONBOARDING_GLOSSARY_RULE } from "@/lib/team/agents";
+import { TEAM_DISAMBIGUATION_RULE } from "@/lib/team/tools";
 import { sendEmail, markdownToBasicHtml } from "@/lib/email";
 
 export const runtime = "nodejs";
@@ -37,7 +38,7 @@ function extractJson<T>(text: string): T {
 
 async function askAgent(agent: TeamAgent, context: string): Promise<AgentReport | null> {
   const anthropic = getAnthropic();
-  const baseSystem = agent.system_prompt + ONBOARDING_GLOSSARY_RULE + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
+  const baseSystem = agent.system_prompt + ONBOARDING_GLOSSARY_RULE + TEAM_DISAMBIGUATION_RULE + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
   // Haiku is ~5x faster than Sonnet; sufficient for short structured standup output.
   const FAST_MODEL = "claude-haiku-4-5-20251001";
 
@@ -143,6 +144,7 @@ ${nonTamar
   const tamarSystemBase =
     tamar.system_prompt +
     ONBOARDING_GLOSSARY_RULE +
+    TEAM_DISAMBIGUATION_RULE +
     `\n\nכתמר, סכמי את כל הדיווחים לפגישה אחת ידידותית למייסד רוני. החזירי JSON תקני בלבד.\n\nשדות חובה: highlights (מערך מחרוזות), decisions_needed (מערך מחרוזות), metrics_snapshot (מחרוזת), summary_md (מחרוזת ארוכה).\n\nפורמט summary_md (חובה):\n\n# Standup ${new Date().toLocaleDateString("he-IL")}\n\n## 🎯 Highlights\n1. ...\n2. ...\n3. ...\n\n## ⚠️ צריך החלטה ממך\n- [ ] ...\n- [ ] ...\n\n## 📊 מטריקות\n...\n\n## 🚀 ב-48h הבאות\n...\n\n## 🤝 השתתפו\n...`;
 
   for (let attempt = 0; attempt < 2; attempt++) {

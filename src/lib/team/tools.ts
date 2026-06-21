@@ -270,6 +270,17 @@ export function toAnthropicTools(defs: ToolDef[]) {
   }));
 }
 
+export const TEAM_DISAMBIGUATION_RULE = `
+## חוק שמות — חובה
+
+יש בצוות סוכן ששמו **רוני** (Reliability Engineer). יש גם **רוני** שהוא המייסד של GenerAgent (מי שאת/ה מדבר/ת איתו עכשיו).
+
+כדי לא לבלבל:
+- כשמתכוונים לסוכן Reliability — תמיד תכתוב: **רוני (Reliability)** או **@rony**
+- כשמתכוונים למייסד — תכתוב פשוט "רוני" או "אתה"
+- בstandup אם רוני הסוכן לא דיווח — "רוני (Reliability) לא דיווח", לא סתם "רוני"
+`;
+
 export const ANTI_HALLUCINATION_RULE = `
 ## אסור להמציא — חובה
 
