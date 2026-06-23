@@ -52,6 +52,7 @@ export default async function AdminPage() {
               <Link href="/team" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">צוות</Link>
               <Link href="/admin/standups" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">standups</Link>
               <Link href="/admin/team" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">סקירת צוות</Link>
+              <Link href="/admin/inter-agent" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">תקשורת פנימית</Link>
             </div>
           </div>
         </div>
@@ -68,7 +69,7 @@ export default async function AdminPage() {
         </div>
 
         {/* Quick links to admin sections */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           <Link href="/team" className="block bg-gradient-to-br from-indigo-500/[0.08] to-fuchsia-500/[0.05] border border-indigo-400/25 rounded-[14px] p-5 hover:border-indigo-400/50 transition-colors no-underline">
             <div className="text-[24px] mb-1">💬</div>
             <div className="text-[14px] font-semibold text-white mb-1">דבר עם הצוות</div>
@@ -83,6 +84,11 @@ export default async function AdminPage() {
             <div className="text-[24px] mb-1">👥</div>
             <div className="text-[14px] font-semibold text-white mb-1">סקירת הצוות</div>
             <div className="text-[12px] text-[var(--fg-dim)]">6 הסוכנים, תפקידים, פקודת התקנה</div>
+          </Link>
+          <Link href="/admin/inter-agent" className="block bg-gradient-to-br from-indigo-500/[0.08] to-fuchsia-500/[0.05] border border-indigo-400/25 rounded-[14px] p-5 hover:border-indigo-400/50 transition-colors no-underline">
+            <div className="text-[24px] mb-1">🔗</div>
+            <div className="text-[14px] font-semibold text-white mb-1">תקשורת פנימית</div>
+            <div className="text-[12px] text-[var(--fg-dim)]">מי שאל את מי בצוות, audit log</div>
           </Link>
         </div>
 

@@ -1,16 +1,24 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { askAgent, callTeamMeeting } from "@/lib/team/communicate";
 
 /**
  * Tool definitions for team agents (Anthropic Tool Use format).
  * Each tool has: name, description, input_schema, and an executor function.
  */
 
+type ToolProp = {
+  type: string;
+  description: string;
+  enum?: string[];
+  items?: { type: string; enum?: string[] };
+};
+
 export type ToolDef = {
   name: string;
   description: string;
   input_schema: {
     type: "object";
-    properties: Record<string, { type: string; description: string; enum?: string[] }>;
+    properties: Record<string, ToolProp>;
     required?: string[];
   };
 };
@@ -103,6 +111,46 @@ export const ALL_TOOLS: Record<string, ToolDef> = {
       required: ["memory_type", "content"],
     },
   },
+  ping_agent: {
+    name: "ping_agent",
+    description:
+      "Send a question or request to another team agent and synchronously get their reply (in their voice). Use when you need a teammate's input before answering the founder — e.g. Tamar asking Yoav 'how long would this take to build?' or asking Rony 'any errors in the last 24h?'. The target agent will answer from their persona + their own memory. One call = one teammate. For multiple teammates use call_team_meeting.",
+    input_schema: {
+      type: "object",
+      properties: {
+        agent_handle: {
+          type: "string",
+          description: "The handle of the agent to ping",
+          enum: ["tamar", "yoav", "rony", "dana", "shira", "ariel"],
+        },
+        message: {
+          type: "string",
+          description: "The question / request in Hebrew, 1-3 sentences. Be specific.",
+        },
+      },
+      required: ["agent_handle", "message"],
+    },
+  },
+  call_team_meeting: {
+    name: "call_team_meeting",
+    description:
+      "Ask the same question to several teammates in parallel and collect all their answers. Use when a decision needs cross-functional input — e.g. 'should we ship X this week?' to Yoav (eng), Rony (reliability), Ariel (release). Returns each agent's reply as a list.",
+    input_schema: {
+      type: "object",
+      properties: {
+        agent_handles: {
+          type: "array",
+          description: "List of agent handles to invite (2-5 agents). Self is excluded automatically.",
+          items: { type: "string", enum: ["tamar", "yoav", "rony", "dana", "shira", "ariel"] },
+        },
+        topic: {
+          type: "string",
+          description: "The question / topic in Hebrew. Same text goes to every participant.",
+        },
+      },
+      required: ["agent_handles", "topic"],
+    },
+  },
 };
 
 /** Which tools each agent has access to. Agents not listed = no tools. */
@@ -116,8 +164,17 @@ export const AGENT_TOOLS: Record<string, string[]> = {
     "list_my_recent_chats",
     "read_my_memory",
     "save_to_memory",
+    "ping_agent",
+    "call_team_meeting",
   ],
-  yoav: ["list_recent_consultations", "list_recent_agents", "list_my_recent_chats", "read_my_memory", "save_to_memory"],
+  yoav: [
+    "list_recent_consultations",
+    "list_recent_agents",
+    "list_my_recent_chats",
+    "read_my_memory",
+    "save_to_memory",
+    "ping_agent",
+  ],
   rony: [
     "get_token_usage_summary",
     "get_user_metrics",
@@ -125,10 +182,33 @@ export const AGENT_TOOLS: Record<string, string[]> = {
     "list_my_recent_chats",
     "read_my_memory",
     "save_to_memory",
+    "ping_agent",
   ],
-  dana: ["list_recent_consultations", "list_recent_agents", "get_user_metrics", "list_my_recent_chats", "read_my_memory", "save_to_memory"],
-  shira: ["get_user_metrics", "list_recent_agents", "list_my_recent_chats", "read_my_memory", "save_to_memory"],
-  ariel: ["list_recent_standups", "list_recent_agents", "list_my_recent_chats", "read_my_memory", "save_to_memory"],
+  dana: [
+    "list_recent_consultations",
+    "list_recent_agents",
+    "get_user_metrics",
+    "list_my_recent_chats",
+    "read_my_memory",
+    "save_to_memory",
+    "ping_agent",
+  ],
+  shira: [
+    "get_user_metrics",
+    "list_recent_agents",
+    "list_my_recent_chats",
+    "read_my_memory",
+    "save_to_memory",
+    "ping_agent",
+  ],
+  ariel: [
+    "list_recent_standups",
+    "list_recent_agents",
+    "list_my_recent_chats",
+    "read_my_memory",
+    "save_to_memory",
+    "ping_agent",
+  ],
 };
 
 export function getToolsForAgent(handle: string): ToolDef[] {
@@ -254,6 +334,36 @@ export async function executeTool(
         source_chat_id: ctx.chatId ?? null,
       });
       return error ? { ok: false, error: error.message } : { ok: true };
+    }
+
+    case "ping_agent": {
+      const toHandle = String(input.agent_handle ?? "").trim();
+      const message = String(input.message ?? "").trim();
+      const result = await askAgent({
+        fromHandle: ctx.agentHandle,
+        toHandle,
+        message,
+        sourceChatId: ctx.chatId ?? null,
+      });
+      return result;
+    }
+
+    case "call_team_meeting": {
+      const rawHandles = input.agent_handles;
+      const toHandles = Array.isArray(rawHandles) ? rawHandles.map(String) : [];
+      const topic = String(input.topic ?? "").trim();
+      if (toHandles.length === 0 || !topic) {
+        return { ok: false, error: "need agent_handles[] and topic" };
+      }
+      // Cap meeting size to avoid runaway parallel calls.
+      const capped = toHandles.slice(0, 5);
+      const meeting = await callTeamMeeting({
+        fromHandle: ctx.agentHandle,
+        toHandles: capped,
+        topic,
+        sourceChatId: ctx.chatId ?? null,
+      });
+      return meeting;
     }
 
     default:
