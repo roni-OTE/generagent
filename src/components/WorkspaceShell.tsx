@@ -274,13 +274,29 @@ export default function WorkspaceShell({
             </div>
           </Link>
           {isAdmin && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 px-2 py-1.5 mt-1 rounded-lg text-[11px] text-[var(--magenta)] hover:bg-[rgba(192,132,252,0.08)] transition-colors no-underline"
-            >
-              <span>★</span>
-              <span>admin console</span>
-            </Link>
+            <>
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 px-2 py-1.5 mt-1 rounded-lg text-[11px] text-[var(--magenta)] hover:bg-[rgba(192,132,252,0.08)] transition-colors no-underline"
+              >
+                <span>★</span>
+                <span>admin console</span>
+              </Link>
+              <Link
+                href="/team"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] text-[var(--indigo-text)] hover:bg-[rgba(94,106,210,0.08)] transition-colors no-underline"
+              >
+                <span>💬</span>
+                <span>דבר עם הצוות</span>
+              </Link>
+              <Link
+                href="/admin/standups"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] text-[var(--indigo-text)] hover:bg-[rgba(94,106,210,0.08)] transition-colors no-underline"
+              >
+                <span>📋</span>
+                <span>standups</span>
+              </Link>
+            </>
           )}
         </div>
       </aside>

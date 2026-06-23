@@ -48,6 +48,10 @@ export default async function AdminPage() {
             </Link>
             <div className="flex gap-1">
               <Link href="/dashboard" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">← dashboard</Link>
+              <Link href="/admin" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--indigo-bright)] bg-[rgba(94,106,210,0.1)]">משתמשים</Link>
+              <Link href="/team" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">צוות</Link>
+              <Link href="/admin/standups" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">standups</Link>
+              <Link href="/admin/team" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">סקירת צוות</Link>
             </div>
           </div>
         </div>
@@ -61,6 +65,25 @@ export default async function AdminPage() {
           <h1 className="text-[32px] font-bold tracking-[-0.025em] bg-gradient-to-b from-white to-[#B0B5C0] bg-clip-text text-transparent">
             ניהול משתמשים
           </h1>
+        </div>
+
+        {/* Quick links to admin sections */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          <Link href="/team" className="block bg-gradient-to-br from-indigo-500/[0.08] to-fuchsia-500/[0.05] border border-indigo-400/25 rounded-[14px] p-5 hover:border-indigo-400/50 transition-colors no-underline">
+            <div className="text-[24px] mb-1">💬</div>
+            <div className="text-[14px] font-semibold text-white mb-1">דבר עם הצוות</div>
+            <div className="text-[12px] text-[var(--fg-dim)]">צ׳אט עם תמר, יואב, רוני, דנה, שירה, אריאל</div>
+          </Link>
+          <Link href="/admin/standups" className="block bg-gradient-to-br from-indigo-500/[0.08] to-fuchsia-500/[0.05] border border-indigo-400/25 rounded-[14px] p-5 hover:border-indigo-400/50 transition-colors no-underline">
+            <div className="text-[24px] mb-1">📋</div>
+            <div className="text-[14px] font-semibold text-white mb-1">Standups</div>
+            <div className="text-[12px] text-[var(--fg-dim)]">סיכומי הצוות + מענה על החלטות</div>
+          </Link>
+          <Link href="/admin/team" className="block bg-gradient-to-br from-indigo-500/[0.08] to-fuchsia-500/[0.05] border border-indigo-400/25 rounded-[14px] p-5 hover:border-indigo-400/50 transition-colors no-underline">
+            <div className="text-[24px] mb-1">👥</div>
+            <div className="text-[14px] font-semibold text-white mb-1">סקירת הצוות</div>
+            <div className="text-[12px] text-[var(--fg-dim)]">6 הסוכנים, תפקידים, פקודת התקנה</div>
+          </Link>
         </div>
 
         <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[16px] overflow-hidden">
