@@ -27,7 +27,7 @@ export default async function Home() {
   return (
     <>
       {/* NAV */}
-      <nav className="backdrop-blur-[20px] bg-[rgba(2,2,3,0.6)] border-b border-[var(--border)] py-3.5">
+      <nav className="relative z-50 backdrop-blur-[20px] bg-[rgba(2,2,3,0.6)] border-b border-[var(--border)] py-3.5">
         <div className="max-w-[1180px] mx-auto px-6 flex items-center justify-between gap-4">
           <Link
             href="/"
