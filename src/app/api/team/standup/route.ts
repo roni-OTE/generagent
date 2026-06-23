@@ -38,21 +38,37 @@ function extractJson<T>(text: string): T {
 
 async function askAgent(agent: TeamAgent, context: string): Promise<AgentReport | null> {
   const anthropic = getAnthropic();
-  const baseSystem = agent.system_prompt + ONBOARDING_GLOSSARY_RULE + TEAM_DISAMBIGUATION_RULE + `\n\nהחזר *רק* JSON תקני, התחל ב-{ סיים ב-}.\nשדות חובה: did, next, blockers, wow (כולם מחרוזות, אסור null).`;
-  // Haiku is ~5x faster than Sonnet; sufficient for short structured standup output.
-  const FAST_MODEL = "claude-haiku-4-5-20251001";
+  // Tighter standup-only prompt — strip out long persona details that confused Haiku
+  const standupSystem = `אתה ${agent.name}. ${agent.role}.
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+תפקידך עכשיו: לחזיר standup קצר ב-JSON בלבד.
+
+החזר אך ורק אובייקט JSON עם 4 שדות, כל אחד מחרוזת בעברית 1-2 משפטים:
+{
+  "did": "מה עשית מאז ה-standup הקודם",
+  "next": "מה אתה עושה ב-48 השעות הבאות",
+  "blockers": "מה חוסם אותך (או 'אין')",
+  "wow": "תובנה מעניינת מ-48h האחרונות"
+}
+
+חוקים:
+- התחל ב-{ סיים ב-}
+- אל תוסיף טקסט מחוץ ל-JSON
+- אל תמציא נתונים — אם אין לך מידע אמיתי, כתוב "אין מידע" או "השבוע היה שקט"
+- מושגי אנגלית — תוסיף הסבר קצר בסוגריים בעברית בפעם הראשונה`;
+
+  // Sonnet 4.5 — more reliable JSON than Haiku, only ~$0.02 per call
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const resp = await anthropic.messages.create({
-        model: FAST_MODEL,
-        max_tokens: 400,
-        temperature: 0.4,
+        model: BOT_MODEL,
+        max_tokens: 600,
+        temperature: 0.3,
         system:
-          baseSystem +
-          (attempt === 1 ? "\n\n⚠️ ניסיון קודם לא היה JSON תקני. החזר JSON בלבד." : ""),
+          standupSystem +
+          (attempt > 0 ? "\n\n⚠️ ניסיון קודם לא היה JSON תקני. החזר JSON בלבד." : ""),
         messages: [
-          { role: "user" as const, content: `הקשר השבוע:\n${context}\n\nתן את הסטנדאפ שלך.` },
+          { role: "user" as const, content: `הקשר 48 השעות האחרונות:\n${context}\n\nתן את הסטנדאפ שלך בפורמט JSON.` },
           { role: "assistant" as const, content: "{" },
         ],
       });
