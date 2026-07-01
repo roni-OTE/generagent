@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
   const path = url.pathname;
 
   // Protected routes
-  const protectedPrefixes = ["/dashboard", "/admin", "/consult", "/p/"];
+  const protectedPrefixes = ["/dashboard", "/admin", "/consult", "/p/", "/team", "/account"];
   const isProtected = protectedPrefixes.some((p) => path.startsWith(p));
 
   if (isProtected && !user) {
@@ -44,8 +44,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Admin-only: /admin
-  if (path.startsWith("/admin") && user) {
+  // Admin-only: /admin and /team (talk to internal team agents)
+  const adminOnlyPrefixes = ["/admin", "/team"];
+  const isAdminOnly = adminOnlyPrefixes.some((p) => path.startsWith(p));
+  if (isAdminOnly && user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan")
