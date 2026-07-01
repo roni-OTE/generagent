@@ -29,16 +29,20 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-
   const url = request.nextUrl.clone();
   const path = url.pathname;
 
-  // Protected routes
+  // Fast path: middleware runs on EVERY request. Skip auth work for public
+  // pages so their edge-cached HTML isn't slowed down by needless calls.
   const protectedPrefixes = ["/dashboard", "/admin", "/consult", "/p/", "/team", "/account"];
   const isProtected = protectedPrefixes.some((p) => path.startsWith(p));
+  if (!isProtected) {
+    return response;
+  }
 
-  if (isProtected && !user) {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
     url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
@@ -47,7 +51,7 @@ export async function updateSession(request: NextRequest) {
   // Admin-only: /admin and /team (talk to internal team agents)
   const adminOnlyPrefixes = ["/admin", "/team"];
   const isAdminOnly = adminOnlyPrefixes.some((p) => path.startsWith(p));
-  if (isAdminOnly && user) {
+  if (isAdminOnly) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan")

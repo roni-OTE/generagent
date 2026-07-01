@@ -32,10 +32,13 @@ function LoginInner() {
   }, [params]);
 
   // Auto-verify invite code from URL: /login?invite=CODE
+  // If no invite param at all → treat as existing-user sign-in (auth callback
+  // enforces the gate for BRAND-NEW users only, so returning users can log in
+  // without needing to re-enter an invite).
   useEffect(() => {
     const invite = params.get("invite");
     if (!invite) {
-      setInviteChecked({ valid: false, reason: "empty" });
+      setInviteChecked({ valid: true, source: "existing" });
       return;
     }
     setBusy("verify");

@@ -16,7 +16,8 @@ export default function HomeHeroAuth() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setIsAuthed(!!data.user));
+    // getSession() is synchronous-fast from localStorage — no network hit.
+    supabase.auth.getSession().then(({ data }) => setIsAuthed(!!data.session?.user));
   }, []);
 
   // Optimistic render: assume anonymous until we know otherwise.

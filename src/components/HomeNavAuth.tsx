@@ -22,22 +22,34 @@ export default function HomeNavAuth() {
   useEffect(() => {
     const supabase = createClient();
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // getSession() reads from localStorage — instant, no network round-trip.
+      // Only verify server-side once we have a user we care about.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
         setState({ status: "anon" });
         return;
       }
+      // Optimistic UI: show authed immediately using session data.
+      setState({
+        status: "authed",
+        email: session.user.email ?? "",
+        displayName: null,
+        isAdmin: false,
+      });
+      // Then fetch profile in the background to upgrade the display name + admin badge.
       const { data: profile } = await supabase
         .from("profiles")
         .select("display_name, plan")
-        .eq("id", user.id)
+        .eq("id", session.user.id)
         .single();
-      setState({
-        status: "authed",
-        email: user.email ?? "",
-        displayName: profile?.display_name ?? null,
-        isAdmin: profile?.plan === "admin",
-      });
+      if (profile) {
+        setState({
+          status: "authed",
+          email: session.user.email ?? "",
+          displayName: profile.display_name ?? null,
+          isAdmin: profile.plan === "admin",
+        });
+      }
     })();
   }, []);
 
