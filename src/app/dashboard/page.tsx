@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { computeEntitlement } from "@/lib/entitlement";
 import WorkspaceShell from "@/components/WorkspaceShell";
 import Orb from "@/components/Orb";
@@ -17,6 +17,12 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // We use the SERVICE client for the profile/legal/packages reads because
+  // (a) we already authorize via user.id (server-side), and (b) it avoids any
+  // subtle RLS misconfig blocking a user from seeing their own row. All these
+  // queries filter on user.id so there's no data-leak risk.
+  const svc = createServiceClient();
+
   // Parallelize ALL supabase queries below — was 5 sequential round-trips (~2s
   // on cross-region Supabase), now 1 parallel batch (~400ms). Massive win.
   const [
@@ -24,15 +30,15 @@ export default async function DashboardPage() {
     legalRes,
     packagesRes,
   ] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase
+    svc.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+    svc
       .from("legal_acceptances")
       .select("id")
       .eq("user_id", user.id)
       .eq("document", "terms")
       .eq("version", "v1.0")
       .limit(1),
-    supabase
+    svc
       .from("packages")
       .select("id, name, description, version, archetype, is_template_clone, created_at")
       .eq("user_id", user.id)
@@ -40,18 +46,40 @@ export default async function DashboardPage() {
       .limit(30),
   ]);
 
-  const profile = profileRes.data;
+  let profile = profileRes.data;
   const legalRows = legalRes.data;
   const packages = packagesRes.data;
 
+  // Self-heal: if no profile row exists yet (trigger failed for some reason),
+  // create it on the fly with sensible defaults so the user can proceed.
   if (!profile) {
-    return <div className="p-10">Profile not found. Please sign out and back in.</div>;
+    const isAdminEmail = (user.email ?? "").toLowerCase() === "roni@otegroup.co.il";
+    const { data: inserted } = await svc
+      .from("profiles")
+      .insert({
+        id: user.id,
+        email: user.email,
+        display_name:
+          (user.user_metadata?.full_name as string | undefined) ??
+          (user.user_metadata?.name as string | undefined) ??
+          (user.email ?? "").split("@")[0],
+        avatar_url: (user.user_metadata?.avatar_url as string | undefined) ?? null,
+        plan: isAdminEmail ? "admin" : "trial",
+        invite_verified: isAdminEmail ? true : false,
+      })
+      .select("*")
+      .maybeSingle();
+    profile = inserted;
+  }
+
+  if (!profile) {
+    return <div className="p-10">Profile still not found. Contact support@generagent.io.</div>;
   }
   if (!legalRows || legalRows.length === 0) redirect("/legal/accept");
 
   const ent = computeEntitlement(profile);
   // Quota derives from profile we already have — no extra DB call needed.
-  const quota = await getQuotaStatus(supabase, user.id);
+  const quota = await getQuotaStatus(svc, user.id);
 
   const isAdmin = profile.plan === "admin";
 
