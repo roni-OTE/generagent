@@ -130,6 +130,12 @@ export default async function Home() {
             >
               תיעוד
             </Link>
+            <Link
+              href="/support"
+              className="text-[var(--fg-muted)] no-underline hover:text-[var(--fg-dim)] transition-colors"
+            >
+              תמיכה
+            </Link>
           </div>
         </div>
       </footer>
