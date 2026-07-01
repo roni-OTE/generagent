@@ -55,6 +55,7 @@ export default async function AdminPage() {
               <Link href="/admin/inter-agent" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">תקשורת פנימית</Link>
               <Link href="/admin/waitlist" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">waitlist</Link>
               <Link href="/admin/support" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">support</Link>
+              <Link href="/admin/marketing" className="px-3 py-1.5 rounded-lg text-[13px] text-[var(--fg-dim)] hover:text-[var(--fg)] hover:bg-[var(--surface)]">marketing</Link>
             </div>
           </div>
         </div>
