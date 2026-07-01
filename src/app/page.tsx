@@ -25,19 +25,19 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <main className="max-w-[1180px] mx-auto px-5 sm:px-6 flex-1 grid grid-cols-1 md:grid-cols-2 items-center gap-8 md:gap-12 py-8 md:py-0 text-center md:text-right">
-        <div className="max-w-[480px] mx-auto md:mx-0">
+      <main className="w-full max-w-[1180px] mx-auto px-4 sm:px-6 flex-1 grid grid-cols-1 md:grid-cols-2 items-center gap-6 md:gap-12 py-6 md:py-0 text-center md:text-right overflow-hidden">
+        <div className="w-full max-w-[480px] mx-auto md:mx-0">
           <div className="inline-flex items-center gap-2 font-mono text-[11px] text-[var(--indigo-text)] bg-[rgba(94,106,210,0.08)] border border-[rgba(94,106,210,0.25)] rounded-[20px] px-3 py-1.5 mb-6 uppercase tracking-[0.1em]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--indigo)] shadow-[0_0_10px_var(--indigo)]" />
             agent consulting · v1.0
           </div>
-          <h1 className="text-[clamp(38px,5.5vw,64px)] font-bold tracking-[-0.032em] leading-[1.02] mb-5 bg-gradient-to-b from-white to-[#B0B5C0] bg-clip-text text-transparent">
+          <h1 className="text-[clamp(30px,7vw,64px)] font-bold tracking-[-0.028em] leading-[1.08] mb-4 md:mb-5 bg-gradient-to-b from-white to-[#B0B5C0] bg-clip-text text-transparent break-words">
             איזה סוכן AI<br />
             <span className="bg-gradient-to-r from-[var(--indigo-bright)] to-[var(--magenta)] bg-clip-text text-transparent">
               אתה באמת צריך?
             </span>
           </h1>
-          <p className="text-[var(--fg-dim)] text-[clamp(15px,1.3vw,17px)] leading-[1.6] mb-8">
+          <p className="text-[var(--fg-dim)] text-[15px] md:text-[17px] leading-[1.6] mb-6 md:mb-8">
             5 דקות שיחה עם <strong className="text-[var(--fg)]">נועם</strong>, ואתה מקבל סוכן AI
             מותאם אישית — מוכן להתקנה בפקודה אחת לטרמינל ב-Claude Code או Codex CLI.
           </p>
@@ -51,7 +51,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="relative flex items-center justify-center min-h-[280px] md:min-h-[380px]">
+        <div className="relative flex items-center justify-center min-h-[220px] md:min-h-[380px]">
           <Orb size="hero" cursorFollow />
         </div>
       </main>
