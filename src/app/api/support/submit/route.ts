@@ -15,6 +15,20 @@ const FOUNDER_EMAIL = process.env.FOUNDER_EMAIL ?? "roni@otegroup.co.il";
  * Creates a ticket, generates Dana's reply, emails the user, notifies admin if escalated.
  * Rate-limited by IP to prevent abuse: max 3 per hour per email.
  */
+/** Absolute daily cap across all users. If reached, the endpoint is closed for the day. */
+const GLOBAL_DAILY_CAP = 100;
+
+/** Per-IP hourly cap. Prevents one attacker cycling through many emails. */
+const IP_HOURLY_CAP = 10;
+
+function getIP(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  const real = req.headers.get("x-real-ip");
+  if (real) return real.trim();
+  return "unknown";
+}
+
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
     email?: string;
@@ -35,9 +49,37 @@ export async function POST(req: Request) {
   }
 
   const service = createServiceClient();
+  const ip = getIP(req);
+  const now = Date.now();
+  const oneHourAgo = new Date(now - 3600 * 1000).toISOString();
+  const oneDayAgo = new Date(now - 24 * 3600 * 1000).toISOString();
 
-  // Rate limit: 3 tickets per email per hour
-  const oneHourAgo = new Date(Date.now() - 3600 * 1000).toISOString();
+  // Global daily cap — hard stop if abused.
+  const { count: globalToday } = await service
+    .from("support_tickets")
+    .select("id", { count: "exact", head: true })
+    .gte("created_at", oneDayAgo);
+  if ((globalToday ?? 0) >= GLOBAL_DAILY_CAP) {
+    return NextResponse.json(
+      { error: "התמיכה סגורה זמנית להיום. אנא נסה מחר או שלח מייל ישיר ל-support@generagent.io." },
+      { status: 429 }
+    );
+  }
+
+  // Per-IP hourly cap.
+  const { count: ipRecent } = await service
+    .from("support_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("ip_address", ip)
+    .gte("created_at", oneHourAgo);
+  if ((ipRecent ?? 0) >= IP_HOURLY_CAP) {
+    return NextResponse.json(
+      { error: "יותר מדי פניות מהמכשיר שלך בשעה האחרונה. נסה שוב מאוחר יותר." },
+      { status: 429 }
+    );
+  }
+
+  // Per-email hourly cap.
   const { count: recentCount } = await service
     .from("support_tickets")
     .select("id", { count: "exact", head: true })
@@ -85,6 +127,7 @@ export async function POST(req: Request) {
       name,
       subject,
       status: "open",
+      ip_address: ip,
     })
     .select("id, created_at")
     .single();

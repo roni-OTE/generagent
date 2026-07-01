@@ -10,12 +10,16 @@ create table if not exists support_tickets (
   category text,                                    -- 'install' | 'bug' | 'billing' | 'how_to' | 'other'
   status text not null default 'open',              -- 'open' | 'answered' | 'escalated' | 'closed'
   escalated boolean not null default false,
+  ip_address text,
   first_message_id uuid,
   last_message_at timestamptz not null default now(),
   created_at timestamptz not null default now()
 );
 
+alter table support_tickets add column if not exists ip_address text;
+
 create index if not exists support_tickets_email_idx on support_tickets (lower(email), created_at desc);
+create index if not exists support_tickets_ip_idx on support_tickets (ip_address, created_at desc);
 create index if not exists support_tickets_status_idx on support_tickets (status, last_message_at desc);
 create index if not exists support_tickets_escalated_idx on support_tickets (escalated) where escalated = true;
 
