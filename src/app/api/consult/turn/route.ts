@@ -240,12 +240,23 @@ export async function POST(req: Request) {
     turn.should_continue = true;
   }
 
+  // Bug fix: if we're closing but the bot returned a real question, that question
+  // will never get a user response. Replace it with a farewell so the UX makes sense.
+  // A "real question" = ends with ? or has more than ~20 chars.
+  const questionLooksLikeAQuestion =
+    typeof turn.question === "string" &&
+    (turn.question.trim().endsWith("?") || turn.question.trim().length > 30);
+  const messageContent =
+    shouldClose && questionLooksLikeAQuestion
+      ? "יש לי מספיק כדי להתחיל לבנות את הסוכן שלך. תודה על השיחה — עובר לניתוח…"
+      : turn.question;
+
   await supabase.from("messages").insert({
     consultation_id,
     role: "bot",
-    content: turn.question,
+    content: messageContent,
     question_id: turn.question_id,
-    micro_explanation: turn.micro_explanation,
+    micro_explanation: shouldClose ? null : turn.micro_explanation,
   });
 
   await supabase
