@@ -19,27 +19,41 @@ async function enforceInviteGate(request: Request, origin: string): Promise<Next
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const service = createServiceClient();
-  const { data: profile } = await service
-    .from("profiles")
-    .select("id, created_at")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  // Existing user (profile > 60s old) — no gate.
-  if (profile && Date.now() - new Date(profile.created_at).getTime() > 60_000) {
+  // Founder always bypasses the gate — belt-and-suspenders for ops.
+  const FOUNDER_EMAILS = new Set(["roni@otegroup.co.il"]);
+  if (user.email && FOUNDER_EMAILS.has(user.email.toLowerCase())) {
     return null;
   }
 
-  // New user path. Try to consume the invite cookie.
+  const service = createServiceClient();
+  const { data: profile } = await service
+    .from("profiles")
+    .select("id, plan, invite_verified")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Admins are always let in.
+  if (profile?.plan === "admin") {
+    return null;
+  }
+
+  // *** Source of truth for "is this user allowed in?" ***
+  // Once invite_verified = true, they log in freely forever. This is set
+  // atomically by claim_invite_code() the first time a user redeems a code.
+  if (profile?.invite_verified === true) {
+    return null;
+  }
+
+  // First-time sign-in — no verification yet. Try to consume an invite cookie.
   const cookieStore = await cookies();
   const inviteCookie = cookieStore.get(INVITE_COOKIE)?.value ?? "";
   const consumed = inviteCookie ? await consumeInviteCode(inviteCookie, user.id) : false;
 
   if (!consumed) {
-    // Reject: sign them out + delete their fresh profile + redirect to waitlist.
-    await service.from("profiles").delete().eq("id", user.id);
-    await service.auth.admin.deleteUser(user.id);
+    // No valid invite → send to waitlist and sign them out. We do NOT delete
+    // their auth.users row anymore — they can complete signup later by
+    // clicking a valid invite link. The trigger's profile row is harmless
+    // (invite_verified stays false).
     await supabase.auth.signOut();
     const url = new URL(`${origin}/waitlist?blocked=1&email=${encodeURIComponent(user.email ?? "")}`);
     const res = NextResponse.redirect(url);
@@ -47,7 +61,8 @@ async function enforceInviteGate(request: Request, origin: string): Promise<Next
     return res;
   }
 
-  // Success — clear the invite cookie (best effort — deleted by NextResponse below).
+  // claim_invite_code() already flipped profiles.invite_verified = true.
+  // From here on, this user is a verified account.
   return null;
 }
 
