@@ -20,14 +20,32 @@ function LoginInner() {
   const params = useSearchParams();
   const supabase = createClient();
   const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState<"google" | "email" | null>(null);
+  const [busy, setBusy] = useState<"google" | "email" | "verify" | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [inviteChecked, setInviteChecked] = useState<null | { valid: boolean; source?: string; reason?: string }>(null);
 
   useEffect(() => {
     const e = params.get("error");
     const d = params.get("detail");
     if (e) setErr(d ? `${e} — ${d}` : e);
+  }, [params]);
+
+  // Auto-verify invite code from URL: /login?invite=CODE
+  useEffect(() => {
+    const invite = params.get("invite");
+    if (!invite) {
+      setInviteChecked({ valid: false, reason: "empty" });
+      return;
+    }
+    setBusy("verify");
+    fetch(`/api/invite/verify?code=${encodeURIComponent(invite)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setInviteChecked({ valid: data.valid, source: data.source, reason: data.reason });
+      })
+      .catch(() => setInviteChecked({ valid: false, reason: "network" }))
+      .finally(() => setBusy(null));
   }, [params]);
 
   async function signInWithGoogle() {
@@ -104,9 +122,41 @@ function LoginInner() {
                 בוא נכיר
               </h1>
               <p className="text-[var(--fg-dim)] text-[14px]">חיבור מהיר עם Google או Email.</p>
+              {inviteChecked?.valid && (
+                <div className="mt-4 inline-flex items-center gap-2 text-[11px] text-[var(--success)] bg-[rgba(74,222,128,0.08)] border border-[rgba(74,222,128,0.3)] rounded-full px-3 py-1 font-mono uppercase tracking-[0.1em]">
+                  ✓ הזמנה תקפה · {inviteChecked.source === "mechadshin" ? "מחדשין" : inviteChecked.source === "linkedin" ? "LinkedIn" : inviteChecked.source}
+                </div>
+              )}
             </div>
 
-            {emailSent ? (
+            {/* Gated: no valid invite → show waitlist CTA */}
+            {inviteChecked && !inviteChecked.valid ? (
+              <div className="text-center py-4">
+                <div className="text-[13px] text-[var(--fg-dim)] mb-4 leading-relaxed">
+                  {inviteChecked.reason === "used" ? (
+                    <>קוד ההזמנה הזה כבר נוצל.</>
+                  ) : inviteChecked.reason === "not_found" ? (
+                    <>קוד ההזמנה לא תקין.</>
+                  ) : (
+                    <>ההרשמה כרגע רק דרך הזמנה אישית.<br/>אין לך קוד? בקש להצטרף לרשימת ההמתנה.</>
+                  )}
+                </div>
+                <Link href="/waitlist">
+                  <Button variant="primary" size="md" className="w-full">
+                    הצטרף לרשימת המתנה <span className="inline-block">←</span>
+                  </Button>
+                </Link>
+                <p className="text-[11px] text-[var(--fg-muted)] mt-4">
+                  כבר יש חשבון?{" "}
+                  <button
+                    onClick={() => { setInviteChecked({ valid: true, source: "existing" }); }}
+                    className="text-[var(--indigo-text)] hover:text-[var(--indigo-bright)] underline"
+                  >
+                    התחבר כאן
+                  </button>
+                </p>
+              </div>
+            ) : emailSent ? (
               <div className="text-center py-6 px-2">
                 <div className="text-[var(--success)] font-mono text-[11px] uppercase tracking-[0.1em] mb-3">✓ נשלח</div>
                 <p className="text-[var(--fg)] text-[15px] mb-2">בדוק את המייל שלך</p>

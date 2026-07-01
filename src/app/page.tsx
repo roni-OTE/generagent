@@ -52,9 +52,9 @@ export default async function Home() {
                     התחבר
                   </Button>
                 </Link>
-                <Link href="/login">
+                <Link href="/waitlist">
                   <Button variant="primary" size="sm">
-                    התחל <span className="inline-block">←</span>
+                    הצטרף <span className="inline-block">←</span>
                   </Button>
                 </Link>
               </>
@@ -88,9 +88,9 @@ export default async function Home() {
                 </Button>
               </Link>
             ) : (
-              <Link href="/login">
+              <Link href="/waitlist">
                 <Button variant="primary" size="lg">
-                  התחל ייעוץ <span className="inline-block">←</span>
+                  הצטרף לרשימת המתנה <span className="inline-block">←</span>
                 </Button>
               </Link>
             )}
