@@ -1,29 +1,14 @@
 import Orb from "@/components/Orb";
-import Button from "@/components/Button";
 import Logo from "@/components/Logo";
-import UserMenu from "@/components/UserMenu";
+import HomeNavAuth from "@/components/HomeNavAuth";
+import HomeHeroAuth from "@/components/HomeHeroAuth";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
+// No `dynamic = "force-dynamic"` — this page is fully static now.
+// Auth state is hydrated client-side by HomeNavAuth / HomeHeroAuth so first
+// paint is instant. Rest of the marketing content never changes per user.
 
-export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const isAuthed = !!user;
-
-  let displayName: string | null = null;
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("display_name, plan")
-      .eq("id", user.id)
-      .single();
-    displayName = profile?.display_name ?? null;
-    isAdmin = profile?.plan === "admin";
-  }
-
+export default function Home() {
   return (
     <>
       {/* NAV */}
@@ -35,31 +20,7 @@ export default async function Home() {
           >
             <Logo size="md" />
           </Link>
-          <div className="flex gap-2.5 items-center">
-            {isAuthed && user ? (
-              <>
-                <Link href="/dashboard">
-                  <Button variant="primary" size="sm">
-                    לדאשבורד <span className="inline-block">←</span>
-                  </Button>
-                </Link>
-                <UserMenu email={user.email ?? ""} displayName={displayName} isAdmin={isAdmin} />
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" size="sm">
-                    התחבר
-                  </Button>
-                </Link>
-                <Link href="/waitlist">
-                  <Button variant="primary" size="sm">
-                    הצטרף <span className="inline-block">←</span>
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+          <HomeNavAuth />
         </div>
       </nav>
 
@@ -81,19 +42,7 @@ export default async function Home() {
             מותאם אישית — מוכן להתקנה בפקודה אחת לטרמינל ב-Claude Code או Codex CLI.
           </p>
           <div className="flex gap-2.5 flex-wrap items-center justify-center md:justify-start mb-6">
-            {isAuthed ? (
-              <Link href="/dashboard">
-                <Button variant="primary" size="lg">
-                  המשך לדאשבורד <span className="inline-block">←</span>
-                </Button>
-              </Link>
-            ) : (
-              <Link href="/waitlist">
-                <Button variant="primary" size="lg">
-                  הצטרף לרשימת המתנה <span className="inline-block">←</span>
-                </Button>
-              </Link>
-            )}
+            <HomeHeroAuth />
           </div>
           <div className="flex gap-5 flex-wrap justify-center md:justify-start font-mono text-[11px] text-[var(--fg-muted)]">
             <span className="meta-dot">ראיון בעברית · 5 דק׳</span>
