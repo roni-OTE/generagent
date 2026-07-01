@@ -20,13 +20,23 @@ export default async function AdminWaitlistPage() {
 
   const { data: codes } = await supabase
     .from("invite_codes")
-    .select("code, source, used_at");
+    .select("code, source, max_uses, use_count, disabled_at");
 
-  const codesBySource: Record<string, { total: number; used: number }> = {};
+  // For campaign codes (mechadshin/linkedin): pull the single row per source.
+  const campaignCodes: Record<string, { code: string; max: number; used: number }> = {};
+  let waitlistApprovedTotal = 0;
+  let waitlistApprovedUsed = 0;
   (codes ?? []).forEach((c) => {
-    if (!codesBySource[c.source]) codesBySource[c.source] = { total: 0, used: 0 };
-    codesBySource[c.source].total++;
-    if (c.used_at) codesBySource[c.source].used++;
+    if (c.source === "mechadshin" || c.source === "linkedin") {
+      campaignCodes[c.source] = {
+        code: c.code,
+        max: c.max_uses,
+        used: c.use_count,
+      };
+    } else if (c.source === "waitlist_approval") {
+      waitlistApprovedTotal++;
+      if (c.use_count > 0) waitlistApprovedUsed++;
+    }
   });
 
   const pending = (waitlist ?? []).filter((w) => w.status === "pending");
@@ -55,29 +65,61 @@ export default async function AdminWaitlistPage() {
           </p>
         </div>
 
-        {/* Codes overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-          {["mechadshin", "linkedin", "waitlist_approval"].map((src) => {
-            const s = codesBySource[src] ?? { total: 0, used: 0 };
-            const label = src === "mechadshin" ? "מחדשין" : src === "linkedin" ? "LinkedIn" : "אושרו מרשימת המתנה";
-            return (
-              <div key={src} className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[14px] p-4">
-                <div className="text-[11px] text-[var(--fg-muted)] font-mono uppercase tracking-[0.1em] mb-2">{label}</div>
-                <div className="text-[24px] font-bold text-white">
-                  {s.used} <span className="text-[var(--fg-muted)] font-normal">/ {s.total}</span>
+        {/* Campaign codes with counter */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          {(["mechadshin", "linkedin"] as const).map((src) => {
+            const s = campaignCodes[src];
+            const label = src === "mechadshin" ? "מחדשין" : "LinkedIn";
+            if (!s) {
+              return (
+                <div key={src} className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[14px] p-4 opacity-60">
+                  <div className="text-[13px] text-[var(--fg-muted)]">{label} — לא הוגדר עדיין</div>
                 </div>
-                <div className="text-[11px] text-[var(--fg-dim)] mt-1">{s.total - s.used} פנויים</div>
-                {src !== "waitlist_approval" && (
-                  <Link
-                    href={`/admin/waitlist/codes?source=${src}`}
-                    className="mt-2 inline-block text-[11px] text-[var(--indigo-text)] hover:text-[var(--indigo-bright)]"
-                  >
-                    ראה קודים →
-                  </Link>
-                )}
+              );
+            }
+            const pct = s.max > 0 ? Math.min(100, Math.round((s.used / s.max) * 100)) : 0;
+            const remaining = Math.max(0, s.max - s.used);
+            const inviteUrl = `https://www.generagent.io/login?invite=${s.code}`;
+            return (
+              <div key={src} className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[14px] p-5">
+                <div className="flex items-baseline justify-between mb-2">
+                  <div className="text-[13px] text-[var(--fg-muted)] font-mono uppercase tracking-[0.1em]">{label}</div>
+                  <div className="text-[11px] text-[var(--fg-dim)] font-mono">{remaining} פנויים</div>
+                </div>
+                <div className="text-[28px] font-bold text-white mb-3">
+                  {s.used} <span className="text-[var(--fg-muted)] font-normal text-[18px]">/ {s.max}</span>
+                </div>
+                <div className="h-1.5 bg-[var(--surface)] rounded-full overflow-hidden mb-4">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${pct}%`,
+                      background: pct >= 90 ? "linear-gradient(90deg, #F87171, #EF4444)" :
+                                  pct >= 70 ? "linear-gradient(90deg, #FBBF24, #F59E0B)" :
+                                              "linear-gradient(90deg, #5E6AD2, #B867FF)",
+                    }}
+                  />
+                </div>
+                <div className="text-[10px] text-[var(--fg-muted)] font-mono mb-1.5 uppercase tracking-[0.08em]">קישור להעתקה</div>
+                <div className="bg-[var(--bg-deep)] border border-[var(--border)] rounded-[8px] px-3 py-2 font-mono text-[11px] text-[var(--fg)] break-all" dir="ltr">
+                  {inviteUrl}
+                </div>
               </div>
             );
           })}
+        </div>
+
+        {/* Waitlist-approval codes summary */}
+        <div className="bg-[var(--bg-elev)] border border-[var(--border)] rounded-[14px] p-4 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[13px] text-[var(--fg-dim)] mb-1">אושרו מרשימת המתנה</div>
+              <div className="text-[11px] text-[var(--fg-muted)]">קודים אישיים (max_uses=1) שנוצרו על ידך</div>
+            </div>
+            <div className="text-[20px] font-bold text-white">
+              {waitlistApprovedUsed} <span className="text-[var(--fg-muted)] font-normal text-[14px]">/ {waitlistApprovedTotal}</span>
+            </div>
+          </div>
         </div>
 
         {/* Pending */}

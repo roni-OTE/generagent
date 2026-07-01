@@ -133,12 +133,14 @@ function LoginInner() {
             {inviteChecked && !inviteChecked.valid ? (
               <div className="text-center py-4">
                 <div className="text-[13px] text-[var(--fg-dim)] mb-4 leading-relaxed">
-                  {inviteChecked.reason === "used" ? (
-                    <>קוד ההזמנה הזה כבר נוצל.</>
+                  {inviteChecked.reason === "exhausted" ? (
+                    <>קוד ההזמנה מלא — כל המקומות מהמסע הזה נתפסו.<br/>אפשר להירשם לרשימת המתנה.</>
+                  ) : inviteChecked.reason === "disabled" ? (
+                    <>קוד ההזמנה כבר לא פעיל.</>
                   ) : inviteChecked.reason === "not_found" ? (
                     <>קוד ההזמנה לא תקין.</>
                   ) : (
-                    <>ההרשמה כרגע רק דרך הזמנה אישית.<br/>אין לך קוד? בקש להצטרף לרשימת ההמתנה.</>
+                    <>ההרשמה כרגע רק דרך הזמנה.<br/>אין לך קוד? בקש להצטרף לרשימת ההמתנה.</>
                   )}
                 </div>
                 <Link href="/waitlist">
