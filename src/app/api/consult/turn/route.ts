@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 import { getQuotaStatus, recordUsage, PER_CHAT_CAP } from "@/lib/quota";
+import { logEvent, classifyAnthropicError } from "@/lib/events";
 
 export const runtime = "nodejs";
 // 3 model attempts on a slow day can exceed 60s — headroom prevents mid-flight kills.
@@ -210,6 +211,13 @@ export async function POST(req: Request) {
     usedIn = result.inputTokens;
     usedOut = result.outputTokens;
   } catch (e: unknown) {
+    const cls = classifyAnthropicError(e);
+    await logEvent({
+      source: "consult.turn",
+      code: cls.code,
+      message: cls.message,
+      meta: { consultation_id, user_id: user.id },
+    });
     // Soft recovery: return a friendly turn instead of 500 so chat keeps going
     const fallbackTurn: BotTurn = {
       phase: (consultation.phase as BotTurn["phase"]) ?? "discovery",

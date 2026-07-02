@@ -48,3 +48,7 @@ public/        # Static assets
 - Server components by default; mark `"use client"` only when needed.
 - Never use color alone for status — always pair with icon/text.
 - Touch targets ≥ 44px (WCAG AAA).
+
+## Imported Claude Cowork project instructions
+
+Create agent skill and md

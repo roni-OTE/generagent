@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 import { getQuotaStatus, recordUsage } from "@/lib/quota";
+import { logEvent } from "@/lib/events";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -144,6 +145,12 @@ export async function POST(req: Request) {
   await recordUsage(supabase, user.id, totalIn, totalOut);
 
   if (!turn) {
+    await logEvent({
+      source: "consult.start",
+      code: "start_failed",
+      message: lastErr,
+      meta: { user_id: user.id },
+    });
     // Don't leave an orphaned empty consultation behind — it clutters the sidebar
     // and opens to a dead chat.
     await supabase.from("consultations").delete().eq("id", consultation.id);

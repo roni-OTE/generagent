@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { ANALYSIS_SYSTEM_PROMPT } from "@/lib/bot/prompts";
 import { recordUsage } from "@/lib/quota";
+import { logEvent, classifyAnthropicError } from "@/lib/events";
 
 export const runtime = "nodejs";
 // Analysis generates up to 8k tokens — 60s was killing the function mid-generation
@@ -132,6 +133,13 @@ export async function POST(req: Request) {
     await recordUsage(supabase, user.id, result.inputTokens, result.outputTokens);
   } catch (e: unknown) {
     console.error("[finalize] parse failed after retries", e);
+    const cls = classifyAnthropicError(e);
+    await logEvent({
+      source: "consult.finalize",
+      code: cls.code,
+      message: cls.message,
+      meta: { consultation_id, user_id: user.id },
+    });
     return NextResponse.json(
       { error: "parse_failed", detail: e instanceof Error ? e.message.slice(0, 200) : "unknown" },
       { status: 500 }
