@@ -5,7 +5,8 @@ import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 import { getQuotaStatus, recordUsage, PER_CHAT_CAP } from "@/lib/quota";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// 3 model attempts on a slow day can exceed 60s — headroom prevents mid-flight kills.
+export const maxDuration = 120;
 
 const MAX_QUESTIONS = 15;
 const MIN_QUESTIONS = 7;
@@ -95,6 +96,11 @@ export async function POST(req: Request) {
 
   if (!consultation) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (consultation.status !== "in_progress") {
+    // Tell the client explicitly that this chat is waiting for analysis, so the
+    // UI can auto-trigger finalize instead of leaving the user typing into a wall.
+    if (consultation.status === "analyzing") {
+      return NextResponse.json({ error: "needs_finalize" }, { status: 409 });
+    }
     return NextResponse.json({ error: "not_in_progress" }, { status: 409 });
   }
 

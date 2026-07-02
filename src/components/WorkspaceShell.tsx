@@ -121,10 +121,14 @@ export default function WorkspaceShell({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.consultation_id) {
         router.push(`/consult/${data.consultation_id}`);
+      } else {
+        alert(data?.message || "לא הצלחתי לפתוח שיחה חדשה. נסה שוב בעוד רגע.");
       }
+    } catch {
+      alert("בעיית רשת — נסה שוב בעוד רגע.");
     } finally {
       setCreating(false);
     }

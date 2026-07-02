@@ -50,8 +50,38 @@ export default function ChatView({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(initialDone);
+  const [finalizeFailed, setFinalizeFailed] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Human-readable Hebrew errors instead of raw codes like "turn_failed".
+  function friendlyError(code: string): string {
+    const map: Record<string, string> = {
+      turn_failed: "משהו השתבש בדרך. התשובה שלך נשמרה — נסה לשלוח שוב.",
+      finalize_failed: "הסיכום נכשל באמצע. לחץ 'נסה שוב לסיים אפיון' למטה.",
+      parse_failed: "נועם התבלבל לרגע. נסה שוב — זה בדרך כלל עובד בפעם השנייה.",
+      not_in_progress: "השיחה הזו כבר הסתיימה.",
+      unauthenticated: "החיבור שלך פג. רענן את הדף והתחבר מחדש.",
+      timeout: "זה לוקח יותר מדי זמן — כנראה עומס רגעי. נסה שוב.",
+    };
+    return map[code] ?? code;
+  }
+
+  // fetch with a hard client-side timeout so the UI never hangs on "חושב…"
+  // if the serverless function was killed mid-flight.
+  async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+      return await fetch(url, { ...init, signal: ctrl.signal });
+    } catch (e) {
+      if (ctrl.signal.aborted) throw new Error("timeout");
+      throw e;
+    } finally {
+      clearTimeout(t);
+    }
+  }
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -73,13 +103,26 @@ export default function ChatView({
     setMessages((m) => [...m, { role: "user", content: answer }]);
     setInput("");
     try {
-      const res = await fetch("/api/consult/turn", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consultation_id: consultationId, user_answer: answer }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "turn_failed");
+      const res = await fetchWithTimeout(
+        "/api/consult/turn",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consultation_id: consultationId, user_answer: answer }),
+        },
+        110_000
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Chat is stuck in "analyzing" (a previous finalize died) — recover
+        // automatically instead of rejecting everything the user types.
+        if (data?.error === "needs_finalize") {
+          setDone(true);
+          await finalize();
+          return;
+        }
+        throw new Error(data?.message || friendlyError(data?.error || "turn_failed"));
+      }
       const t: Turn = data.turn;
       setPhase(t.phase);
       setQuestionCount(data.question_count);
@@ -90,7 +133,7 @@ export default function ChatView({
         await finalize();
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "שגיאה");
+      setError(friendlyError(e instanceof Error ? e.message : "שגיאה"));
     } finally {
       setBusy(false);
       inputRef.current?.focus();
@@ -98,24 +141,31 @@ export default function ChatView({
   }
 
   async function finalize() {
+    setFinalizing(true);
+    setFinalizeFailed(false);
+    setError(null);
     try {
-      const res = await fetch("/api/consult/finalize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consultation_id: consultationId }),
-      });
+      const res = await fetchWithTimeout(
+        "/api/consult/finalize",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ consultation_id: consultationId }),
+        },
+        290_000
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const detail = data?.detail ? ` (${data.detail})` : "";
-        throw new Error(`${data?.error || "finalize_failed"}${detail}`);
+        throw new Error(data?.message || friendlyError(data?.error || "finalize_failed"));
       }
       router.push(`/consult/${consultationId}/result`);
     } catch (e: unknown) {
-      setError(
-        (e instanceof Error ? e.message : "שגיאה בסיום") +
-          " — נסה לרענן או ללחוץ 'נסה שוב' למטה."
-      );
-      setDone(false); // re-enable the input
+      setError(friendlyError(e instanceof Error ? e.message : "שגיאה בסיום"));
+      // Keep the chat closed (the server is in "analyzing" and would reject new
+      // messages anyway) and surface a working retry button instead.
+      setFinalizeFailed(true);
+    } finally {
+      setFinalizing(false);
     }
   }
 
@@ -192,13 +242,15 @@ export default function ChatView({
           )}
           {done && !error && (
             <div className="text-xs text-white/50 text-center py-4">
-              מסיים את האפיון… מעביר אותך לתוצאה.
+              {finalizing
+                ? "מסיים את האפיון… זה יכול לקחת עד דקה-שתיים. אל תסגור את הדף."
+                : "מסיים את האפיון… מעביר אותך לתוצאה."}
             </div>
           )}
-          {error && done && (
+          {finalizeFailed && !finalizing && (
             <div className="text-center py-4">
               <button
-                onClick={() => { setError(null); void finalize(); }}
+                onClick={() => void finalize()}
                 className="px-4 py-2 rounded-lg text-xs bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 hover:bg-indigo-500/25"
               >
                 נסה שוב לסיים אפיון

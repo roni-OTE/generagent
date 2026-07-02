@@ -21,9 +21,19 @@ type BotTurn = {
 
 function extractJson(text: string): BotTurn {
   const trimmed = text.trim();
+  // 1. fenced ```json ... ```
   const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenceMatch ? fenceMatch[1] : trimmed;
-  return JSON.parse(candidate) as BotTurn;
+  if (fenceMatch) {
+    try { return JSON.parse(fenceMatch[1]) as BotTurn; } catch {}
+  }
+  // 2. first { ... last }
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
+  if (first !== -1 && last > first) {
+    try { return JSON.parse(trimmed.slice(first, last + 1)) as BotTurn; } catch {}
+  }
+  // 3. raw parse
+  return JSON.parse(trimmed) as BotTurn;
 }
 
 export async function POST(req: Request) {
@@ -98,26 +108,49 @@ export async function POST(req: Request) {
   }
 
   const anthropic = getAnthropic();
-  const resp = await anthropic.messages.create({
-    model: BOT_MODEL,
-    max_tokens: 800,
-    system: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }),
-    messages: [{ role: "user", content: "התחל את הייעוץ. השאלה הראשונה." }],
-  });
+  const systemPrompt = buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior });
 
-  // Record token usage (best-effort)
-  await recordUsage(supabase, user.id, resp.usage?.input_tokens ?? 0, resp.usage?.output_tokens ?? 0);
-
-  const textBlock = resp.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json({ error: "no_text_response" }, { status: 500 });
+  let turn: BotTurn | null = null;
+  let totalIn = 0;
+  let totalOut = 0;
+  let lastErr = "";
+  for (let attempt = 0; attempt < 2 && !turn; attempt++) {
+    try {
+      const resp = await anthropic.messages.create({
+        model: BOT_MODEL,
+        max_tokens: 800,
+        system:
+          systemPrompt +
+          (attempt > 0
+            ? "\n\n⚠️ החזר **רק** JSON, מתחיל ב-{ ומסתיים ב-}, ללא טקסט נוסף, ללא code-fence."
+            : ""),
+        messages: [
+          { role: "user", content: "התחל את הייעוץ. השאלה הראשונה." },
+          // Prefill forces the model to open with JSON — same trick as /turn.
+          { role: "assistant", content: "{" },
+        ],
+      });
+      totalIn += resp.usage?.input_tokens ?? 0;
+      totalOut += resp.usage?.output_tokens ?? 0;
+      const textBlock = resp.content.find((b) => b.type === "text");
+      if (!textBlock || textBlock.type !== "text") { lastErr = "no_text_response"; continue; }
+      turn = extractJson("{" + textBlock.text);
+    } catch (e: unknown) {
+      lastErr = e instanceof Error ? e.message.slice(0, 200) : "unknown";
+    }
   }
 
-  let turn: BotTurn;
-  try {
-    turn = extractJson(textBlock.text);
-  } catch {
-    return NextResponse.json({ error: "parse_failed", raw: textBlock.text }, { status: 500 });
+  // Record token usage (best-effort)
+  await recordUsage(supabase, user.id, totalIn, totalOut);
+
+  if (!turn) {
+    // Don't leave an orphaned empty consultation behind — it clutters the sidebar
+    // and opens to a dead chat.
+    await supabase.from("consultations").delete().eq("id", consultation.id);
+    return NextResponse.json(
+      { error: "start_failed", message: "לא הצלחתי לפתוח שיחה כרגע. נסה שוב בעוד רגע.", detail: lastErr },
+      { status: 500 }
+    );
   }
 
   await supabase.from("messages").insert({

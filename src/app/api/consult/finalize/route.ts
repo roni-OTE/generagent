@@ -5,7 +5,9 @@ import { ANALYSIS_SYSTEM_PROMPT } from "@/lib/bot/prompts";
 import { recordUsage } from "@/lib/quota";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+// Analysis generates up to 8k tokens — 60s was killing the function mid-generation
+// and leaving users stuck on "מסיים את האפיון…". Fluid compute allows 300s.
+export const maxDuration = 300;
 
 type Analysis = {
   agent_name: string;
@@ -45,8 +47,10 @@ async function callAnalyst(args: {
   let lastRaw = "";
   let totalIn = 0;
   let totalOut = 0;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const resp = await anthropic.messages.create({
+  for (let attempt = 0; attempt < 2; attempt++) {
+    // Streaming keeps the connection alive for long generations (8k tokens can
+    // take 1-2 minutes) instead of risking idle timeouts on a blocking call.
+    const stream = anthropic.messages.stream({
       model: BOT_MODEL,
       max_tokens: 8000,
       temperature: 0.3,
@@ -60,6 +64,7 @@ async function callAnalyst(args: {
         { role: "assistant" as const, content: "{" },
       ],
     });
+    const resp = await stream.finalMessage();
     totalIn += resp.usage?.input_tokens ?? 0;
     totalOut += resp.usage?.output_tokens ?? 0;
     const textBlock = resp.content.find((b) => b.type === "text");
@@ -90,6 +95,22 @@ export async function POST(req: Request) {
     .single();
 
   if (!consultation) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  // Idempotency: if already completed (double-click, second tab, auto-retry on
+  // page load), return the existing result instead of generating a duplicate.
+  if (consultation.status === "completed" && consultation.analysis_json) {
+    const { data: existingPkg } = await supabase
+      .from("packages")
+      .select("id")
+      .eq("consultation_id", consultation_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return NextResponse.json({
+      analysis: consultation.analysis_json,
+      package_id: existingPkg?.id ?? null,
+    });
+  }
 
   const { data: msgs } = await supabase
     .from("messages")
@@ -133,6 +154,18 @@ export async function POST(req: Request) {
     analysis.target_platform === "both"
       ? ["claude-code", "codex"]
       : [analysis.target_platform];
+
+  // Guard against duplicate packages if two finalize calls raced past the
+  // idempotency check (e.g. double tab + retry).
+  const { data: racedPkg } = await supabase
+    .from("packages")
+    .select("id")
+    .eq("consultation_id", consultation_id)
+    .limit(1)
+    .maybeSingle();
+  if (racedPkg) {
+    return NextResponse.json({ analysis, package_id: racedPkg.id });
+  }
 
   const { data: pkg } = await supabase
     .from("packages")
