@@ -6,6 +6,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # GenerAgent — production app
 
+> **לפני שנוגעים בקוד:** קרא את `CODE-GUIDE.md` — מפת הפרויקט, חוקי הברזל והמוקשים הידועים.
+
 ## What this is
 Next.js 16 production application for **generagent.io**. The product helps users characterize **which** AI agent they need (via an adaptive consultation bot), then ships a ready-to-install package for Claude Code or Codex CLI.
 

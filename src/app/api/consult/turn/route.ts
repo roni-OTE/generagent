@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { buildBotSystemPrompt } from "@/lib/bot/prompts";
 import { getQuotaStatus, recordUsage, PER_CHAT_CAP } from "@/lib/quota";
-import { logEvent, classifyAnthropicError } from "@/lib/events";
+import { logEvent } from "@/lib/events";
+import { askClaudeJson, LlmError } from "@/lib/llm";
 
 export const runtime = "nodejs";
 // 3 model attempts on a slow day can exceed 60s — headroom prevents mid-flight kills.
@@ -24,59 +24,7 @@ type BotTurn = {
   internal_notes: string;
 };
 
-function extractJson(text: string): BotTurn {
-  const trimmed = text.trim();
-  // 1. fenced ```json ... ```
-  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    try { return JSON.parse(fenceMatch[1]) as BotTurn; } catch {}
-  }
-  // 2. first { ... last }
-  const first = trimmed.indexOf("{");
-  const last = trimmed.lastIndexOf("}");
-  if (first !== -1 && last > first) {
-    try { return JSON.parse(trimmed.slice(first, last + 1)) as BotTurn; } catch {}
-  }
-  // 3. raw parse
-  return JSON.parse(trimmed) as BotTurn;
-}
-
-async function callBot(args: {
-  systemPrompt: string;
-  history: { role: "user" | "assistant"; content: string }[];
-}): Promise<{ turn: BotTurn; inputTokens: number; outputTokens: number }> {
-  const anthropic = getAnthropic();
-  let lastRaw = "";
-  let totalIn = 0;
-  let totalOut = 0;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const resp = await anthropic.messages.create({
-      model: BOT_MODEL,
-      max_tokens: 900,
-      temperature: 0.3,
-      system:
-        args.systemPrompt +
-        (attempt > 0
-          ? "\n\n⚠️ ניסיון קודם לא היה JSON תקין. החזר **רק** JSON, מתחיל ב-{ ומסתיים ב-}, ללא טקסט נוסף, ללא code-fence."
-          : ""),
-      messages: [
-        ...args.history,
-        { role: "assistant" as const, content: "{" },
-      ],
-    });
-    totalIn += resp.usage?.input_tokens ?? 0;
-    totalOut += resp.usage?.output_tokens ?? 0;
-    const textBlock = resp.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") continue;
-    lastRaw = "{" + textBlock.text;
-    try {
-      return { turn: extractJson(lastRaw), inputTokens: totalIn, outputTokens: totalOut };
-    } catch {
-      // try again
-    }
-  }
-  throw new Error("parse_failed: " + lastRaw.slice(0, 200));
-}
+// JSON extraction + retry + prefill all live in @/lib/llm — do not re-implement here.
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -203,19 +151,20 @@ export async function POST(req: Request) {
   let usedIn = 0;
   let usedOut = 0;
   try {
-    const result = await callBot({
-      systemPrompt: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }) + suffixHint,
-      history,
+    const result = await askClaudeJson<BotTurn>({
+      system: buildBotSystemPrompt({ userName: profile?.display_name ?? null, prior }) + suffixHint,
+      messages: history,
+      maxTokens: 900,
+      attempts: 3,
     });
-    turn = result.turn;
-    usedIn = result.inputTokens;
-    usedOut = result.outputTokens;
+    turn = result.data;
+    usedIn = result.usage.inputTokens;
+    usedOut = result.usage.outputTokens;
   } catch (e: unknown) {
-    const cls = classifyAnthropicError(e);
     await logEvent({
       source: "consult.turn",
-      code: cls.code,
-      message: cls.message,
+      code: e instanceof LlmError ? e.code : "unknown",
+      message: e instanceof Error ? e.message.slice(0, 300) : "unknown",
       meta: { consultation_id, user_id: user.id },
     });
     // Soft recovery: return a friendly turn instead of 500 so chat keeps going

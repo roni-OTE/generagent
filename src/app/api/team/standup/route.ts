@@ -11,9 +11,8 @@
  */
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
-import { classifyAnthropicError } from "@/lib/events";
 import { sendEmail, markdownToBasicHtml } from "@/lib/email";
+import { askClaudeJson, LlmError } from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -41,20 +40,6 @@ type Digest = {
   open_tickets: number;
   flags: string[];
 };
-
-function extractJson<T>(text: string): T {
-  const trimmed = text.trim();
-  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fence) {
-    try { return JSON.parse(fence[1]) as T; } catch {}
-  }
-  const first = trimmed.indexOf("{");
-  const last = trimmed.lastIndexOf("}");
-  if (first !== -1 && last > first) {
-    return JSON.parse(trimmed.slice(first, last + 1)) as T;
-  }
-  return JSON.parse(trimmed) as T;
-}
 
 async function buildDigest(): Promise<Digest> {
   const supabase = createServiceClient();
@@ -167,10 +152,8 @@ export async function POST(req: Request) {
   let tamarOut: TamarSummary | null = null;
   let llmFailure: string | null = null;
   try {
-    const anthropic = getAnthropic();
-    const resp = await anthropic.messages.create({
-      model: BOT_MODEL,
-      max_tokens: 1500,
+    const result = await askClaudeJson<TamarSummary>({
+      maxTokens: 1500,
       temperature: 0.4,
       system: `את תמר, ה-Product Lead של GenerAgent. את מקבלת digest נתונים אמיתי (לא דיווחים של סוכנים) ומנסחת סטנדאפ יומי קצר למייסד רוני.
 
@@ -184,16 +167,12 @@ export async function POST(req: Request) {
 החזירי JSON בלבד: {"highlights": [...], "decisions_needed": [...], "metrics_snapshot": "...", "summary_md": "..."}`,
       messages: [
         { role: "user", content: `Digest של 24 השעות האחרונות:\n\n${digestMd}\n\nנסחי את הסטנדאפ.` },
-        { role: "assistant", content: "{" },
       ],
     });
-    const textBlock = resp.content.find((b) => b.type === "text");
-    if (textBlock && textBlock.type === "text") {
-      tamarOut = extractJson<TamarSummary>("{" + textBlock.text);
-    }
+    tamarOut = result.data;
   } catch (e) {
     // Distinguish API failure from parse failure — the old version masked this.
-    llmFailure = classifyAnthropicError(e).code;
+    llmFailure = e instanceof LlmError ? e.code : "unknown";
   }
 
   const dateStr = new Date().toLocaleDateString("he-IL");

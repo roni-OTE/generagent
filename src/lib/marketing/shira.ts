@@ -2,10 +2,10 @@
  * Shira's content generator. Ask her for a piece of content in a specific format,
  * get back structured output (title + body + optional short hook).
  */
-import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { TEAM_AGENTS, ONBOARDING_GLOSSARY_RULE } from "@/lib/team/agents";
 import { ANTI_HALLUCINATION_RULE, TEAM_DISAMBIGUATION_RULE } from "@/lib/team/tools";
 import { createServiceClient } from "@/lib/supabase/server";
+import { askClaudeJson } from "@/lib/llm";
 
 const SHIRA = TEAM_AGENTS.find((a) => a.handle === "shira")!;
 
@@ -57,16 +57,6 @@ const FORMAT_INSTRUCTIONS: Record<ContentFormat, string> = {
 - מסתיים ב-CTA link
 - לא formal מדי`,
 };
-
-function extractJson<T>(text: string): T {
-  const trimmed = text.trim();
-  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fence) return JSON.parse(fence[1]) as T;
-  const first = trimmed.indexOf("{");
-  const last = trimmed.lastIndexOf("}");
-  if (first !== -1 && last > first) return JSON.parse(trimmed.slice(first, last + 1)) as T;
-  return JSON.parse(trimmed) as T;
-}
 
 async function readShiraMemory(): Promise<string> {
   const supabase = createServiceClient();
@@ -120,29 +110,16 @@ ${opts.angle ? `**זווית:** ${opts.angle}` : ""}
   "hook": "משפט hook קצר (אם רלוונטי לפורמט)"
 }`;
 
-  const anthropic = getAnthropic();
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const resp = await anthropic.messages.create({
-        model: BOT_MODEL,
-        max_tokens: 1600,
-        temperature: 0.75,
-        system: system + (attempt > 0 ? "\n\n⚠️ ניסיון קודם לא היה JSON תקני. החזירי JSON בלבד." : ""),
-        messages: [
-          { role: "user", content: `כתבי את התוכן. החזירי JSON בלבד.` },
-          { role: "assistant", content: "{" },
-        ],
-      });
-      const textBlock = resp.content.find((b) => b.type === "text");
-      if (!textBlock || textBlock.type !== "text") continue;
-      const raw = "{" + textBlock.text;
-      const parsed = extractJson<ShiraDraft>(raw);
-      if (!parsed.title || !parsed.body) continue;
-      return parsed;
-    } catch (e) {
-      console.error("[shira] generate attempt failed", attempt, e);
-    }
+  try {
+    const { data: parsed } = await askClaudeJson<ShiraDraft>({
+      system,
+      messages: [{ role: "user", content: `כתבי את התוכן. החזירי JSON בלבד.` }],
+      maxTokens: 1600,
+      temperature: 0.75,
+    });
+    if (parsed.title && parsed.body) return parsed;
+  } catch (e) {
+    console.error("[shira] generate failed", e);
   }
 
   throw new Error("Shira failed to produce content");

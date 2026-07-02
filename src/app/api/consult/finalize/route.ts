@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getAnthropic, BOT_MODEL } from "@/lib/anthropic";
 import { ANALYSIS_SYSTEM_PROMPT } from "@/lib/bot/prompts";
 import { recordUsage } from "@/lib/quota";
-import { logEvent, classifyAnthropicError } from "@/lib/events";
+import { logEvent } from "@/lib/events";
+import { askClaudeJson, LlmError } from "@/lib/llm";
 
 export const runtime = "nodejs";
 // Analysis generates up to 8k tokens — 60s was killing the function mid-generation
@@ -26,59 +26,8 @@ type Analysis = {
   confidence: number;
 };
 
-function extractJson<T>(text: string): T {
-  const trimmed = text.trim();
-  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    try { return JSON.parse(fenceMatch[1]) as T; } catch {}
-  }
-  const first = trimmed.indexOf("{");
-  const last = trimmed.lastIndexOf("}");
-  if (first !== -1 && last > first) {
-    try { return JSON.parse(trimmed.slice(first, last + 1)) as T; } catch {}
-  }
-  return JSON.parse(trimmed) as T;
-}
-
-async function callAnalyst(args: {
-  system: string;
-  userMessage: string;
-}): Promise<{ analysis: Analysis; inputTokens: number; outputTokens: number }> {
-  const anthropic = getAnthropic();
-  let lastRaw = "";
-  let totalIn = 0;
-  let totalOut = 0;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    // Streaming keeps the connection alive for long generations (8k tokens can
-    // take 1-2 minutes) instead of risking idle timeouts on a blocking call.
-    const stream = anthropic.messages.stream({
-      model: BOT_MODEL,
-      max_tokens: 8000,
-      temperature: 0.3,
-      system:
-        args.system +
-        (attempt > 0
-          ? "\n\n⚠️ ניסיון קודם לא היה JSON תקין. החזר **רק** JSON, מתחיל ב-{ ומסתיים ב-}, ללא טקסט נוסף, ללא code-fence."
-          : ""),
-      messages: [
-        { role: "user" as const, content: args.userMessage },
-        { role: "assistant" as const, content: "{" },
-      ],
-    });
-    const resp = await stream.finalMessage();
-    totalIn += resp.usage?.input_tokens ?? 0;
-    totalOut += resp.usage?.output_tokens ?? 0;
-    const textBlock = resp.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") continue;
-    lastRaw = "{" + textBlock.text;
-    try {
-      return { analysis: extractJson<Analysis>(lastRaw), inputTokens: totalIn, outputTokens: totalOut };
-    } catch {
-      // try again
-    }
-  }
-  throw new Error("analyst_parse_failed: " + lastRaw.slice(0, 200));
-}
+// JSON extraction + retry + prefill + streaming live in @/lib/llm — do not re-implement here.
+// (maxTokens 8000 > 4000 → askClaudeJson automatically streams to survive long generations.)
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -125,23 +74,24 @@ export async function POST(req: Request) {
 
   let analysis: Analysis;
   try {
-    const result = await callAnalyst({
+    const result = await askClaudeJson<Analysis>({
       system: ANALYSIS_SYSTEM_PROMPT,
-      userMessage: `transcript:\n\n${transcript}\n\nתפיק את האפיון.`,
+      messages: [{ role: "user", content: `transcript:\n\n${transcript}\n\nתפיק את האפיון.` }],
+      maxTokens: 8000,
     });
-    analysis = result.analysis;
-    await recordUsage(supabase, user.id, result.inputTokens, result.outputTokens);
+    analysis = result.data;
+    await recordUsage(supabase, user.id, result.usage.inputTokens, result.usage.outputTokens);
   } catch (e: unknown) {
-    console.error("[finalize] parse failed after retries", e);
-    const cls = classifyAnthropicError(e);
+    console.error("[finalize] failed", e);
+    const code = e instanceof LlmError ? e.code : "unknown";
     await logEvent({
       source: "consult.finalize",
-      code: cls.code,
-      message: cls.message,
+      code,
+      message: e instanceof Error ? e.message.slice(0, 300) : "unknown",
       meta: { consultation_id, user_id: user.id },
     });
     return NextResponse.json(
-      { error: "parse_failed", detail: e instanceof Error ? e.message.slice(0, 200) : "unknown" },
+      { error: code, detail: e instanceof Error ? e.message.slice(0, 200) : "unknown" },
       { status: 500 }
     );
   }
