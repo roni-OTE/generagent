@@ -271,7 +271,7 @@ export default function ChatView({
               onKeyDown={onKey}
               disabled={busy || done}
               rows={1}
-              placeholder={done ? "השיחה הסתיימה" : "תכתוב את התשובה שלך… (Enter כדי לשלוח)"}
+              placeholder={done ? "השיחה הסתיימה" : "תכתוב את התשובה שלך…"}
               className="flex-1 resize-none bg-white/[0.03] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-indigo-400/40 disabled:opacity-50"
               style={{ maxHeight: "120px" }}
             />
