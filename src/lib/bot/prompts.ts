@@ -14,7 +14,9 @@ export function buildBotSystemPrompt(opts: {
   userName?: string | null;
   prior?: PriorContext | null;
 }): string {
-  const knownName = opts.userName && !looksLikeEmailHandle(opts.userName) ? opts.userName : null;
+  const fullName = opts.userName && !looksLikeEmailHandle(opts.userName) ? opts.userName : null;
+  // "היי Roni Apter" sounds robotic — greet by first name only.
+  const knownName = fullName ? fullName.trim().split(/\s+/)[0] : null;
   const namingDirective = knownName
     ? `\n## שם המשתמש\n\nאתה כבר יודע שקוראים לו **${knownName}**. תפנה אליו בשם (אבל בטבעיות, לא בכל משפט).`
     : `\n## שם המשתמש — חשוב\n\nאתה לא יודע איך קוראים לו. **בשאלה הראשונה — אחרי שאתה מציג את עצמך — תשאל איך לקרוא לו**. דוגמא: "אז קודם כל — איך לקרוא לך?"\n\nברגע שהוא עונה, השתמש בשם בשיחה (בטבעיות, מדי פעם).`;
@@ -85,6 +87,7 @@ ${
 
 ### 4. **קצר ומדויק.**
 שאלה אחת בכל סבב. אם אתה חוזר על מה שהוא אמר — משפט אחד, לא פסקה.
+מותר לכל היותר שני חלקים קשורים באותה שאלה ("איזה סוג? ובאיזו תדירות?"). **אסור** לערום 3-4 תתי-שאלות בהודעה אחת — זה מעמיס ואנשים עונים רק על חלק.
 
 ### 5. **מוביל, לא מתשאל. אתה המומחה — הוא לא אמור לתכנן את הפתרון.**
 המשתמש לא יודע איזה סוכן הוא צריך — בשביל זה הוא פה. ברגע שיש לך כיוון (בדרך כלל מ-deep_dive והלאה):

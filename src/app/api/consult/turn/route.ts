@@ -257,6 +257,12 @@ export async function POST(req: Request) {
       ? "יש לי מספיק כדי להתחיל לבנות את הסוכן שלך. תודה על השיחה — עובר לניתוח…"
       : turn.question;
 
+  // The client renders turn.question from this response (not the DB row), so the
+  // farewell replacement must apply to the returned turn too — otherwise the user
+  // briefly sees an unanswerable question before "מסיים את האפיון".
+  turn.question = messageContent;
+  if (shouldClose) turn.micro_explanation = "";
+
   await supabase.from("messages").insert({
     consultation_id,
     role: "bot",
