@@ -76,6 +76,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, preview: true, abandoned: r1, followup: r2 });
   }
 
+  // Safety gate: real sends to users are OFF until the founder approves the copy.
+  // Approve by setting LIFECYCLE_ENABLED=true in Vercel env (then redeploy).
+  if (process.env.LIFECYCLE_ENABLED !== "true") {
+    return NextResponse.json({
+      ok: true,
+      skipped: "lifecycle emails disabled — set LIFECYCLE_ENABLED=true after approving the copy",
+    });
+  }
+
   const supabase = createServiceClient();
   const now = Date.now();
   let sentAbandoned = 0;
