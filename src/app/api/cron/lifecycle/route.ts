@@ -43,6 +43,39 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // Preview mode: send both templates (with sample data) to the founder only.
+  // No DB reads/writes, nothing goes to users. Used to approve copy before launch.
+  const url = new URL(req.url);
+  if (url.searchParams.get("preview") === "1") {
+    const founder = process.env.FOUNDER_EMAIL ?? "roni@otegroup.co.il";
+    const sampleResume = `${BASE_URL}/consult/00000000-preview`;
+    const fb1 = `${BASE_URL}/feedback?src=abandoned&email=${encodeURIComponent(founder)}`;
+    const fb2 = `${BASE_URL}/feedback?src=followup&email=${encodeURIComponent(founder)}`;
+    const r1 = await sendEmail({
+      to: founder,
+      subject: "[תצוגה מקדימה — מייל נטישה] נועם עדיין מחכה לך 👋",
+      html: `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">
+        <p>היי רוני,</p>
+        <p>התחלת שיחה עם נועם על הסוכן שלך — והיא עדיין פתוחה בדיוק איפה שעצרת. נשארו רק כמה שאלות עד שתקבל סוכן AI מותאם אישית, מוכן להתקנה בפקודה אחת.</p>
+        <p><a href="${sampleResume}" style="display:inline-block;background:#5E6AD2;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600">להמשיך מאיפה שעצרתי ←</a></p>
+        <p style="color:#666;font-size:13px">ואם עצרת כי משהו הפריע או לא עבד — זה בדיוק מה שאנחנו רוצים לשמוע: <a href="${fb1}">ספר לנו בשתי דקות</a>. המשוב מגיע ישירות לרוני, המייסד.</p>
+        <p style="color:#999;font-size:12px">GenerAgent · OTE Group</p>
+      </div>`,
+    });
+    const r2 = await sendEmail({
+      to: founder,
+      subject: "[תצוגה מקדימה — מייל פולו-אפ] איך הולך עם רועי — מנהל הצעות המחיר?",
+      html: `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">
+        <p>היי רוני,</p>
+        <p>לפני שלושה ימים בנית את <strong>רועי — מנהל הצעות המחיר</strong> ב-GenerAgent. הספקת להתקין? עובד כמו שציפית?</p>
+        <p>אם משהו נתקע בהתקנה או שהסוכן לא בדיוק מה שרצית — <a href="${fb2}">ספר לנו בשתי דקות</a>, זה מגיע ישירות לרוני והוא באמת קורא הכל.</p>
+        <p>ואם הכל עובד — נשמח שתספר לחבר 😉</p>
+        <p style="color:#999;font-size:12px">GenerAgent · OTE Group</p>
+      </div>`,
+    });
+    return NextResponse.json({ ok: true, preview: true, abandoned: r1, followup: r2 });
+  }
+
   const supabase = createServiceClient();
   const now = Date.now();
   let sentAbandoned = 0;
