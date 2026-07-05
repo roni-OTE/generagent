@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { logEvent } from "@/lib/events";
+import { sendEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -50,5 +51,20 @@ export async function POST(req: Request) {
     await logEvent({ source: "feedback.submit", code: "db_error", message: error.message });
     return NextResponse.json({ error: "save_failed" }, { status: 500 });
   }
+
+  // Notify the founder immediately — feedback is gold, don't let it sit unseen.
+  const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+  await sendEmail({
+    to: process.env.FOUNDER_EMAIL ?? "roni@otegroup.co.il",
+    subject: `💬 משוב חדש: ${stars} (${rating}/5)`,
+    html: `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">
+      <h3 style="margin:0 0 12px">משוב חדש התקבל</h3>
+      <p><strong>דירוג:</strong> ${stars} (${rating}/5)</p>
+      ${body.what_worked ? `<p><strong>מה עבד:</strong> ${String(body.what_worked).slice(0, 2000)}</p>` : ""}
+      ${body.what_missing ? `<p><strong>מה חסר/הפריע:</strong> ${String(body.what_missing).slice(0, 2000)}</p>` : ""}
+      <p style="color:#666;font-size:13px">מאת: ${body.email || "אנונימי"} · מקור: ${body.source || "site"}${userId ? " · משתמש מחובר" : ""}</p>
+    </div>`,
+  }).catch(() => undefined);
+
   return NextResponse.json({ ok: true });
 }
