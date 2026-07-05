@@ -30,6 +30,8 @@ type Props = {
   initialConfidence: number;
   initialDone: boolean;
   autoFinalize?: boolean;
+  /** Read-only transcript mode for completed consultations (?view=chat). */
+  completedView?: boolean;
 };
 
 export default function ChatView({
@@ -40,6 +42,7 @@ export default function ChatView({
   initialConfidence,
   initialDone,
   autoFinalize,
+  completedView,
 }: Props) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -240,7 +243,17 @@ export default function ChatView({
               {error}
             </div>
           )}
-          {done && !error && (
+          {completedView && (
+            <div className="text-center py-4">
+              <button
+                onClick={() => router.push(`/consult/${consultationId}/result`)}
+                className="px-4 py-2 rounded-lg text-xs bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 hover:bg-indigo-500/25"
+              >
+                ← לסוכן שנבנה מהשיחה הזו
+              </button>
+            </div>
+          )}
+          {done && !error && !completedView && (
             <div className="text-xs text-white/50 text-center py-4">
               {finalizing
                 ? "מסיים את האפיון… זה יכול לקחת עד דקה-שתיים. אל תסגור את הדף."

@@ -85,6 +85,12 @@ export default function Home() {
             >
               תמיכה
             </Link>
+            <Link
+              href="/blog"
+              className="text-[var(--fg-muted)] no-underline hover:text-[var(--fg-dim)] transition-colors"
+            >
+              בלוג
+            </Link>
           </div>
         </div>
       </footer>

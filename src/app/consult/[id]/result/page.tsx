@@ -189,6 +189,12 @@ export default async function ConsultResultPage({
           >
             חזרה לדאשבורד
           </Link>
+          <Link
+            href={`/consult/${id}?view=chat`}
+            className="px-5 py-2.5 rounded-xl text-sm text-white/80 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.06] transition-colors"
+          >
+            צפייה בשיחה המלאה
+          </Link>
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendEmail, markdownToBasicHtml } from "@/lib/email";
 import { askClaudeJson, LlmError } from "@/lib/llm";
+import { logEvent } from "@/lib/events";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -38,6 +39,7 @@ type Digest = {
   health_incidents_24h: number;
   stuck_consultations: number;
   open_tickets: number;
+  waitlist_pending: { name: string | null; email: string; note: string | null; created_at: string }[];
   flags: string[];
 };
 
@@ -58,6 +60,7 @@ async function buildDigest(): Promise<Digest> {
     { data: events },
     { count: stuck },
     { count: tickets },
+    { data: waitlistPending },
   ] = await Promise.all([
     supabase.from("consultations").select("id", { count: "exact", head: true }).gte("created_at", h24),
     supabase.from("consultations").select("id", { count: "exact", head: true }).gte("created_at", h48).lt("created_at", h24),
@@ -72,6 +75,12 @@ async function buildDigest(): Promise<Digest> {
       .eq("status", "analyzing")
       .lt("updated_at", stuckCutoff),
     supabase.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabase
+      .from("waitlist")
+      .select("name, email, note, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
 
   const errCounts = new Map<string, number>();
@@ -95,6 +104,8 @@ async function buildDigest(): Promise<Digest> {
   const credit = errors24.find((e) => e.code === "api_credit");
   if (credit) flags.push(`נרשמו ${credit.count} כשלי אשראי API — לוודא Auto-reload פעיל`);
   if ((tickets ?? 0) > 0) flags.push(`${tickets} פניות תמיכה פתוחות`);
+  if ((waitlistPending?.length ?? 0) > 0)
+    flags.push(`${waitlistPending!.length} ממתינים ברשימת ההמתנה — לאשר ב-/admin/waitlist`);
 
   return {
     metrics: {
@@ -110,6 +121,7 @@ async function buildDigest(): Promise<Digest> {
     health_incidents_24h: healthIncidents,
     stuck_consultations: stuck ?? 0,
     open_tickets: tickets ?? 0,
+    waitlist_pending: waitlistPending ?? [],
     flags,
   };
 }
@@ -135,6 +147,14 @@ function digestToMarkdown(d: Digest): string {
     ``,
     `## ⚠️ דגלים`,
     d.flags.length === 0 ? `- הכל תקין` : d.flags.map((f) => `- ${f}`).join("\n"),
+    ``,
+    `## 📝 רשימת המתנה (${d.waitlist_pending.length} ממתינים)`,
+    d.waitlist_pending.length === 0
+      ? `- אין ממתינים חדשים`
+      : d.waitlist_pending
+          .slice(0, 15)
+          .map((w) => `- ${w.name ?? "(ללא שם)"} · ${w.email}${w.note ? ` — "${w.note.slice(0, 80)}"` : ""}`)
+          .join("\n"),
   ].join("\n");
 }
 
@@ -215,6 +235,15 @@ export async function POST(req: Request) {
 
   if (standupRow && emailRes.success) {
     await supabase.from("team_standups").update({ email_sent: true }).eq("id", standupRow.id);
+  } else if (!emailRes.success) {
+    // Standup email failures were invisible (row stayed "לא נשלח" with no trace).
+    // Log to app_events so the next digest — and Yoav's triage — can see why.
+    await logEvent({
+      source: "standup.email",
+      code: "email_failed",
+      message: emailRes.error ?? "unknown",
+      meta: { standup_id: standupRow?.id ?? null },
+    });
   }
 
   return NextResponse.json({

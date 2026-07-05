@@ -71,4 +71,17 @@ export async function recordUsage(
     () => undefined,
     () => undefined
   );
+  // Usage event — feeds the global daily spend guard in /api/health.
+  // Dynamic import avoids a circular dependency (events → supabase server).
+  try {
+    const { logEvent } = await import("@/lib/events");
+    await logEvent({
+      level: "info",
+      source: "usage",
+      code: "tokens",
+      meta: { user_id: userId, in: Math.round(inputTokens), out: Math.round(outputTokens) },
+    });
+  } catch {
+    // never block on accounting
+  }
 }

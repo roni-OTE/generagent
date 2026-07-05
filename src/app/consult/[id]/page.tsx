@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic";
 
 export default async function ConsultChatPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ view?: string }>;
 }) {
   const { id } = await params;
+  const { view } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -30,8 +33,9 @@ export default async function ConsultChatPage({
     .single();
   if (!consultation) redirect("/dashboard");
 
-  // If completed, redirect to result
-  if (consultation.status === "completed" && consultation.analysis_json) {
+  // If completed, redirect to result — unless the user explicitly asked to see
+  // the transcript (?view=chat, linked from the result page and the sidebar).
+  if (consultation.status === "completed" && consultation.analysis_json && view !== "chat") {
     redirect(`/consult/${id}/result`);
   }
 
@@ -64,6 +68,7 @@ export default async function ConsultChatPage({
         initialConfidence={Number(consultation.confidence ?? 0)}
         initialDone={consultation.status !== "in_progress"}
         autoFinalize={stuckAnalyzing}
+        completedView={consultation.status === "completed" && view === "chat"}
       />
     </WorkspaceShell>
   );

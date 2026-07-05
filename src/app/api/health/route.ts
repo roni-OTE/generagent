@@ -18,6 +18,55 @@ export const maxDuration = 60;
 const ALERT_COOLDOWN_MIN = 45;
 const FOUNDER_EMAIL = process.env.FOUNDER_EMAIL ?? "roni@otegroup.co.il";
 
+// Global daily spend guard. Sonnet pricing: $3/M input, $15/M output.
+const DAILY_SPEND_CAP_USD = Number(process.env.DAILY_SPEND_CAP_USD ?? 25);
+const SPEND_ALERT_COOLDOWN_HOURS = 12;
+
+async function checkDailySpend(supabase: ReturnType<typeof createServiceClient>): Promise<void> {
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+  const { data: events } = await supabase
+    .from("app_events")
+    .select("meta, created_at, code")
+    .eq("source", "usage")
+    .gte("created_at", since)
+    .limit(2000);
+  let inTok = 0;
+  let outTok = 0;
+  for (const e of events ?? []) {
+    const m = (e.meta ?? {}) as { in?: number; out?: number };
+    inTok += Number(m.in ?? 0);
+    outTok += Number(m.out ?? 0);
+  }
+  const estUsd = (inTok * 3 + outTok * 15) / 1_000_000;
+  if (estUsd < DAILY_SPEND_CAP_USD) return;
+
+  // Cooldown: one spend alert per 12h
+  const cooldownSince = new Date(Date.now() - SPEND_ALERT_COOLDOWN_HOURS * 3600_000).toISOString();
+  const { count: recentAlerts } = await supabase
+    .from("app_events")
+    .select("id", { count: "exact", head: true })
+    .eq("source", "health")
+    .eq("code", "spend_alert")
+    .gte("created_at", cooldownSince);
+  if ((recentAlerts ?? 0) > 0) return;
+
+  await supabase.from("app_events").insert({
+    level: "warn",
+    source: "health",
+    code: "spend_alert",
+    message: `הוצאת API ב-24 שעות: ~$${estUsd.toFixed(2)} (תקרה: $${DAILY_SPEND_CAP_USD})`,
+    meta: { est_usd: estUsd, input_tokens: inTok, output_tokens: outTok },
+  });
+  await sendEmail({
+    to: FOUNDER_EMAIL,
+    subject: `⚠️ GenerAgent — הוצאת ה-API חצתה $${DAILY_SPEND_CAP_USD} ב-24 שעות`,
+    html: `<div dir="rtl" style="font-family:sans-serif">
+      <p>רוני (Reliability): צריכת ה-API ב-24 השעות האחרונות מוערכת ב-<strong>~$${estUsd.toFixed(2)}</strong> (${inTok.toLocaleString()} in / ${outTok.toLocaleString()} out).</p>
+      <p>שווה להציץ ב-<a href="https://www.generagent.io/admin">אדמין</a> מי הצרכנים הגדולים, ולוודא שאין שימוש חריג. לשינוי התקרה: DAILY_SPEND_CAP_USD ב-Vercel env.</p>
+    </div>`,
+  });
+}
+
 type CheckResult = { name: string; ok: boolean; detail?: string };
 
 async function checkDb(supabase: ReturnType<typeof createServiceClient>): Promise<CheckResult> {
@@ -54,6 +103,8 @@ export async function GET(req: Request) {
 
   const supabase = createServiceClient();
   const [db, anthropic] = await Promise.all([checkDb(supabase), checkAnthropic()]);
+  // Spend guard rides on the same 10-min cadence (best-effort, never fails health)
+  await checkDailySpend(supabase).catch(() => undefined);
   const failures = [db, anthropic].filter((c) => !c.ok);
   const healthy = failures.length === 0;
 
