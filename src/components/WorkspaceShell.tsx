@@ -202,6 +202,16 @@ export default function WorkspaceShell({
           >
             {creating ? "פותח..." : "+ שיחה חדשה"}
           </button>
+          <Link
+            href="/templates"
+            className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[var(--fg-dim)] hover:bg-[var(--surface)] hover:text-[var(--fg)] transition-colors no-underline"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span>מרקטפלייס הסוכנים</span>
+          </Link>
         </div>
 
         {/* chats list */}

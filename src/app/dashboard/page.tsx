@@ -156,13 +156,18 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <>
-            <div className="mb-7">
-              <div className="font-mono text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.12em] mb-2">
-                → agents · {packages.length}
+            <div className="mb-7 flex items-end justify-between gap-4 flex-wrap">
+              <div>
+                <div className="font-mono text-[11px] text-[var(--indigo-text)] uppercase tracking-[0.12em] mb-2">
+                  → agents · {packages.length}
+                </div>
+                <h1 className="text-[28px] font-bold tracking-[-0.02em] leading-[1.1] bg-gradient-to-b from-white to-[#B0B5C0] bg-clip-text text-transparent">
+                  הסוכנים שלך
+                </h1>
               </div>
-              <h1 className="text-[28px] font-bold tracking-[-0.02em] leading-[1.1] bg-gradient-to-b from-white to-[#B0B5C0] bg-clip-text text-transparent">
-                הסוכנים שלך
-              </h1>
+              <Link href="/templates" className="text-[13px] text-[var(--indigo-text)] hover:underline whitespace-nowrap">
+                עיין במרקטפלייס →
+              </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {packages.map((pkg) => (
