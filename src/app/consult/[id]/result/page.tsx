@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import Orb from "@/components/Orb";
 import CopyableCode from "@/components/CopyableCode";
 import { buildInstallCommand } from "@/lib/handle";
+import PublishButton from "./PublishButton";
 
 export const dynamic = "force-dynamic";
 
@@ -69,6 +70,26 @@ export default async function ConsultResultPage({
   }
 
   const a = consultation.analysis_json as Analysis;
+
+  // Is this agent already published to the marketplace? (for the publish widget)
+  let publishedSlug: string | null = null;
+  const { data: pkgRow } = await supabase
+    .from("packages")
+    .select("id")
+    .eq("consultation_id", id)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (pkgRow) {
+    const svc = createServiceClient();
+    const { data: tpl } = await svc
+      .from("templates")
+      .select("slug, published")
+      .eq("source_package_id", pkgRow.id)
+      .maybeSingle();
+    if (tpl?.published) publishedSlug = tpl.slug;
+  }
 
   return (
     <div className="min-h-screen px-6 py-12" dir="rtl">
@@ -180,6 +201,11 @@ export default async function ConsultResultPage({
             {a.system_prompt_he}
           </pre>
         </Section>
+
+        {/* Publish to marketplace */}
+        <div className="mt-8">
+          <PublishButton consultationId={id} initialSlug={publishedSlug} />
+        </div>
 
         {/* CTA */}
         <div className="mt-10 flex justify-center gap-3">

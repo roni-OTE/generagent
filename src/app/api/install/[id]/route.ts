@@ -75,6 +75,32 @@ export async function GET(
     }
   }
 
+  // Fallback: treat id as a published marketplace template (public).
+  if (!pkg) {
+    const { data: tpl } = await supabase
+      .from("templates")
+      .select("id, name, description, manifest_json, published")
+      .eq("id", id)
+      .eq("published", true)
+      .maybeSingle();
+    if (tpl) {
+      const tm = (tpl.manifest_json as Manifest & { agent_name?: string }) ?? {};
+      pkg = {
+        id: tpl.id,
+        name: tm.agent_name ?? tpl.name,
+        description: tm.agent_description ?? tpl.description ?? null,
+        archetype: tm.archetype ?? null,
+        manifest_json: tm,
+        version: "1.0.0",
+      };
+      // Best-effort install counter.
+      supabase.rpc("increment_template_installs", { p_template_id: tpl.id }).then(
+        () => undefined,
+        () => undefined
+      );
+    }
+  }
+
   if (!pkg) {
     return new NextResponse(`# Agent not found\n\nid: ${id}\n`, {
       status: 404,

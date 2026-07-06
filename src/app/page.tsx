@@ -91,6 +91,12 @@ export default function Home() {
             >
               בלוג
             </Link>
+            <Link
+              href="/templates"
+              className="text-[var(--fg-muted)] no-underline hover:text-[var(--fg-dim)] transition-colors"
+            >
+              מרקטפלייס
+            </Link>
           </div>
         </div>
       </footer>
