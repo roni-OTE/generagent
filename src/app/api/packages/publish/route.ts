@@ -129,7 +129,10 @@ export async function POST(req: Request) {
   const tags = Array.isArray(pkg.required_connectors) ? pkg.required_connectors.slice(0, 6) : [];
 
   if (existing) {
-    // Re-publish (and refresh content) an existing template.
+    // Re-publish (and refresh content) an existing template. Self-heal a stale
+    // slug (e.g. an old non-ASCII slug that 404s) so it becomes reachable.
+    const slugIsBad = !/^[a-z0-9-]+$/.test(existing.slug ?? "");
+    const healedSlug = slugIsBad ? slugify(cleanName, existing.id) : existing.slug;
     const { data: t } = await service
       .from("templates")
       .update({
@@ -139,6 +142,7 @@ export async function POST(req: Request) {
         persona,
         tags,
         manifest_json: manifest,
+        ...(slugIsBad ? { slug: healedSlug } : {}),
       })
       .eq("id", existing.id)
       .select("slug")
