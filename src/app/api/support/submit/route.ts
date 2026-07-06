@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { generateDanaReply } from "@/lib/support/dana";
 import { sendEmail } from "@/lib/email";
+import { escapeHtml } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -227,12 +228,12 @@ export async function POST(req: Request) {
   if (dana.escalate) {
     const adminNote = `<div dir="rtl" style="font-family:system-ui,sans-serif;padding:20px;color:#1a1f2e;">
       <h2 style="margin:0 0 12px;">🚨 דנה סימנה פנייה להסלמה</h2>
-      <p><strong>מייל:</strong> ${email}</p>
-      <p><strong>שם:</strong> ${name || "—"}</p>
-      <p><strong>נושא:</strong> ${subject || "—"}</p>
-      <p><strong>סיבה להסלמה:</strong> ${dana.escalate_reason || "—"}</p>
-      <p><strong>ההודעה:</strong><br/>${message.replace(/\n/g, "<br/>")}</p>
-      <p><strong>תגובת דנה:</strong><br/>${dana.reply_text.replace(/\n/g, "<br/>")}</p>
+      <p><strong>מייל:</strong> ${escapeHtml(email)}</p>
+      <p><strong>שם:</strong> ${name ? escapeHtml(name) : "—"}</p>
+      <p><strong>נושא:</strong> ${subject ? escapeHtml(subject) : "—"}</p>
+      <p><strong>סיבה להסלמה:</strong> ${dana.escalate_reason ? escapeHtml(dana.escalate_reason) : "—"}</p>
+      <p><strong>ההודעה:</strong><br/>${escapeHtml(message).replace(/\n/g, "<br/>")}</p>
+      <p><strong>תגובת דנה:</strong><br/>${escapeHtml(dana.reply_text).replace(/\n/g, "<br/>")}</p>
       <p style="margin-top:20px;">
         <a href="https://www.generagent.io/admin/support/${ticket.id}" style="background:#5E6AD2;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;">
           פתח את הפנייה →

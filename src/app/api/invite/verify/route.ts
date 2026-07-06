@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { checkInviteCode, INVITE_COOKIE, INVITE_COOKIE_MAX_AGE } from "@/lib/invite";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
+
+// Invite codes are short campaign words (guessable) — throttle guessing per IP.
+async function guard(req: Request): Promise<NextResponse | null> {
+  const rl = await checkRateLimit(req, "invite", { ipHourly: 30, globalDaily: 5000 });
+  if (!rl.ok) return NextResponse.json({ valid: false, reason: rl.message }, { status: rl.status });
+  return null;
+}
 
 /**
  * POST /api/invite/verify  { code }
@@ -9,6 +17,8 @@ export const runtime = "nodejs";
  * On valid → sets an httpOnly cookie so the auth callback can consume it after sign-in.
  */
 export async function POST(req: Request) {
+  const blocked = await guard(req);
+  if (blocked) return blocked;
   const body = (await req.json().catch(() => ({}))) as { code?: string };
   const code = (body.code ?? "").trim().toUpperCase();
   const check = await checkInviteCode(code);
@@ -33,6 +43,8 @@ export async function POST(req: Request) {
 
 /** GET /api/invite/verify?code=X — same as POST, convenient for links */
 export async function GET(req: Request) {
+  const blocked = await guard(req);
+  if (blocked) return blocked;
   const url = new URL(req.url);
   const code = (url.searchParams.get("code") ?? "").trim().toUpperCase();
   const check = await checkInviteCode(code);

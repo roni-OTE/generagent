@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email";
+import { checkRateLimit, escapeHtml } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -9,6 +10,10 @@ export const runtime = "nodejs";
  * Public endpoint. Inserts a waitlist entry. Notifies admin by email.
  */
 export async function POST(req: Request) {
+  // Throttle: public endpoint that emails the founder on every insert.
+  const rl = await checkRateLimit(req, "waitlist", { ipHourly: 5, globalDaily: 200 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: rl.status });
+
   const body = (await req.json().catch(() => ({}))) as {
     email?: string;
     name?: string;
@@ -61,10 +66,10 @@ export async function POST(req: Request) {
       subject: `👋 נרשם חדש לרשימת המתנה — ${name || email}`,
       html: `<div dir="rtl" style="font-family:system-ui,sans-serif;padding:20px;color:#1a1f2e;">
         <h2 style="margin:0 0 12px;">בקשה חדשה לרשימת המתנה</h2>
-        <p><strong>אימייל:</strong> ${email}</p>
-        <p><strong>שם:</strong> ${name || "—"}</p>
+        <p><strong>אימייל:</strong> ${escapeHtml(email)}</p>
+        <p><strong>שם:</strong> ${name ? escapeHtml(name) : "—"}</p>
         <p><strong>איך שמע:</strong> ${sourceLabel}</p>
-        ${note ? `<p><strong>מה רוצה לבנות:</strong><br/>${note.replace(/\n/g, "<br/>")}</p>` : ""}
+        ${note ? `<p><strong>מה רוצה לבנות:</strong><br/>${escapeHtml(note).replace(/\n/g, "<br/>")}</p>` : ""}
         <p style="margin-top:20px;">
           <a href="https://www.generagent.io/admin/waitlist" style="background:#5E6AD2;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;">
             אשר / דחה →
