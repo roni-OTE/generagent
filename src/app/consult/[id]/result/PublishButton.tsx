@@ -83,10 +83,14 @@ export default function PublishButton({
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
       <div className="text-white font-medium text-sm mb-1">רוצה לשתף את הסוכן הזה?</div>
-      <p className="text-xs text-white/50 leading-relaxed mb-4">
+      <p className="text-xs text-white/50 leading-relaxed mb-3">
         פרסם אותו במרקטפלייס הציבורי כטמפלייט חינמי. כל אחד יוכל למצוא ולהתקין אותו — נהדר אם בנית משהו
-        שימושי. <span className="text-white/40">שים לב: התוכן (כולל ה-system prompt) יהיה גלוי לכולם.</span>
+        שימושי.
       </p>
+      <div className="text-[11px] text-amber-300/80 bg-amber-500/[0.06] border border-amber-500/20 rounded-lg px-3 py-2 mb-4 leading-relaxed">
+        ⚠️ שים לב: ה-system prompt המלא יהיה גלוי וניתן להורדה לכל אחד. אם הזנת בשיחה פרטים עסקיים
+        רגישים (מחירים, שמות לקוחות, נתונים פנימיים) — הם עלולים להיכלל בו. אפשר להסיר בכל רגע.
+      </div>
       {error && <div className="text-xs text-red-300/80 mb-3">{error}</div>}
       {!confirming ? (
         <button

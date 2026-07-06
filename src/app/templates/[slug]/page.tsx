@@ -46,6 +46,7 @@ export default async function TemplateDetailPage({
     .select("id, name, description, tags, manifest_json, install_count")
     .eq("slug", slug)
     .eq("published", true)
+    .eq("admin_blocked", false)
     .maybeSingle();
 
   if (!t) notFound();

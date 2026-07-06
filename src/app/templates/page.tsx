@@ -25,6 +25,7 @@ export default async function TemplatesPage() {
     .from("templates")
     .select("slug, name, description, tags, persona, install_count, created_at")
     .eq("published", true)
+    .eq("admin_blocked", false)
     .order("install_count", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(60);

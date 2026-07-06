@@ -82,6 +82,7 @@ export async function GET(
       .select("id, name, description, manifest_json, published")
       .eq("id", id)
       .eq("published", true)
+      .eq("admin_blocked", false)
       .maybeSingle();
     if (tpl) {
       const tm = (tpl.manifest_json as Manifest & { agent_name?: string }) ?? {};

@@ -9,22 +9,31 @@
  */
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
+// Anti-spam: one person can't flood the public gallery.
+const MAX_PUBLISHED_PER_USER = 10;
+
+// Slug uses more of the id (12 hex chars) → collision-resistant.
 function slugify(name: string, salt: string): string {
   const base = name
     .toLowerCase()
     .replace(/[^a-z0-9א-ת]+/gi, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
-  return `${base || "agent"}-${salt.slice(0, 6)}`;
+  return `${base || "agent"}-${salt.replace(/-/g, "").slice(0, 12)}`;
 }
 
 export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+
+  // Throttle publish churn per user/IP.
+  const rl = await checkRateLimit(req, "publish", { ipHourly: 20, globalDaily: 500 });
+  if (!rl.ok) return NextResponse.json({ error: rl.message }, { status: rl.status });
 
   const body = (await req.json().catch(() => ({}))) as {
     consultation_id?: string;
@@ -51,7 +60,7 @@ export async function POST(req: Request) {
   // Already published from this package?
   const { data: existing } = await service
     .from("templates")
-    .select("id, slug, published")
+    .select("id, slug, published, admin_blocked")
     .eq("source_package_id", pkg.id)
     .maybeSingle();
 
@@ -60,6 +69,27 @@ export async function POST(req: Request) {
       await service.from("templates").update({ published: false }).eq("id", existing.id);
     }
     return NextResponse.json({ ok: true, published: false });
+  }
+
+  // An admin takedown is final — the author cannot re-publish blocked content.
+  if (existing?.admin_blocked) {
+    return NextResponse.json({ error: "blocked_by_admin" }, { status: 403 });
+  }
+
+  // Per-user cap on published templates (anti-spam). Re-publishing an existing
+  // one doesn't count against the cap.
+  if (!existing) {
+    const { count: publishedCount } = await service
+      .from("templates")
+      .select("id", { count: "exact", head: true })
+      .eq("author_id", user.id)
+      .eq("published", true);
+    if ((publishedCount ?? 0) >= MAX_PUBLISHED_PER_USER) {
+      return NextResponse.json(
+        { error: `הגעת למקסימום ${MAX_PUBLISHED_PER_USER} סוכנים מפורסמים. הסר אחד קודם.` },
+        { status: 429 }
+      );
+    }
   }
 
   const manifest = (pkg.manifest_json ?? {}) as Record<string, unknown>;
