@@ -63,6 +63,19 @@ async function enforceInviteGate(request: Request, origin: string): Promise<Next
 
   // claim_invite_code() already flipped profiles.invite_verified = true.
   // From here on, this user is a verified account.
+
+  // The user is in — auto-resolve any stale *pending* waitlist entry for this
+  // email (people sometimes join the waitlist first, then find an invite link;
+  // without this the admin sees them "waiting" forever).
+  if (user.email) {
+    await service
+      .from("waitlist")
+      .update({ status: "approved", approved_at: new Date().toISOString() })
+      .eq("status", "pending")
+      .ilike("email", user.email)
+      .then(() => undefined, () => undefined);
+  }
+
   return null;
 }
 
