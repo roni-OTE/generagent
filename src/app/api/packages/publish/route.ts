@@ -20,11 +20,15 @@ export const maxDuration = 300;
 // Anti-spam: one person can't flood the public gallery.
 const MAX_PUBLISHED_PER_USER = 10;
 
-// Slug uses more of the id (12 hex chars) → collision-resistant.
+// ASCII-only slug — Hebrew chars in a URL path break routing (encoding /
+// Unicode-normalization mismatches → 404). Latin letters from the name are kept
+// if present, otherwise we fall back to "agent"; the id suffix keeps it unique.
 function slugify(name: string, salt: string): string {
   const base = name
     .toLowerCase()
-    .replace(/[^a-z0-9א-ת]+/gi, "-")
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "") // strip diacritics
+    .replace(/[^a-z0-9]+/g, "-") // ASCII alnum only
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
   return `${base || "agent"}-${salt.replace(/-/g, "").slice(0, 12)}`;
