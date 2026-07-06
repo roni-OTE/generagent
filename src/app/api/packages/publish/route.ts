@@ -10,8 +10,12 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { sanitizeManifestForPublish } from "@/lib/sanitize-template";
+import { recordUsage } from "@/lib/quota";
 
 export const runtime = "nodejs";
+// Sanitization is an LLM pass over the (possibly 8k-token) system prompt.
+export const maxDuration = 300;
 
 // Anti-spam: one person can't flood the public gallery.
 const MAX_PUBLISHED_PER_USER = 10;
@@ -92,7 +96,31 @@ export async function POST(req: Request) {
     }
   }
 
-  const manifest = (pkg.manifest_json ?? {}) as Record<string, unknown>;
+  const rawManifest = (pkg.manifest_json ?? {}) as Record<string, unknown>;
+
+  // Strip the publisher's business specifics before it goes public. Fails CLOSED:
+  // if sanitization errors, we do NOT publish raw data.
+  let manifest: Record<string, unknown>;
+  let cleanName = pkg.name;
+  let cleanDescription = pkg.description;
+  try {
+    const result = await sanitizeManifestForPublish(rawManifest);
+    manifest = result.manifest;
+    await recordUsage(supabase, user.id, result.usage.inputTokens, result.usage.outputTokens);
+    // Prefer the sanitized name/description for the public listing.
+    if (typeof manifest.agent_name === "string" && manifest.agent_name.trim()) {
+      cleanName = manifest.agent_name as string;
+    }
+    if (typeof manifest.agent_description === "string" && manifest.agent_description.trim()) {
+      cleanDescription = manifest.agent_description as string;
+    }
+  } catch {
+    return NextResponse.json(
+      { error: "לא הצלחנו לנקות את הפרטים העסקיים כרגע. נסה שוב בעוד רגע — לא פרסמנו כלום." },
+      { status: 503 }
+    );
+  }
+
   const persona = (manifest.persona_match as string) ?? null;
   const tags = Array.isArray(pkg.required_connectors) ? pkg.required_connectors.slice(0, 6) : [];
 
@@ -102,8 +130,8 @@ export async function POST(req: Request) {
       .from("templates")
       .update({
         published: true,
-        name: pkg.name,
-        description: pkg.description,
+        name: cleanName,
+        description: cleanDescription,
         persona,
         tags,
         manifest_json: manifest,
@@ -114,15 +142,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, published: true, slug: t?.slug ?? existing.slug });
   }
 
-  const slug = slugify(pkg.name, pkg.id);
+  const slug = slugify(cleanName, pkg.id);
   const { data: created, error } = await service
     .from("templates")
     .insert({
       author_id: user.id,
       source_package_id: pkg.id,
       slug,
-      name: pkg.name,
-      description: pkg.description,
+      name: cleanName,
+      description: cleanDescription,
       tags,
       persona,
       manifest_json: manifest,

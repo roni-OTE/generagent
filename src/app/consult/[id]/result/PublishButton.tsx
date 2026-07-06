@@ -29,8 +29,8 @@ export default function PublishButton({
       setPublished(true);
       setSlug(data.slug ?? null);
       setConfirming(false);
-    } catch {
-      setError("הפרסום נכשל. נסה שוב.");
+    } catch (e) {
+      setError(e instanceof Error && e.message.includes("לנקות") ? e.message : "הפרסום נכשל. נסה שוב.");
     } finally {
       setBusy(false);
     }
@@ -87,9 +87,9 @@ export default function PublishButton({
         פרסם אותו במרקטפלייס הציבורי כטמפלייט חינמי. כל אחד יוכל למצוא ולהתקין אותו — נהדר אם בנית משהו
         שימושי.
       </p>
-      <div className="text-[11px] text-amber-300/80 bg-amber-500/[0.06] border border-amber-500/20 rounded-lg px-3 py-2 mb-4 leading-relaxed">
-        ⚠️ שים לב: ה-system prompt המלא יהיה גלוי וניתן להורדה לכל אחד. אם הזנת בשיחה פרטים עסקיים
-        רגישים (מחירים, שמות לקוחות, נתונים פנימיים) — הם עלולים להיכלל בו. אפשר להסיר בכל רגע.
+      <div className="text-[11px] text-emerald-300/80 bg-emerald-500/[0.06] border border-emerald-500/20 rounded-lg px-3 py-2 mb-4 leading-relaxed">
+        🛡️ לפני הפרסום אנחנו מנקים אוטומטית את הפרטים העסקיים שלך — מחירים, שמות לקוחות ונתונים פנימיים
+        הופכים לגנריים, כך שנשארת תבנית שימושית בלי לחשוף מידע שלך. (לוקח כמה שניות.) אפשר להסיר בכל רגע.
       </div>
       {error && <div className="text-xs text-red-300/80 mb-3">{error}</div>}
       {!confirming ? (
@@ -108,7 +108,7 @@ export default function PublishButton({
             className="px-5 py-2.5 rounded-xl text-sm font-medium text-white disabled:opacity-50"
             style={{ background: "linear-gradient(135deg, #5E6AD2, #B867FF)" }}
           >
-            {busy ? "מפרסם…" : "כן, פרסם לכולם"}
+            {busy ? "מנקה פרטים ומפרסם…" : "כן, פרסם לכולם"}
           </button>
           <button
             onClick={() => setConfirming(false)}
