@@ -73,7 +73,19 @@ export async function POST(req: Request) {
         <p style="color:#999;font-size:12px">GenerAgent · OTE Group</p>
       </div>`,
     });
-    return NextResponse.json({ ok: true, preview: true, abandoned: r1, followup: r2 });
+    const fb3 = `${BASE_URL}/feedback?src=nostart&email=${encodeURIComponent(founder)}`;
+    const r3 = await sendEmail({
+      to: founder,
+      subject: "[תצוגה מקדימה — מייל 'נרשמו ולא התחילו'] נועם מחכה להכיר אותך 👋",
+      html: `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">
+        <p>היי רוני,</p>
+        <p>נרשמת ל-GenerAgent — אבל עוד לא התחלת שיחה עם נועם. חבל, כי זה ממש 5 דקות: כמה שאלות על מה שאתה עושה, ובסוף אתה יוצא עם סוכן AI מותאם אישית, מוכן להתקנה בפקודה אחת.</p>
+        <p><a href="${BASE_URL}/dashboard" style="display:inline-block;background:#5E6AD2;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600">להתחיל עכשיו ←</a></p>
+        <p style="color:#666;font-size:13px">ואם משהו עצר אותך — טכני, לא ברור, או סתם לא היה זמן — <a href="${fb3}">ספר לנו בשורה אחת</a>. זה עוזר לנו מאוד.</p>
+        <p style="color:#999;font-size:12px">GenerAgent · OTE Group</p>
+      </div>`,
+    });
+    return NextResponse.json({ ok: true, preview: true, abandoned: r1, followup: r2, nostart: r3 });
   }
 
   // Safety gate: real sends to users are OFF until the founder approves the copy.
