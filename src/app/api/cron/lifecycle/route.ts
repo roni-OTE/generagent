@@ -91,7 +91,7 @@ export async function POST(req: Request) {
   let sentFollowup = 0;
 
   // ---- 1. Abandonment nudges ----
-  const staleSince = new Date(now - 7 * 24 * 3600_000).toISOString(); // not older than 7d
+  const staleSince = new Date(now - 21 * 24 * 3600_000).toISOString(); // not older than 21d
   const staleUntil = new Date(now - 20 * 3600_000).toISOString(); // at least 20h idle
   const { data: abandoned } = await supabase
     .from("consultations")
@@ -144,14 +144,15 @@ export async function POST(req: Request) {
     }
   }
 
-  // ---- 2. 3-day follow-ups ----
-  const fuFrom = new Date(now - 4 * 24 * 3600_000).toISOString();
-  const fuTo = new Date(now - 3 * 24 * 3600_000).toISOString();
+  // ---- 2. Follow-ups after building (agent is 3+ days old) ----
+  // Was a narrow 24h window ("created 3-4 days ago") that missed almost everyone.
+  // Now: anyone 3+ days old who hasn't been followed up yet (dedup below makes it once-only).
+  const fuBefore = new Date(now - 3 * 24 * 3600_000).toISOString();
   const { data: packages } = await supabase
     .from("packages")
     .select("id, user_id, name")
-    .gte("created_at", fuFrom)
-    .lte("created_at", fuTo)
+    .lte("created_at", fuBefore)
+    .order("created_at", { ascending: false })
     .limit(100);
 
   const alreadyFollowed = await loadSent(supabase, "followup_sent");
@@ -192,7 +193,71 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, abandoned_sent: sentAbandoned, followup_sent: sentFollowup });
+  // ---- 3. Registered but never started a chat ----
+  // Users who got in (invite_verified) but never opened a conversation with Noam.
+  // The abandonment nudge above only catches people who STARTED a chat — this
+  // covers everyone who signed up and then went quiet.
+  let sentNoStart = 0;
+  const joinFrom = new Date(now - 21 * 24 * 3600_000).toISOString(); // joined within 21d
+  const joinUntil = new Date(now - 20 * 3600_000).toISOString(); // give them ~a day first
+
+  const { data: recentProfiles } = await supabase
+    .from("profiles")
+    .select("id, email, display_name, plan, invite_verified, created_at")
+    .eq("invite_verified", true)
+    .neq("plan", "admin")
+    .gte("created_at", joinFrom)
+    .lte("created_at", joinUntil)
+    .limit(500);
+
+  if (recentProfiles && recentProfiles.length > 0) {
+    // Which of them have ever started a consultation?
+    const ids = recentProfiles.map((p) => p.id);
+    const { data: consults } = await supabase
+      .from("consultations")
+      .select("user_id")
+      .in("user_id", ids);
+    const startedIds = new Set((consults ?? []).map((c) => c.user_id));
+    const alreadyNudgedNoStart = await loadSent(supabase, "nostart_sent");
+
+    for (const p of recentProfiles) {
+      if (sentNoStart >= MAX_SENDS_PER_RUN) break;
+      if (startedIds.has(p.id)) continue; // they did start a chat
+      if (alreadyNudgedNoStart.has(p.id)) continue;
+      if (!p.email) continue;
+
+      const firstName = (p.display_name ?? "").trim().split(/\s+/)[0] || "";
+      const feedbackUrl = `${BASE_URL}/feedback?src=nostart&email=${encodeURIComponent(p.email)}`;
+      const res = await sendEmail({
+        to: p.email,
+        subject: "נועם מחכה להכיר אותך 👋",
+        html: `<div dir="rtl" style="font-family:sans-serif;line-height:1.7">
+          <p>היי${firstName ? " " + firstName : ""},</p>
+          <p>נרשמת ל-GenerAgent — אבל עוד לא התחלת שיחה עם נועם. חבל, כי זה ממש 5 דקות: כמה שאלות על מה שאתה עושה, ובסוף אתה יוצא עם סוכן AI מותאם אישית, מוכן להתקנה בפקודה אחת.</p>
+          <p><a href="${BASE_URL}/dashboard" style="display:inline-block;background:#5E6AD2;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600">להתחיל עכשיו ←</a></p>
+          <p style="color:#666;font-size:13px">ואם משהו עצר אותך — טכני, לא ברור, או סתם לא היה זמן — <a href="${feedbackUrl}">ספר לנו בשורה אחת</a>. זה עוזר לנו מאוד.</p>
+          <p style="color:#999;font-size:12px">GenerAgent · OTE Group</p>
+        </div>`,
+      });
+      if (res.success) {
+        sentNoStart++;
+        await supabase.from("app_events").insert({
+          level: "info",
+          source: "lifecycle",
+          code: "nostart_sent",
+          message: `נשלחה תזכורת 'לא התחלת' ל-${p.email}`,
+          meta: { target_id: p.id, user_id: p.id },
+        });
+      }
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    abandoned_sent: sentAbandoned,
+    followup_sent: sentFollowup,
+    nostart_sent: sentNoStart,
+  });
 }
 
 export async function GET(req: Request) {

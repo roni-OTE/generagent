@@ -19,7 +19,15 @@ export default async function FeedbackPage({
           המשוב שלך הולך ישירות לרוני (המייסד) ומשפיע על מה שנבנה בשבוע הקרוב.
         </p>
         <FeedbackForm
-          source={params.src === "abandoned" ? "abandoned_email" : params.src === "followup" ? "followup_email" : "site"}
+          source={
+            params.src === "abandoned"
+              ? "abandoned_email"
+              : params.src === "followup"
+                ? "followup_email"
+                : params.src === "nostart"
+                  ? "nostart_email"
+                  : "site"
+          }
           initialEmail={params.email ?? ""}
         />
       </div>

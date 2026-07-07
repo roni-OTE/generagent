@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     rating,
     what_worked: (body.what_worked ?? "").slice(0, 2000) || null,
     what_missing: (body.what_missing ?? "").slice(0, 2000) || null,
-    source: ["abandoned_email", "followup_email", "site"].includes(body.source ?? "")
+    source: ["abandoned_email", "followup_email", "nostart_email", "site"].includes(body.source ?? "")
       ? body.source
       : "site",
   });
