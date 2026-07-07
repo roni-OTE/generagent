@@ -5,6 +5,9 @@ import Orb from "@/components/Orb";
 import CopyableCode from "@/components/CopyableCode";
 import { buildInstallCommand } from "@/lib/handle";
 import PublishButton from "./PublishButton";
+import ReviseBox from "./ReviseBox";
+
+const MAX_REVISIONS = 3; // keep in sync with /api/consult/revise
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +73,15 @@ export default async function ConsultResultPage({
   }
 
   const a = consultation.analysis_json as Analysis;
+
+  // Revisions used = user messages created after completion (same rule as the API).
+  const { count: revisionsUsed } = await supabase
+    .from("messages")
+    .select("id", { count: "exact", head: true })
+    .eq("consultation_id", id)
+    .eq("role", "user")
+    .gt("created_at", consultation.completed_at);
+  const revisionsLeft = Math.max(0, MAX_REVISIONS - (revisionsUsed ?? 0));
 
   // Is this agent already published to the marketplace? (for the publish widget)
   let publishedSlug: string | null = null;
@@ -167,6 +179,11 @@ export default async function ConsultResultPage({
             </ul>
           </Section>
         )}
+
+        {/* Refine the agent before (or after) installing */}
+        <Section title="רוצה לדייק משהו?">
+          <ReviseBox consultationId={id} revisionsLeft={revisionsLeft} />
+        </Section>
 
         {/* Install command (CLI) — both platforms */}
         <Section title="התקנה — בחר את הכלי שלך">
