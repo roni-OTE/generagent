@@ -65,7 +65,7 @@ export default function ChatView({
       finalize_failed: "הסיכום נכשל באמצע. לחץ 'נסה שוב לסיים אפיון' למטה.",
       parse_failed: "נועם התבלבל לרגע. נסה שוב — זה בדרך כלל עובד בפעם השנייה.",
       not_in_progress: "השיחה הזו כבר הסתיימה.",
-      unauthenticated: "החיבור שלך פג. רענן את הדף והתחבר מחדש.",
+      unauthenticated: "רגע — צריך לחדש את החיבור. התשובה שלך נשמרה, פשוט לחץ שלח שוב.",
       timeout: "זה לוקח יותר מדי זמן — כנראה עומס רגעי. נסה שוב.",
     };
     return map[code] ?? code;
@@ -98,6 +98,18 @@ export default function ChatView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function postTurn(answer: string): Promise<Response> {
+    return fetchWithTimeout(
+      "/api/consult/turn",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consultation_id: consultationId, user_answer: answer }),
+      },
+      110_000
+    );
+  }
+
   async function sendAnswer() {
     const answer = input.trim();
     if (!answer || busy || done) return;
@@ -106,15 +118,13 @@ export default function ChatView({
     setMessages((m) => [...m, { role: "user", content: answer }]);
     setInput("");
     try {
-      const res = await fetchWithTimeout(
-        "/api/consult/turn",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ consultation_id: consultationId, user_answer: answer }),
-        },
-        110_000
-      );
+      let res = await postTurn(answer);
+      // A transient auth blip (token being refreshed) can 401 once. Retry a single
+      // time — the retry passes back through middleware which refreshes the session.
+      if (res.status === 401) {
+        await new Promise((r) => setTimeout(r, 600));
+        res = await postTurn(answer);
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         // Chat is stuck in "analyzing" (a previous finalize died) — recover
@@ -124,6 +134,9 @@ export default function ChatView({
           await finalize();
           return;
         }
+        // Don't lose the user's answer on failure — restore it so they can resend.
+        setMessages((m) => (m[m.length - 1]?.role === "user" ? m.slice(0, -1) : m));
+        setInput(answer);
         throw new Error(data?.message || friendlyError(data?.error || "turn_failed"));
       }
       const t: Turn = data.turn;
@@ -136,6 +149,11 @@ export default function ChatView({
         await finalize();
       }
     } catch (e: unknown) {
+      // On network/timeout error too, keep the answer recoverable.
+      if (input === "") {
+        setMessages((m) => (m[m.length - 1]?.role === "user" ? m.slice(0, -1) : m));
+        setInput(answer);
+      }
       setError(friendlyError(e instanceof Error ? e.message : "שגיאה"));
     } finally {
       setBusy(false);
