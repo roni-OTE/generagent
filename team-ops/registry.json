@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "updated_at": "2026-07-12T16:43:02+03:00",
+  "note": "Shared orchestration registry. Tamar (Product Lead) reads/writes this. The GenerAgent product will bridge to it later (outbox/inbox). See README.md.",
+  "agents": {
+    "tamar": {
+      "role": "Product Lead / Chief of Staff",
+      "runs_on": "cowork+product",
+      "owns": ["orchestration", "prioritization", "roadmap", "ceo-interface"],
+      "task_id": "tamar-dispatcher"
+    },
+    "yoav": {
+      "role": "Full-Stack Engineer",
+      "runs_on": "cowork",
+      "owns": ["code", "bugfix", "features", "triage"],
+      "task_id": "yoav-daily-triage"
+    },
+    "shira": {
+      "role": "Marketing & Content",
+      "runs_on": "cowork",
+      "owns": ["content", "linkedin", "whatsapp", "blog", "landing"],
+      "task_id": "shira-weekly-marketing"
+    },
+    "ariel": {
+      "role": "Release Captain",
+      "runs_on": "cowork",
+      "owns": ["release", "validation", "release-notes", "deploy-status"],
+      "task_id": "ariel-friday-release"
+    },
+    "rony": {
+      "role": "Reliability Engineer",
+      "runs_on": "vercel",
+      "owns": ["monitoring", "health", "guardrails"],
+      "task_id": null
+    },
+    "dana": {
+      "role": "Customer Support",
+      "runs_on": "vercel",
+      "owns": ["support", "faq", "user-inquiries"],
+      "task_id": null
+    }
+  },
+  "rules": {
+    "no_shabbat": "No outbound mailing/drafts on Saturday (Shabbat). If a recurring due date lands on Saturday, defer to Sunday.",
+    "email_mode": "draft_only — Tamar prepares a Gmail draft to roni@otegroup.co.il; Roni reviews and sends. The connector cannot auto-send.",
+    "escalation": "Agent blocked -> status 'blocked' -> Tamar drafts a decision email to CEO -> status 'awaiting_decision' until Roni replies.",
+    "compliance_mailing": "Any mailing to registered users (נרשמים) MUST include: an easy unsubscribe mechanism (link/reply/phone, free), publisher identity (OTE Group name + address + contact), and clear 'פרסומת' marking where the message is advertising — per Amendment 40 to the Israeli Communications Law. Applies to all user-facing sends, not internal reports to Roni."
+  },
+  "work_orders": [
+    {
+      "id": "wo-20260712-001",
+      "created_at": "2026-07-12T00:00:00+03:00",
+      "created_by": "roni",
+      "channel": "cowork",
+      "decision": "כל יומיים לשלוח לרוני מייל עם פוסט מוכן ללינקדין על המערכת (GenerAgent).",
+      "owner": "shira",
+      "type": "recurring",
+      "cadence": "every_2_days",
+      "next_due": "2026-07-13",
+      "constraints": ["no_shabbat"],
+      "status": "assigned",
+      "questions_for_ceo": [],
+      "result": null,
+      "activity_log": [
+        { "at": "2026-07-12T00:00:00+03:00", "by": "tamar", "note": "נוצר מבקשת רוני. הוקצה לשירה. תדירות: כל יומיים, לא בשבת. פורמט: פוסט לינקדין בעברית על GenerAgent." }
+      ],
+      "updated_at": "2026-07-12T00:00:00+03:00"
+    },
+    {
+      "id": "wo-20260712-002",
+      "created_at": "2026-07-12T16:43:02+03:00",
+      "created_by": "roni",
+      "channel": "cowork",
+      "decision": "כל דיוור לנרשמים חייב לכלול מנגנון הסרה מהרשימה + זיהוי מפרסם + סימון 'פרסומת', לפי תיקון 40 לחוק התקשורת. כרגע מיילי ה-lifecycle (route.ts) לא כוללים הסרה.",
+      "owner": "yoav",
+      "type": "once",
+      "cadence": null,
+      "next_due": null,
+      "constraints": ["compliance"],
+      "status": "in_progress",
+      "questions_for_ceo": [],
+      "result": "נכתב קוד: migration 0017_email_suppressions, src/lib/unsubscribe.ts, src/app/api/unsubscribe/route.ts, ושילוב ב-lifecycle route (סינון מוסרים + פוטר תואם + סימון 'פרסומת' על מייל 'נרשמו ולא התחילו'). tsc נקי. ממתין ל-SQL + git push של רוני.",
+      "activity_log": [
+        { "at": "2026-07-12T16:43:02+03:00", "by": "tamar", "note": "זוהה פער תאימות: src/app/api/cron/lifecycle/route.ts שולח 3 מיילים לנרשמים (נטישה/פולו-אפ/נרשמו-ולא-התחילו) דרך Resend ללא לינק הסרה, זיהוי מפרסם או סימון פרסומת. השליחה כרגע מכובה (LIFECYCLE_ENABLED). הוקצה ליואב (קוד)." },
+        { "at": "2026-07-12T16:43:02+03:00", "by": "roni", "note": "החלטות: טבלת suppression ב-Supabase; סימון 'פרסומת' רק על השיווקי (נרשמו-ולא-התחילו). אישר יישום." },
+        { "at": "2026-07-12T16:43:02+03:00", "by": "yoav", "note": "יושם: טבלת email_suppressions, טוקן הסרה חתום, route /api/unsubscribe (דף אישור דו-שלבי), ופוטר תואם בכל המיילים. tsc נקי. commit מקומי מוכן; ממתין ל-SQL + push." }
+      ],
+      "updated_at": "2026-07-12T16:43:02+03:00"
+    }
+  ]
+}
